@@ -1,0 +1,91 @@
+<div id="point1" class="bg-neutral-200"></div>
+<div id="point2" class="bg-blue-200"></div>
+<style>
+
+  #point1,
+  #point2 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    z-index: 1000;
+    mix-blend-mode:difference; 
+    pointer-events: none;
+  }
+  #point2 {
+    width: 3rem;
+    height: 3rem;
+    background: #c0d5ef;  
+    transition: all 0.2s ease-out;
+    filter: blur(0.5px) brightness(1.1) saturate(1.5);
+    z-index: 999;
+  }
+</style>
+<script>
+  const body = document.body;
+  const g1: HTMLDivElement =
+    document.querySelector("#point1") || new HTMLDivElement();
+  const g2: HTMLDivElement =
+    document.querySelector("#point2") || new HTMLDivElement();
+  let g1Width = 0;
+  let g2Width = 0;
+  let isHovering = false;
+  // console.log(g1, g2);
+  onload = () => {
+    g1Width = g1.offsetWidth / 2;
+    g2Width = g2.offsetWidth / 2;
+  };
+  const setPosition = (x: number, y: number) => {
+    window.requestAnimationFrame(() => {
+      g1.style.transform = `translate(${x - g1Width}px, ${y - g1Width}px)`;
+    });
+    if (!isHovering) {
+      g2.style.transform = `translate(${x - g2Width}px, ${y - g2Width}px)`;
+    }
+  };
+  window.onmousemove = (e) => {
+    window.requestAnimationFrame(() => {
+      setPosition(e.clientX, e.clientY);
+    });
+  };
+  window.onmouseover = (e) => {
+    const target = e.target as Element;
+    if (target.classList.contains("g-animation")) {
+      isHovering = true;
+      const rect = target.getBoundingClientRect();
+      const style = window.getComputedStyle(target);
+      g2.style.width = `${rect.width + 20}px`;
+      g2.style.height = `${rect.height + 20}px`;
+      const borderRadius = style.borderRadius.slice(0,style.borderRadius.lastIndexOf("p"))
+      // console.log(border);
+      const border = "inset 0 0 10px rgba(0,0,0,0.2)";
+      g2.style.boxShadow = border;
+      g2.style.borderRadius = Math.max(parseInt(borderRadius) / 16, 1) + "rem";
+      g2.style.transform = `translate(${rect.left - 10}px, ${rect.top - 10}px)`;
+    }
+  };
+  window.onmouseout = (e)=>{
+        const target = e.target as Element;
+    if (target.classList.contains("g-animation")) {
+      isHovering = false;
+
+      g2.style.width = `3rem`;
+      g2.style.height = `3rem`;
+      g2.style.borderRadius = `50%`;
+    }
+  }
+		  const observer = new MutationObserver(()=>{
+    
+    const allClickElement = document.querySelectorAll('a,button')
+    // console.log(allClickElement)
+	allClickElement.forEach((e)=>[
+		e.classList.toggle('g-animation',true)
+	])
+  })
+  observer.observe(document.documentElement,{
+	childList:true,
+    subtree:true
+  })
+</script>
