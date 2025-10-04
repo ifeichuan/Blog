@@ -1,0 +1,564 @@
+---
+
+---
+
+<style lang="scss">
+  :root {
+    box-sizing: border-box;
+    --size-unit: 16;
+    --size-container-ideal: 1440;
+    --size-container-min: 992px;
+    --size-container-max: 2560px;
+    --size-container: clamp(
+      var(--size-container-min),
+      100vw,
+      var(--size-container-max)
+    );
+    --size-font: calc(
+      var(--size-container) / (var(--size-container-ideal) / var(--size-unit))
+    );
+  }
+  @media screen and (max-width: 991px) {
+    :root {
+      --size-container-ideal: 834;
+      /* screen-size in design - no px */
+      --size-container-min: 768px;
+      --size-container-max: 991px;
+      --spacer-title: 4.5em;
+    }
+  }
+
+  /* Mobile Landscape */
+  @media screen and (max-width: 767px) {
+    :root {
+      --size-container-ideal: 620;
+      /* screen-size in design - no px */
+      --size-container-min: 480px;
+      --size-container-max: 767px;
+    }
+  }
+
+  /* Mobile Portrait */
+  @media screen and (max-width: 479px) {
+    :root {
+      --size-container-ideal: 390;
+      /* screen-size in design - no px */
+      --size-container-min: 320px;
+      --size-container-max: 479px;
+      --spacer-title: 4em;
+      --page-padding: 1em;
+    }
+  }
+  .load-w {
+    font-size: var(--size-font);
+    z-index: 0;
+    background-color: var(--color-white);
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    position: fixed;
+
+    .load-bg {
+      z-index: 0;
+      position: absolute;
+      inset: 0%;
+      width: 100%;
+      height: 100%;
+      background-size: 5em 5em;
+      background-position: center center;
+      background-image: linear-gradient(
+          to right,
+          #409eff 1.5px,
+          transparent 1.5px
+        ),
+        linear-gradient(to bottom, #409eff 1.5px, transparent 1.5px);
+    }
+  }
+  .load-modal {
+    z-index: 2;
+    width: calc(45em + 2px);
+    height: calc(35em + 2px);
+    display: flex;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    background: var(--color-slate-800);
+    &__bar {
+      z-index: 15;
+      display: flex;
+      position: absolute;
+      inset: 0% 0% auto;
+      background: var(--color-slate-700);
+      height: calc(5em + 2px);
+      color: var(--color-blue-50);
+      justify-content: center;
+      align-items: center;
+      outline-color: var(--color-slate-900);
+      outline-offset: -2px;
+      outline-width: 2px;
+      outline-style: solid;
+      gap: 0.5em;
+    }
+    &__close {
+      padding: 1.25em;
+      height: 100%;
+      aspect-ratio: 1;
+      background: var(--color-blue-400);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--color-slate-900);
+      outline-width: 2px;
+      outline-style: solid;
+      outline-color: var(--color-slate-900);
+      outline-offset: -2px;
+      position: absolute;
+      inset: 0% 0% auto auto;
+    }
+    .code {
+      color: var(--color-blue-400);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 1em;
+      line-height: 1;
+    }
+    .u--fw-med {
+      font-weight: 500;
+    }
+    .p-small {
+      font-size: 0.875em;
+      line-height: 1.25;
+      letter-spacing: 0.1em;
+    }
+    .timeline-card.load {
+      flex: 1;
+      max-width: calc(1.6785em * 17 + 1px);
+
+      .card-top {
+        height: calc(4 * 1.6875em + 1px);
+        width: 100%;
+        position: relative;
+        .card-grid-bg {
+          position: absolute;
+          inset: 0%;
+          background-size: 1.6785em 1.6785em;
+          background-position: left top;
+          background-image: linear-gradient(
+              to right,
+              var(--color-slate-600) 1px,
+              transparent 1px
+            ),
+            linear-gradient(
+              to bottom,
+              var(--color-slate-600) 1px,
+              transparent 1px
+            );
+        }
+        .card-grid__inner {
+          overflow: hidden;
+          z-index: 2;
+          background-color: var(--color-slate-50);
+          position: absolute;
+          display: flex;
+          justify-content: flex-start;
+          align-items: center;
+          height: calc(2 * 1.6785em + 1px);
+          width: calc(15 * 1.6785em + 1px);
+          left: 1.6785em;
+          top: 1.6785em;
+          .card-grid__icon {
+            position: relative;
+            z-index: 2;
+            background: var(--color-indigo-600);
+            color: var(--color-blue-300);
+            height: 100%;
+            width: calc(2 * 1.6785em + 1px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            .svg {
+              width: 1.875em;
+              height: 1.875em;
+            }
+            &::before {
+              content: "";
+              position: absolute;
+              width: 25em;
+              height: 100%;
+              left: -25em;
+              background: var(--color-slate-100);
+              z-index: 0;
+            }
+          }
+          .load-inner__text {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex: 1;
+            padding: 0 0.75em 0 0.75em;
+            color: var(--color-slate-900);
+            white-space: nowrap;
+            height: calc(1.6785em * 2 + 1px);
+            .load-text {
+              font-size: 1.25em;
+
+              text-transform: uppercase;
+              letter-spacing: -0.02em;
+              line-height: 1.2;
+            }
+          }
+        }
+      }
+      .load-bottom {
+        grid-column-gap: 0.25em;
+        grid-row-gap: 0.25em;
+        border-style: none solid solid;
+        border-width: 1px;
+        border-color: var(--color-slate-600);
+        justify-content: flex-start;
+        align-items: stretch;
+        width: 100%;
+        padding-left: 0.25em;
+        padding-right: 0.25em;
+        display: flex;
+        overflow: hidden;
+        .load-bar-block {
+          opacity: 0;
+          background-color: var(--color-blue-400);
+          width: 1.125em;
+          height: 2.5em;
+          margin-top: 0.25em;
+          margin-bottom: 0.25em;
+        }
+      }
+    }
+  }
+
+  .slot {
+    clip-path: inset(50% 38%);
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: clip;
+  }
+  @media screen and (max-width: 767px) {
+    .load-modal {
+      width: calc(35em + 2px);
+      height: calc(35em + 2px);
+    }
+  }
+  @media screen and (max-width: 479px) {
+    .load-modal {
+      width: 21em;
+      height: calc(33em + 2px);
+    }
+  }
+  @media screen and (max-width: 479px) {
+    .timeline-card {
+      max-width: calc(var(--size-block-large) * 14 - 13px);
+    }
+  }
+  @media screen and (max-width: 479px) {
+    .timeline-card.load {
+      font-size: 0.85em;
+    }
+  }
+</style>
+<div class="load-w">
+  <div class="load-bg"></div>
+  <div class="load-modal">
+    <div class="load-modal__bar">
+      <div class="load-modal__close">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="100%"
+          viewBox="0 0 40 40"
+          fill="none"
+          class="svg"
+          ><circle
+            cx="8.7357"
+            cy="32.0591"
+            r="2.13193"
+            transform="rotate(-45 8.7357 32.0591)"
+            fill="currentColor"></circle><circle
+            cx="12.6088"
+            cy="28.1858"
+            r="2.13193"
+            transform="rotate(-45 12.6088 28.1858)"
+            fill="currentColor"></circle><circle
+            cx="16.4818"
+            cy="24.3125"
+            r="2.13193"
+            transform="rotate(-45 16.4818 24.3125)"
+            fill="currentColor"></circle><circle
+            cx="20.3548"
+            cy="20.4392"
+            r="2.13193"
+            transform="rotate(-45 20.3548 20.4392)"
+            fill="currentColor"></circle><circle
+            cx="24.2298"
+            cy="16.5657"
+            r="2.13193"
+            transform="rotate(-45 24.2298 16.5657)"
+            fill="currentColor"></circle><circle
+            cx="28.1029"
+            cy="12.6924"
+            r="2.13193"
+            transform="rotate(-45 28.1029 12.6924)"
+            fill="currentColor"></circle><circle
+            cx="31.9759"
+            cy="8.81909"
+            r="2.13193"
+            transform="rotate(-45 31.9759 8.81909)"
+            fill="currentColor"></circle><circle
+            cx="31.9766"
+            cy="32.0597"
+            r="2.13193"
+            transform="rotate(-135 31.9766 32.0597)"
+            fill="currentColor"></circle><circle
+            cx="28.1035"
+            cy="28.1864"
+            r="2.13193"
+            transform="rotate(-135 28.1035 28.1864)"
+            fill="currentColor"></circle><circle
+            cx="24.2305"
+            cy="24.3129"
+            r="2.13193"
+            transform="rotate(-135 24.2305 24.3129)"
+            fill="currentColor"></circle><circle
+            cx="20.3574"
+            cy="20.4398"
+            r="2.13193"
+            transform="rotate(-135 20.3574 20.4398)"
+            fill="currentColor"></circle><circle
+            cx="16.4824"
+            cy="16.5663"
+            r="2.13193"
+            transform="rotate(-135 16.4824 16.5663)"
+            fill="currentColor"></circle><circle
+            cx="12.6094"
+            cy="12.693"
+            r="2.13193"
+            transform="rotate(-135 12.6094 12.693)"
+            fill="currentColor"></circle><circle
+            cx="8.73633"
+            cy="8.81972"
+            r="2.13193"
+            transform="rotate(-135 8.73633 8.81972)"
+            fill="currentColor"></circle></svg
+        >
+      </div>
+      <span class="code eyebrow">&lt;date&gt;</span>
+      <p class="p-small u--fw-med">
+        {
+          new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        }
+      </p>
+      <span class="code eyebrow">&lt;/date&gt;</span>
+    </div>
+    <div class="timeline-card load">
+      <div class="card-top">
+        <div class="card-grid-bg"></div>
+        <div class="card-grid__inner clip">
+          <div class="card-grid__icon purple">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="100%"
+              viewBox="0 0 30 30"
+              fill="none"
+              class="svg card-grid"
+              ><circle cx="2.48091" cy="14.9804" r="1.7563" fill="currentColor"
+              ></circle><circle
+                cx="6.73286"
+                cy="15.0043"
+                r="1.7563"
+                fill="currentColor"></circle><circle
+                cx="10.9379"
+                cy="14.9852"
+                r="1.7563"
+                fill="currentColor"></circle><circle
+                cx="15.1899"
+                cy="15.0166"
+                r="1.7563"
+                fill="currentColor"></circle><circle
+                cx="19.434"
+                cy="15.0332"
+                r="1.7563"
+                fill="currentColor"></circle><circle
+                cx="23.6489"
+                cy="14.9995"
+                r="1.7563"
+                fill="currentColor"></circle><circle
+                cx="27.9301"
+                cy="15.0091"
+                r="1.7563"
+                fill="currentColor"></circle><circle
+                cx="23.6704"
+                cy="19.0849"
+                r="1.7563"
+                fill="currentColor"></circle><circle
+                cx="19.4165"
+                cy="23.2897"
+                r="1.7563"
+                fill="currentColor"></circle><circle
+                cx="15.1918"
+                cy="27.6001"
+                r="1.7563"
+                fill="currentColor"></circle><circle
+                cx="1.7563"
+                cy="1.7563"
+                r="1.7563"
+                transform="matrix(1 0 0 -1 21.9004 12.6616)"
+                fill="currentColor"></circle><circle
+                cx="1.7563"
+                cy="1.7563"
+                r="1.7563"
+                transform="matrix(1 0 0 -1 17.6465 8.46387)"
+                fill="currentColor"></circle><circle
+                cx="1.7563"
+                cy="1.7563"
+                r="1.7563"
+                transform="matrix(1 0 0 -1 13.4316 4.146)"
+                fill="currentColor"></circle></svg
+            >
+          </div>
+          <div class="load-inner__text">
+            <p class="load-text" id="load-status">initializing...</p><p
+              class="load-text"
+              id="load-progress"
+            >
+              0%
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="load-bottom">
+        <div class="load-bar-block"></div>
+        <div class="load-bar-block"></div>
+        <div class="load-bar-block"></div><div class="load-bar-block"></div><div
+          class="load-bar-block"
+        >
+        </div><div class="load-bar-block"></div><div class="load-bar-block">
+        </div><div class="load-bar-block"></div><div class="load-bar-block">
+        </div><div class="load-bar-block"></div><div class="load-bar-block">
+        </div><div class="load-bar-block"></div><div class="load-bar-block">
+        </div><div class="load-bar-block"></div><div class="load-bar-block">
+        </div><div class="load-bar-block"></div><div class="load-bar-block">
+        </div><div class="load-bar-block"></div><div class="load-bar-block">
+        </div><div class="load-bar-block"></div>
+        <div class="load-bar-block"></div>
+      </div>
+    </div>
+    <div class="load-cover"></div>
+  </div>
+</div>
+<div class="slot bg-amber-200"><slot /></div>
+
+<script>
+  import gsap from "gsap";
+
+  window.onload = () => {
+    console.log("NIhao");
+
+    const loadProcessElement = document.getElementById(
+      "load-progress"
+    ) as HTMLElement;
+    const initText = gsap.to("#load-status", {
+      opacity: 0.1,
+      duration: 0.5,
+      yoyo: true,
+      repeat: -1,
+    });
+
+    const timeLine = gsap.timeline({ defaults: { ease: "power3.inOut" } });
+    let loadProcess = { process: 0 };
+    timeLine
+      .to(loadProcess, {
+        process: 100,
+        duration: 1.5, // 3
+        ease: "power3.inOut",
+        onUpdate: () => {
+          console.log("updating");
+          loadProcessElement.innerText = Math.floor(loadProcess.process) + "%";
+        },
+        onComplete: () => {
+          initText.seek(0);
+          initText.kill();
+        },
+      })
+      .to(
+        ".load-bar-block",
+        {
+          opacity: 1,
+          stagger: 0.1,
+          duration: 1,
+        },
+        "<"
+      )
+      .to(
+        ".purple",
+        {
+          x: () =>
+            document.querySelector(".card-grid__inner")?.clientWidth || 0,
+          duration: 1,
+        },
+        ">+0.2"
+      )
+      .to(
+        ".load-bottom",
+        {
+          scaleY: 0,
+          transformOrigin: "top",
+          duration: 1,
+        },
+        "<+0.5"
+      )
+      .to(
+        ".load-bar-block",
+        {
+          backgroundColor: "var(--color-blue-900)",
+          stagger: 0.02,
+          duration: 0.5,
+        },
+        "<-0.1"
+      )
+      .to(
+        ".card-top",
+        {
+          scaleY: 0,
+          transformOrigin: "center",
+          duration: 0.5,
+        },
+        ">-0.2"
+      )
+      .to(
+        ".slot",
+        {
+          clipPath: "inset(0% 0%)",
+          duration: 1.2,
+          ease: "power1",
+          onComplete: () => {
+            // document.querySelector(".load-w")?.remove();
+            window.dispatchEvent(new Event("app:loaded"));
+          },
+        },
+        ">+0.2"
+      )
+      .to(
+        ".load-modal",
+        {
+          width: () => window.innerWidth,
+          height: () => window.innerHeight,
+          ease: "power1",
+          duration: 1.2,
+        },
+        "<-0.2"
+      );
+  };
+</script>

@@ -1,0 +1,106 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="100%"
+  viewBox="0 0 40 40"
+  fill="none"
+  class="svg"
+>
+  <circle
+    cx="8.7357"
+    cy="32.0591"
+    r="2.13193"
+    transform="rotate(-45 8.7357 32.0591)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="12.6088"
+    cy="28.1858"
+    r="2.13193"
+    transform="rotate(-45 12.6088 28.1858)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="16.4818"
+    cy="24.3125"
+    r="2.13193"
+    transform="rotate(-45 16.4818 24.3125)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="20.3548"
+    cy="20.4392"
+    r="2.13193"
+    transform="rotate(-45 20.3548 20.4392)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="24.2298"
+    cy="16.5657"
+    r="2.13193"
+    transform="rotate(-45 24.2298 16.5657)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="28.1029"
+    cy="12.6924"
+    r="2.13193"
+    transform="rotate(-45 28.1029 12.6924)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="31.9759"
+    cy="8.81909"
+    r="2.13193"
+    transform="rotate(-45 31.9759 8.81909)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="31.9766"
+    cy="32.0597"
+    r="2.13193"
+    transform="rotate(-135 31.9766 32.0597)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="28.1035"
+    cy="28.1864"
+    r="2.13193"
+    transform="rotate(-135 28.1035 28.1864)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="24.2305"
+    cy="24.3129"
+    r="2.13193"
+    transform="rotate(-135 24.2305 24.3129)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="20.3574"
+    cy="20.4398"
+    r="2.13193"
+    transform="rotate(-135 20.3574 20.4398)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="16.4824"
+    cy="16.5663"
+    r="2.13193"
+    transform="rotate(-135 16.4824 16.5663)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="12.6094"
+    cy="12.693"
+    r="2.13193"
+    transform="rotate(-135 12.6094 12.693)"
+    fill="currentColor"
+  ></circle>
+  <circle
+    cx="8.73633"
+    cy="8.81972"
+    r="2.13193"
+    transform="rotate(-135 8.73633 8.81972)"
+    fill="currentColor"
+  ></circle>
+</svg>
