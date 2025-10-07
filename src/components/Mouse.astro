@@ -1,7 +1,6 @@
-<div id="point1" class="bg-neutral-200"></div>
+<div id="point1" class="bg-blue-600"></div>
 <div id="point2" class="bg-blue-200"></div>
 <style>
-
   #point1,
   #point2 {
     position: fixed;
@@ -11,13 +10,13 @@
     height: 1rem;
     border-radius: 50%;
     z-index: 1000;
-    mix-blend-mode:difference; 
+    mix-blend-mode: difference;
     pointer-events: none;
   }
   #point2 {
     width: 3rem;
     height: 3rem;
-    background: #c0d5ef;  
+    background: #c0d5ef;
     transition: all 0.2s ease-out;
     filter: blur(0.5px) brightness(1.1) saturate(1.5);
     z-index: 999;
@@ -58,7 +57,10 @@
       const style = window.getComputedStyle(target);
       g2.style.width = `${rect.width + 20}px`;
       g2.style.height = `${rect.height + 20}px`;
-      const borderRadius = style.borderRadius.slice(0,style.borderRadius.lastIndexOf("p"))
+      const borderRadius = style.borderRadius.slice(
+        0,
+        style.borderRadius.lastIndexOf("p")
+      );
       // console.log(border);
       const border = "inset 0 0 10px rgba(0,0,0,0.2)";
       g2.style.boxShadow = border;
@@ -66,8 +68,8 @@
       g2.style.transform = `translate(${rect.left - 10}px, ${rect.top - 10}px)`;
     }
   };
-  window.onmouseout = (e)=>{
-        const target = e.target as Element;
+  window.onmouseout = (e) => {
+    const target = e.target as Element;
     if (target.classList.contains("g-animation")) {
       isHovering = false;
 
@@ -75,17 +77,14 @@
       g2.style.height = `3rem`;
       g2.style.borderRadius = `50%`;
     }
-  }
-		  const observer = new MutationObserver(()=>{
-    
-    const allClickElement = document.querySelectorAll('a,button')
+  };
+  const observer = new MutationObserver(() => {
+    const allClickElement = document.querySelectorAll("a,button");
     // console.log(allClickElement)
-	allClickElement.forEach((e)=>[
-		e.classList.toggle('g-animation',true)
-	])
-  })
-  observer.observe(document.documentElement,{
-	childList:true,
-    subtree:true
-  })
+    allClickElement.forEach((e) => [e.classList.toggle("g-animation", true)]);
+  });
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
 </script>

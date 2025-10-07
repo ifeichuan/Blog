@@ -266,7 +266,7 @@
     }
   }
 </style>
-<div class="load-w">
+<div class="load-w opacity-0">
   <div class="load-bg"></div>
   <div class="load-modal">
     <div class="load-modal__bar">
@@ -458,7 +458,7 @@
     <div class="load-cover"></div>
   </div>
 </div>
-<div class="slot bg-amber-200"><slot /></div>
+<div class="slot"><slot /></div>
 
 <script>
   import gsap from "gsap";
@@ -478,11 +478,12 @@
 
     const timeLine = gsap.timeline({ defaults: { ease: "power3.inOut" } });
     let loadProcess = { process: 0 };
+    gsap.set(".load-w", { opacity: 1 });
     timeLine
       .to(loadProcess, {
         process: 100,
-        duration: 1.5, // 3
-        ease: "power3.inOut",
+        duration: 2.5, // 3
+        ease: "steps(" + Math.floor(Math.random() * 100) + ")",
         onUpdate: () => {
           console.log("updating");
           loadProcessElement.innerText = Math.floor(loadProcess.process) + "%";
@@ -497,7 +498,7 @@
         {
           opacity: 1,
           stagger: 0.1,
-          duration: 1,
+          duration: 0.8,
         },
         "<"
       )
@@ -534,31 +535,46 @@
           scaleY: 0,
           transformOrigin: "center",
           duration: 0.5,
+          onComplete: () => {},
         },
         ">-0.2"
       )
       .to(
         ".slot",
         {
+          label: "slot",
           clipPath: "inset(0% 0%)",
-          duration: 1.2,
-          ease: "power1",
-          onComplete: () => {
-            // document.querySelector(".load-w")?.remove();
-            window.dispatchEvent(new Event("app:loaded"));
-          },
+          duration: 1.5,
+          ease: "power3",
         },
         ">+0.2"
       )
       .to(
         ".load-modal",
         {
-          width: () => window.innerWidth,
-          height: () => window.innerHeight,
-          ease: "power1",
+          width: () => window.innerWidth + 150,
+          height: () => window.innerHeight + 150,
+          ease: "power3",
           duration: 1.2,
+          onComplete: () => {
+            console.log("Animation complete");
+            gsap.to(".load-w", {
+              opacity: 0,
+              duration: 0.5,
+              onComplete: () => {
+                document.querySelector(".load-w")?.remove();
+              },
+            });
+            window.dispatchEvent(new Event("app:loaded"));
+            // @ts-ignore
+            sessionStorage.setItem("isLoaded", "true");
+          },
         },
-        "<-0.2"
+        "<+0.05"
       );
+    if (sessionStorage.getItem("isLoaded") === "true") {
+      timeLine.seek("slot");
+      document.querySelector(".load-w")?.remove();
+    }
   };
 </script>

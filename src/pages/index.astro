@@ -1,8 +1,57 @@
 ---
 import Base from "../layouts/Base.astro";
 import About from "./about.astro";
+import Intro from "../components/Intro.astro";
+import Prism from "@/components/Prism";
 ---
 
 <Base>
-  <div class="h-[150vh] w-screen bg-linear-90">\ 123</div>
+  <Intro>
+    <div class="bg-amber-700 h-full w-full">
+      <div
+        class="h-1/3 w-1/3 fixed inset-7 prism flex items-center flex-col justify-center"
+      >
+        <div class="w-16 h-16 rotate-180">
+          <Prism
+            client:load
+            animationType="rotate"
+            timeScale={0.5}
+            height={3.5}
+            baseWidth={5.5}
+            scale={3.6}
+            hueShift={0}
+            colorFrequency={1}
+            noise={0.5}
+            glow={1}
+          />
+        </div>
+        <div class="w-16 h-16">
+          <Prism
+            client:load
+            animationType="rotate"
+            timeScale={0.5}
+            height={3.5}
+            baseWidth={5.5}
+            scale={3.6}
+            hueShift={0}
+            colorFrequency={1}
+            noise={0.5}
+            glow={1}
+          />
+        </div>
+      </div>
+      <div class="h-full w-full">123</div>
+    </div>
+  </Intro>
 </Base>
+
+<script>
+  import gsap from "gsap";
+
+  gsap.to(".prism", {
+    rotation: 360,
+    duration: 20,
+    ease: "none",
+    repeat: -1,
+  });
+</script>

@@ -1,51 +1,22 @@
 ---
 import BaseHead from "../components/BaseHead.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
-import Load from "../components/Load.astro";
+
+import Mouse from "../components/Mouse.astro";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="zh-cn">
   <head>
     <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
   </head>
   <body class="body">
-    <!-- <Mouse /> -->
-    <div
-      class="nav w-screen h-20 bg-red-400 absolute -translate-y-full z-[1] top-0"
-    >
-    </div>
+    <Mouse />
 
-    <Load>
-      <main>
-        <slot class="slot" />
-      </main>
-    </Load>
-
+    <main>
+      <slot />
+    </main>
     <!-- <Footer /> -->
-    <script>
-      import gsap from "gsap";
-      window.addEventListener("app:loaded", () => {
-        const nav = document.querySelector(".nav");
-        console.log("App has loaded!");
-        // 示例：让 .nav 元素入场
-        gsap.to(nav, {
-          y: 0,
-          duration: 0.8,
-
-          onComplete: () => {
-            nav?.classList.add("sticky");
-          },
-        });
-        const slot = gsap.to(".slot", {
-          y: nav?.clientHeight,
-          duration: 0.8,
-          onComplete: () => {
-            slot.seek(0);
-            slot.kill();
-          },
-        });
-      });
-    </script>
+    <script></script>
   </body>
 </html>

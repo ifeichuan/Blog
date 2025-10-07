@@ -1,0 +1,80 @@
+---
+import { Image } from "astro:assets";
+import { NavList, SITE_TITLE } from "../consts";
+---
+
+<script>
+  import gsap from "gsap";
+  import ScrambleTextPlugin from "gsap/ScrambleTextPlugin";
+
+  gsap.registerPlugin(ScrambleTextPlugin);
+  window.addEventListener("load", (e) => {
+    const logoText = document.getElementById("logoText") as HTMLAnchorElement;
+    logoText.addEventListener("mouseover", () => {
+      console.log("Mouse over logoText");
+      const text = () => {
+        const texts = [
+          "Feichuan's Blog",
+          "Blog",
+          "Feichuans",
+          "Welcome",
+          "Home",
+        ];
+        return texts[Math.floor(Math.random() * texts.length)];
+      };
+      gsap.to(logoText, {
+        scrambleText: {
+          text: text(),
+          chars: text(),
+          speed: 0.3,
+        },
+        duration: 1,
+        onComplete: () => {
+          console.log("Animation complete");
+        },
+      });
+    });
+  });
+  // 检测路由变化
+  window.addEventListener("popstate", () => {
+    console.log("Route changed");
+    const links = document.querySelectorAll<HTMLAnchorElement>("nav a");
+    links.forEach((link) => {
+      if (link.href === window.location.href) {
+        link.classList.add("bg-blue-500");
+      } else {
+        link.classList.remove("bg-blue-500");
+      }
+    });
+  });
+</script>
+<header
+  class="nav w-screen h-16 sticky z-[1] top-0 border-t-2 border-b-2 bg-white shadow-lg"
+>
+  <div class="flex justify-between h-full">
+    <div class="left">
+      <a
+        id="logoText"
+        class="h-full flex justify-center items-center px-4 font-serif text-4xl italic"
+        href="/">{SITE_TITLE}</a
+      >
+    </div>
+    <div class="center search"></div>
+    <div class="right h-full">
+      <nav class="flex h-full">
+        {
+          NavList.map((item) => (
+            <a
+              class=" px-4 h-full flex justify-center items-center hover:bg-blue-500 "
+              href={item.href}
+            >
+              {item.label}
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+  </div>
+</header>
+
+<style></style>
