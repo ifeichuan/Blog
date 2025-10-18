@@ -4,6 +4,7 @@
   "exclude": ["dist"],
   "compilerOptions": {
     "strictNullChecks": true,
+    "allowJs": true,
     "jsx": "preserve",
     "paths": {
       "@/*": ["./src/*"]

@@ -2,8 +2,10 @@
 const today = new Date();
 ---
 
-<footer>
-  &copy; {today.getFullYear()} Your name here. All rights reserved.
+<footer class="bg-blue-700 w-screen h-20">
+  <span class="sticky bottom-0"
+    >&copy; {today.getFullYear()} Feichuans Blog. All rights reserved.</span
+  >
   <div class="social-links">
     <a href="https://m.webtoo.ls/@astro" target="_blank">
       <span class="sr-only">Follow Astro on Mastodon</span>
@@ -52,7 +54,7 @@ const today = new Date();
 <style>
   footer {
     padding: 2em 1em 6em 1em;
-    background: linear-gradient(var(--gray-gradient)) no-repeat;
+
     color: rgb(var(--gray));
     text-align: center;
   }

@@ -3,59 +3,14 @@ import { Image } from "astro:assets";
 import { NavList, SITE_TITLE } from "../consts";
 ---
 
-<script>
-  import gsap from "gsap";
-  import ScrambleTextPlugin from "gsap/ScrambleTextPlugin";
-
-  gsap.registerPlugin(ScrambleTextPlugin);
-  window.addEventListener("load", (e) => {
-    const logoText = document.getElementById("logoText") as HTMLAnchorElement;
-    logoText.addEventListener("mouseover", () => {
-      console.log("Mouse over logoText");
-      const text = () => {
-        const texts = [
-          "Feichuan's Blog",
-          "Blog",
-          "Feichuans",
-          "Welcome",
-          "Home",
-        ];
-        return texts[Math.floor(Math.random() * texts.length)];
-      };
-      gsap.to(logoText, {
-        scrambleText: {
-          text: text(),
-          chars: text(),
-          speed: 0.3,
-        },
-        duration: 1,
-        onComplete: () => {
-          console.log("Animation complete");
-        },
-      });
-    });
-  });
-  // 检测路由变化
-  window.addEventListener("popstate", () => {
-    console.log("Route changed");
-    const links = document.querySelectorAll<HTMLAnchorElement>("nav a");
-    links.forEach((link) => {
-      if (link.href === window.location.href) {
-        link.classList.add("bg-blue-500");
-      } else {
-        link.classList.remove("bg-blue-500");
-      }
-    });
-  });
-</script>
 <header
-  class="nav w-screen h-16 sticky z-[1] top-0 border-t-2 border-b-2 bg-white shadow-lg"
+  class="nav w-screen h-16 absolute z-[1] top-0 left-0 right-0 mx-auto shadow-inner"
 >
-  <div class="flex justify-between h-full">
+  <div class="flex justify-between h-full w-full p-5">
     <div class="left">
       <a
         id="logoText"
-        class="h-full flex justify-center items-center px-4 font-serif text-4xl italic"
+        class="h-full flex justify-center items-center font-serif text-3xl italic"
         href="/">{SITE_TITLE}</a
       >
     </div>
@@ -65,8 +20,9 @@ import { NavList, SITE_TITLE } from "../consts";
         {
           NavList.map((item) => (
             <a
-              class=" px-4 h-full flex justify-center items-center hover:bg-blue-500 "
+              class="  h-full flex justify-center items-center hover:bg-blue-500 rounded-[9999px] p-2 data-[current]:underline  data-[current]:text-blue-400"
               href={item.href}
+              data-href={item.href}
             >
               {item.label}
             </a>
@@ -76,5 +32,83 @@ import { NavList, SITE_TITLE } from "../consts";
     </div>
   </div>
 </header>
+<script>
+  import gsap from "gsap";
+  import ScrambleTextPlugin from "gsap/ScrambleTextPlugin";
+  import { debounce, throttle } from "es-toolkit";
+  gsap.registerPlugin(ScrambleTextPlugin);
+  const isNearWindowTop = () => {
+    return window.scrollY <= 30;
+  };
+  let navStatus: string = "undefined";
+  const debounceNav = throttle((direction: string) => {
+    if (direction === "up" && isNearWindowTop() && navStatus === "shrink") {
+      console.log(navStatus);
+      navStatus = "grow";
+      gsap.to(".nav", {
+        translateY: "0",
+        width: "100%",
+        borderRadius: "0",
+        duration: 0.3,
+        ease: "none",
+      });
+    } else if (
+      (direction === "down" && navStatus === "grow") ||
+      navStatus === "undefined"
+    ) {
+      console.log(navStatus);
+      navStatus = "shrink";
+      gsap.to(".nav", {
+        translateY: "20px",
+        width: "40rem",
+        borderRadius: "99999px",
+        duration: 0.3,
+        ease: "none",
+      });
+    }
+  }, 100);
+  window.addEventListener("load", (e) => {
+    const logoText = document.getElementById("logoText") as HTMLAnchorElement;
+    const nav = document.querySelector(".nav") as HTMLElement;
+    const linkArray = document.querySelectorAll(
+      ".nav .right a"
+    ) as NodeListOf<HTMLAnchorElement>;
+    console.log(linkArray);
 
-<style></style>
+    linkArray.forEach((link) => {
+      const path = link.dataset.href;
+      console.log(path, window.location.pathname);
+      if (path === window.location.pathname) {
+        link.dataset.current = "true";
+      }
+    });
+    window.addEventListener("Intro:start", () => {
+      gsap.to(nav, {
+        y: "-100%",
+        duration: 0.1,
+        ease: "power2.inOut",
+      });
+    });
+    window.addEventListener("Intro:end", () => {
+      gsap.to(nav, {
+        y: "0%",
+        duration: 1,
+        // position: "sticky",
+        ease: "power2.inOut",
+      });
+    });
+    window.addEventListener("wheel", (e: any) => {
+      const direction = (e.wheelDelta as number) >= 0 ? "up" : "down";
+      // console.log(window.scrollY, e, direction);
+
+      // debounceNav(direction);
+    });
+  });
+</script>
+<style lang="scss">
+  .nav {
+    backdrop-filter: blur(10px);
+    background: transparent;
+    border-bottom: 1px solid rgba(200, 200, 200, 0.3);
+  }
+</style>

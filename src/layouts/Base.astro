@@ -3,6 +3,9 @@ import BaseHead from "../components/BaseHead.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
 
 import Mouse from "../components/Mouse.astro";
+import Nav from "@/components/Nav.astro";
+import Footer from "@/components/Footer.astro";
+import { ClientRouter } from "astro:transitions";
 ---
 
 <!doctype html>
@@ -12,7 +15,7 @@ import Mouse from "../components/Mouse.astro";
   </head>
   <body class="body">
     <Mouse />
-
+    <Nav />
     <main>
       <slot />
     </main>

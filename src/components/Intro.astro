@@ -237,11 +237,8 @@
 
   .slot {
     clip-path: inset(50% 38%);
-
     width: 100vw;
     height: 100vh;
-
-    overflow: clip;
   }
   @media screen and (max-width: 767px) {
     .load-modal {
@@ -492,6 +489,9 @@
           initText.seek(0);
           initText.kill();
         },
+        onStart: () => {
+          window.dispatchEvent(new Event("Intro:start"));
+        },
       })
       .to(
         ".load-bar-block",
@@ -558,14 +558,8 @@
           duration: 1.2,
           onComplete: () => {
             console.log("Animation complete");
-            gsap.to(".load-w", {
-              opacity: 0,
-              duration: 0.5,
-              onComplete: () => {
-                document.querySelector(".load-w")?.remove();
-              },
-            });
-            window.dispatchEvent(new Event("app:loaded"));
+            document.querySelector(".load-w")?.remove();
+            window.dispatchEvent(new Event("Intro:end"));
             // @ts-ignore
             sessionStorage.setItem("isLoaded", "true");
           },
@@ -575,6 +569,7 @@
     if (sessionStorage.getItem("isLoaded") === "true") {
       timeLine.seek("slot");
       document.querySelector(".load-w")?.remove();
+      window.dispatchEvent(new Event("Intro:end"));
     }
   };
 </script>
