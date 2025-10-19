@@ -5,45 +5,47 @@ import Intro from "../components/Intro.astro";
 import Prism from "@/components/Prism";
 import SplitText from "@/components/SplitText";
 import TextType from "@/components/TextType";
+import DownArrow from "@/assets/svg/downArrow.svg";
+import BlogList from "@/components/Blog";
+import Noise from "@/components/Noise";
+import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
 ---
 
-<div class="noise"></div>
+<!-- <div class="noise"></div> -->
 <Base>
   <Intro>
     <div
-      class="index w-screen flex bg-transparent justify-between relative flex-col h-full overflow-scroll dark:text-white/40"
+      class="index w-screen flex bg-transparent justify-between relative flex-col h-screen dark:text-white/40 overflow-scroll"
     >
+      <Noise client:visible />
       <div
-        class="banner h-screen w-screen absolute left-0 z-0 p-10 flex flex-col"
+        class="banner h-screen w-screen absolute left-0 z-0 p-10 flex flex-col mix-blend-overlay"
       >
         <SplitText
-          text="Feichuans"
-          client:load
+          text={Banner_Title}
+          client:visible
           className="text-[16rem] font-serif "
         />
         <SplitText
-          text="A newbie Frontend developer  who loves designing and coding."
-          client:only="react"
+          text={Banner_Desc}
+          client:visible
           className="text-[4rem]  font-serif text-center   px-10"
           delay={20}
         />
         <TextType
-          text="Welcome to My Blog"
-          client:only="react"
+          text={SITE_DESCRIPTION}
+          client:visible
           className="text-[2rem] font-mono text-center mt-10"
           textColors={["black"]}
         />
-        <TextType
-          text="Scroll~"
-          client:only="react"
-          className="text-[1rem] font-mono text-center mt-40"
-          textColors={["black"]}
-        />
       </div>
+      <div class="arrow"><DownArrow class={"mix-blend-overlay"} /></div>
       <div
-        class="z-[1] h-full top-[100%] absolute w-screen overflow-x-hidden overflow-y-scroll backdrop-blur-2xl"
+        class="content z-[1] h-[calc(100vh-4rem)] top-[100%] fixed w-screen backdrop-blur-3xl p-4"
       >
-        <div class="h-80 w-20 mix-blend-difference text-black dark:text-white">
+        <div class="w-20 text-black dark:text-white">
+          123
+
           <!-- <BlogList /> -->
         </div>
       </div>
@@ -53,6 +55,11 @@ import TextType from "@/components/TextType";
 
 <script>
   import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+  window.addEventListener("load", () => {
+    console.log("index");
+  });
 </script>
 
 <style>
@@ -72,9 +79,31 @@ import TextType from "@/components/TextType";
     width: 100dvw;
     height: 100dvh;
     background: url("../assets/noiseFilter2.jpg");
-    /* background-blend-mode: overlay; */
+    background-blend-mode: overlay;
     background-attachment: fixed;
-    z-index: 99999;
+    z-index: 99999999;
     opacity: 0.05;
+    left: 0;
+    top: 0;
+  }
+  .arrow {
+    animation: down 1s infinite alternate;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100dvw;
+    bottom: 10%;
+    mix-blend-mode: difference;
+  }
+  @keyframes down {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(20px);
+    }
+  }
+  .content {
   }
 </style>
