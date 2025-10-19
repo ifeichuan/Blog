@@ -41,7 +41,7 @@ import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
       </div>
       <div class="arrow"><DownArrow class={"mix-blend-overlay"} /></div>
       <div
-        class="content z-[1] h-[calc(100vh-4rem)] top-[100%] fixed w-screen backdrop-blur-3xl p-4"
+        class="content z-[1] h-[calc(100vh-4rem)] top-[100%] fixed w-screen backdrop-blur-3xl p-4 overflow-scroll"
       >
         <div class="w-20 text-black dark:text-white">
           123
@@ -57,8 +57,50 @@ import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
   import gsap from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
   gsap.registerPlugin(ScrollTrigger);
+
+  // 创建虚拟滚动，让无原生滚动条的页面也能响应滚轮拉动内容
   window.addEventListener("load", () => {
-    console.log("index");
+    const banner = document.querySelector(".content");
+    if (!(banner instanceof HTMLElement)) return;
+
+    let target = 0; // 目标位移
+    let maxScroll = banner.offsetHeight; // 限制位移范围，避免内容被完全拖离
+    const clamp = (value: number, min: number, max: number) =>
+      Math.max(min, Math.min(max, value));
+
+    const tweenToTarget = () => {
+      gsap.to(banner, {
+        y: -target,
+        duration: 0.4,
+        ease: "power3.out",
+        overwrite: true,
+      });
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      target = clamp(target + event.deltaY, 0, maxScroll);
+      tweenToTarget();
+    };
+
+    window.addEventListener("wheel", onWheel, { passive: false });
+
+    const onResize = () => {
+      maxScroll = banner.offsetHeight;
+      target = clamp(target, 0, maxScroll);
+      tweenToTarget();
+    };
+    window.addEventListener("resize", onResize);
+
+    window.addEventListener("keydown", (event: KeyboardEvent) => {
+      if (event.key === "ArrowDown" || event.key === "PageDown") {
+        target = clamp(target + 200, 0, maxScroll);
+        tweenToTarget();
+      } else if (event.key === "ArrowUp" || event.key === "PageUp") {
+        target = clamp(target - 200, 0, maxScroll);
+        tweenToTarget();
+      }
+    });
   });
 </script>
 
