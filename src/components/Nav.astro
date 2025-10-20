@@ -4,10 +4,10 @@ import { NavList, SITE_TITLE } from "../consts";
 ---
 
 <header
-  class="nav w-screen h-16 absolute z-[1] top-0 left-0 right-0 mx-auto shadow-inner text-white mix-blend-difference backdrop-blur-lg"
+  class="nav w-screen h-16 fixed z-[1] top-0 left-0 right-0 mx-auto shadow-inner text-white backdrop-blur-lg -translate-y-full"
 >
   <div class="flex justify-between h-full w-full p-5">
-    <div class="left">
+    <div class="left mix-blend-overlay">
       <a
         id="logoText"
         class="h-full flex justify-center items-center text-3xl"
@@ -20,7 +20,7 @@ import { NavList, SITE_TITLE } from "../consts";
         {
           NavList.map((item) => (
             <a
-              class="mix-blend-difference text-2xl  h-full flex justify-center items-center hover:bg-blue-500 rounded-[9999px] p-2 data-[current]:underline  data-[current]:text-blue-400"
+              class="mix-blend-overlay text-2xl  h-full flex justify-center items-center hover:bg-blue-500 rounded-[9999px] p-2 data-[current]:underline  data-[current]:text-blue-400"
               href={item.href}
               data-href={item.href}
             >
@@ -68,6 +68,7 @@ import { NavList, SITE_TITLE } from "../consts";
     }
   }, 100);
   window.addEventListener("load", (e) => {
+    gsap.set(".nav", { y: "-100%" });
     const logoText = document.getElementById("logoText") as HTMLAnchorElement;
     const nav = document.querySelector(".nav") as HTMLElement;
     const linkArray = document.querySelectorAll(
@@ -83,15 +84,17 @@ import { NavList, SITE_TITLE } from "../consts";
       }
     });
     window.addEventListener("Intro:start", () => {
-      gsap.to(nav, {
-        y: "-100%",
-        duration: 0.1,
-        ease: "power2.inOut",
-      });
+      // gsap.to(nav, {
+      //   y: "-100%",
+      //   duration: 0.1,
+      //   ease: "power2.inOut",
+      // });
     });
     window.addEventListener("Intro:end", () => {
-      gsap.to(nav, {
-        y: "0%",
+      console.log("ENd");
+
+      gsap.to(".nav", {
+        y: 0,
         duration: 1,
         // position: "sticky",
         ease: "power2.inOut",

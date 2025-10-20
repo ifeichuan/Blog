@@ -5,8 +5,7 @@ tags:
   - Javascript
 dateCreated: 2025-08-24T03:20:59+08:00
 dateModified: 2025-10-18T23:37:42+08:00
-banner: https://images.unsplash.com/photo-1754780349763-e3a598db827b?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwxNnx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=60&w=900
-description: File 是 Blob 的子类, 拥有 Blob 对象的所有方法, 以及其他的元（meta）信息。File 对象常见于 Input, DataTransfer (拖动操作), Clipboard（剪贴板）
+banner: https://images.unsplash.com/photo-1760292343750-b476acc543b0?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwyNnx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=60&w=900
 ---
 
 ## `for of for in` 区别

@@ -8,8 +8,10 @@
 /*
   ---break---
  */
-@custom-variant dark (&:is(.dark *));
-
+/* @custom-variant dark (&:is(.dark *)); */
+* {
+  scroll-behavior: smooth;
+}
 :root {
   -ms-text-autospace: normal;
   text-autospace: normal;

@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "my-astro-app",
+  "name": "my-astro-blog",
   "main": "./dist/_worker.js/index.js",
   // 更新为今天的日期
   "compatibility_date": "2025-10-20",

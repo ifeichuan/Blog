@@ -10,7 +10,7 @@
     height: 1rem;
     border-radius: 50%;
     z-index: 10000;
-    mix-blend-mode: multiply;
+    mix-blend-mode: overlay;
     pointer-events: none;
   }
   #point2 {
@@ -43,12 +43,12 @@
         g2.style.transform = `translate(${x - g2Width}px, ${y - g2Width}px)`;
       }
     };
-    window.onmousemove = (e) => {
+    const onMouseMove = (e: MouseEvent) => {
       window.requestAnimationFrame(() => {
         setPosition(e.clientX, e.clientY);
       });
     };
-    window.onmouseover = (e) => {
+    const onMouseOver = (e: MouseEvent) => {
       const target = e.target as Element;
       if (target.classList.contains("g-animation")) {
         isHovering = true;
@@ -56,6 +56,7 @@
         const style = window.getComputedStyle(target);
         g2.style.width = `${rect.width + 20}px`;
         g2.style.height = `${rect.height + 20}px`;
+        g2.style.mixBlendMode = "soft-light";
         const borderRadius = style.borderRadius.slice(
           0,
           style.borderRadius.lastIndexOf("p")
@@ -68,7 +69,7 @@
         g2.style.transform = `translate(${rect.left - 10}px, ${rect.top - 10}px)`;
       }
     };
-    window.onmouseout = (e) => {
+    const onMouseOut = (e: MouseEvent) => {
       const target = e.target as Element;
       if (target.classList.contains("g-animation")) {
         isHovering = false;
@@ -76,8 +77,13 @@
         g2.style.width = `3rem`;
         g2.style.height = `3rem`;
         g2.style.borderRadius = `50%`;
+        g2.style.mixBlendMode = "overlay";
       }
     };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseover", onMouseOver);
+    window.addEventListener("mouseout", onMouseOut);
 
     const observer = new MutationObserver(() => {
       const allClickElement = document.querySelectorAll("a,button");
