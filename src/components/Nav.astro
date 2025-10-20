@@ -4,13 +4,13 @@ import { NavList, SITE_TITLE } from "../consts";
 ---
 
 <header
-  class="nav w-screen h-16 absolute z-[1] top-0 left-0 right-0 mx-auto shadow-inner text-white mix-blend-difference"
+  class="nav w-screen h-16 absolute z-[1] top-0 left-0 right-0 mx-auto shadow-inner text-white mix-blend-difference backdrop-blur-lg"
 >
   <div class="flex justify-between h-full w-full p-5">
     <div class="left">
       <a
         id="logoText"
-        class="h-full flex justify-center items-center font-serif text-3xl italic"
+        class="h-full flex justify-center items-center text-3xl"
         href="/">{SITE_TITLE}</a
       >
     </div>
@@ -107,8 +107,7 @@ import { NavList, SITE_TITLE } from "../consts";
 </script>
 <style lang="scss">
   .nav {
-    backdrop-filter: blur(10px);
     background: transparent;
-    border-bottom: 1px solid rgba(200, 200, 200, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   }
 </style>
