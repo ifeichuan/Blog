@@ -1,0 +1,14 @@
+---
+import type { Image } from "astro:assets";
+import Noise from "./Noise";
+type Props = {
+  banner?: Image | string;
+};
+const { banner = "/src/assets/mesh.png" } = Astro.props;
+---
+
+<div
+ 
+>
+  <Noise client:visible />
+</div>

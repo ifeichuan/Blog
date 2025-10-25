@@ -12,19 +12,19 @@ import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
 ---
 
 <!-- <div class="noise"></div> -->
-<Base>
-  <Intro>
-    <div
-      class="index w-screen flex bg-transparent justify-between relative flex-col h-screen dark:text-white/40 overflow-scroll"
-    >
-      <Noise client:idle />
+<Intro>
+  <Base>
+    <div class="index w-screen h-screen overflow-scroll">
       <div
-        class="banner h-screen w-screen absolute left-0 z-0 p-10 flex flex-col mix-blend-overlay"
+        class="banner h-screen w-screen relative left-0 p-10 flex flex-col mix-blend-overlay"
       >
+        <div class="arrow -translate-x-10">
+          <DownArrow class={"mix-blend-overlay"} />
+        </div>
         <SplitText
           text={Banner_Title}
           client:visible
-          className="text-[16rem] font-serif "
+          className="text-[16rem] font-serif  "
         />
         <SplitText
           text={Banner_Desc}
@@ -39,116 +39,71 @@ import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
           textColors={["black"]}
         />
       </div>
-      <div class="arrow"><DownArrow class={"mix-blend-overlay"} /></div>
+
       <div
-        class="content z-[1] h-[calc(100vh-4rem)] top-[100%] fixed w-screen p-4 backdrop-blur-lg max-xl:absolute flex justify-around"
+        class="content w-screen p-4 h-fit backdrop-blur-2xl flex flex-wrap gap-4 [&_.box]:flex [&_.box]:justify-center [&_.box]:shrink-0"
       >
-        <div class="left flex-1"></div>
-        <div class="center-content flex-2 overflow-scroll">
-          <BlogList />
-        </div>
-        <div class="right flex-1"></div>
+        <div class="box w-36 h-40 bg-sky-400"></div>
+        <div class="box w-36 h-40 bg-sky-400"></div>
+        <div class="box w-36 h-40 bg-sky-400"></div>
+        <div class="box w-36 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
+        <div class="box w-40 h-40 bg-sky-400"></div>
       </div>
     </div>
-  </Intro>
-</Base>
-
+  </Base>
+</Intro>
 <script>
   import gsap from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
-  import { ScrollSmoother } from "gsap/ScrollSmoother";
-
-  gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
-  // const smooth = ScrollSmoother.create({
-  //   wrapper: ".center-content",
-  //   content: ".center-list",
-  //   smooth: 1.2,
-  //   effects: true,
-  // });
-
-  // 创建虚拟滚动，让无原生滚动条的页面也能响应滚轮拉动内容
-  window.addEventListener("load", () => {
-    const banner = document.querySelector(".content");
-    const center = document.querySelector(".center-content");
-
-    if (!(banner instanceof HTMLElement)) return;
-
-    let target = 0; // 目标位移
-    let maxScroll = banner.offsetHeight; // 限制位移范围，避免内容被完全拖离
-    const clamp = (value: number, min: number, max: number) =>
-      Math.max(min, Math.min(max, value));
-
-    const tweenToTarget = () => {
-      gsap.to(banner, {
-        y: -target,
-        duration: 0.4,
-        ease: "power3.out",
-        overwrite: true,
-      });
-    };
-
-    const onWheel = (event: WheelEvent) => {
-      const direction = event.wheelDelta > 0 ? "up" : "down";
-      if (direction === "up" && center?.scrollTop != 0) {
-        return;
-      }
-      if (center?.contains(event.target as Element) && center?.scrollTop == 0) {
-        return;
-      }
-
-      target = clamp(target + event.deltaY, 0, maxScroll);
-      tweenToTarget();
-    };
-
-    window.addEventListener("wheel", onWheel, { passive: false });
-
-    const onResize = () => {
-      maxScroll = banner.offsetHeight;
-      target = clamp(target, 0, maxScroll);
-      tweenToTarget();
-    };
-    window.addEventListener("resize", onResize);
-
-    window.addEventListener("keydown", (event: KeyboardEvent) => {
-      if (event.key === "ArrowDown" || event.key === "PageDown") {
-        target = clamp(target + 200, 0, maxScroll);
-        tweenToTarget();
-      } else if (event.key === "ArrowUp" || event.key === "PageUp") {
-        target = clamp(target - 200, 0, maxScroll);
-        tweenToTarget();
-      }
-    });
-  });
+  gsap.registerPlugin(ScrollTrigger);
 </script>
 
 <style>
-  .index {
-    background-blend-mode: overlay;
-    background:
-      url("../assets/bigNoisy.png") repeat,
-      url("../assets/mesh.png") no-repeat;
-    background-size: 10%, cover;
-    /* 背景变暗 */
-
-    background-attachment: fixed;
-    scrollbar-width: none;
-  }
-  .banner {
-    scrollbar-width: none;
-  }
-  .noise {
-    position: fixed;
-    pointer-events: none;
-    width: 100dvw;
-    height: 100dvh;
-    background: url("../assets/noiseFilter2.jpg");
-    background-blend-mode: overlay;
-    background-attachment: fixed;
-    z-index: 99999999;
-    opacity: 0.05;
-    left: 0;
-    top: 0;
-  }
   .arrow {
     animation: down 1s infinite alternate;
     position: absolute;
@@ -156,7 +111,7 @@ import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
     justify-content: center;
     align-items: center;
     width: 100dvw;
-    bottom: 10%;
+    bottom: 3vh;
     mix-blend-mode: difference;
   }
   @keyframes down {

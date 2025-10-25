@@ -4,19 +4,34 @@ import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
 
 import Mouse from "../components/Mouse.astro";
 import Nav from "@/components/Nav.astro";
-import Footer from "@/components/Footer.astro";
-import { ClientRouter } from "astro:transitions";
+import type { Image } from "astro:assets";
+import BaseBackground from "@/components/BaseBackground.astro";
+import Noise from "@/components/Noise";
+export type Props = {
+  title?: string;
+  description?: string;
+  banner?: Image | string;
+};
+const {
+  title = SITE_TITLE,
+  description = SITE_DESCRIPTION,
+  banner = "/src/assets/mesh.png",
+} = Astro.props;
 ---
 
 <!doctype html>
 <html lang="zh-cn">
   <head>
-    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+    <BaseHead title={title} description={description} />
   </head>
-  <body class="body">
+  <body>
+    <Noise client:visible />
     <Mouse />
     <Nav />
-    <main>
+    <main
+      class=`background w-screen  h-screen  bg-scroll bg-no-repeat fixed `
+      style={`background-image: url('${banner}');`}
+    >
       <slot />
     </main>
     <!-- <Footer /> -->
