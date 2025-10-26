@@ -12,15 +12,12 @@ export async function getStaticPaths() {
 type Props = CollectionEntry<"blog">;
 
 const post = Astro.props;
-
+console.log(Astro.props);
 const { Content, headings } = await render(post);
 ---
 
 <BlogPost {...post}>
-  
-  <div
-    class="prose mt-20 overscroll-auto max-md:prose-sm overscroll-auto dark:prose-invert"
-  >
+  <div class="prose mt-20 overscroll-auto max-md:prose-sm dark:prose-invert">
     <Content />
   </div>
 </BlogPost>

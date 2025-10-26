@@ -6,7 +6,7 @@ import Prism from "@/components/Prism";
 import SplitText from "@/components/SplitText";
 import TextType from "@/components/TextType";
 import DownArrow from "@/assets/svg/downArrow.svg";
-
+import path from "node:path";
 import Noise from "@/components/Noise";
 import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
 import BlogList from "@/components/BlogList.astro";
@@ -14,7 +14,7 @@ import BlogList from "@/components/BlogList.astro";
 
 <!-- <div class="noise"></div> -->
 <Intro>
-  <Base>
+  <Base banner={path.resolve("/src/assets/mesh.png")}>
     <div class="index w-screen h-screen overflow-scroll">
       <div
         class="banner h-screen w-screen relative left-0 p-10 flex flex-col mix-blend-overlay"
