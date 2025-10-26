@@ -1,90 +1,43 @@
 ---
-import { Image } from "astro:assets";
-import type { CollectionEntry } from "astro:content";
-import BaseHead from "../components/BaseHead.astro";
-import Footer from "../components/Footer.astro";
+import { type CollectionEntry, getCollection, render } from "astro:content";
 import FormattedDate from "../components/FormattedDate.astro";
-import Header from "../components/Header.astro";
-
+import Base from "./Base.astro";
+import TOC from "@/components/TOC.astro";
 type Props = CollectionEntry<"blog">["data"];
 
-const { title, description, heroImage, dateCreated, dateModified, isPub } =
-  Astro.props;
+const { title, description, banner, dateCreated, dateModified, isPub } =
+  Astro.props.data;
+const { headings } = await render(Astro.props);
 ---
 
-<html lang="en">
-  <head>
-    <BaseHead title={title} description={description} cancelTwStyle={true} />
-    <style>
-      main {
-        width: calc(100% - 2em);
-        max-width: 100%;
-        margin: 0;
-      }
-      .hero-image {
-        width: 100%;
-      }
-      .hero-image img {
-        display: block;
-        margin: 0 auto;
-        border-radius: 12px;
-        box-shadow: var(--box-shadow);
-      }
-      .prose {
-        width: 720px;
-        max-width: calc(100% - 2em);
-        margin: auto;
-        padding: 1em;
-        color: rgb(var(--gray-dark));
-      }
-      .title {
-        margin-bottom: 1em;
-        padding: 1em 0;
-        text-align: center;
-        line-height: 1;
-      }
-      .title h1 {
-        margin: 0 0 0.5em 0;
-      }
-      .date {
-        margin-bottom: 0.5em;
-        color: rgb(var(--gray));
-      }
-      .last-updated-on {
-        font-style: italic;
-      }
-    </style>
-  </head>
-
-  <body>
-    <Header />
-    <main>
-      <article>
-        <div class="hero-image">
-          {
-            heroImage && (
-              <Image width={1020} height={510} src={heroImage} alt="" />
-            )
-          }
-        </div>
-        <div class="prose">
-          <div class="title">
-            <div class="date">
-              {
-                dateCreated && (
-                  <div class="last-updated-on">
-                    Last updated on <FormattedDate date={dateCreated} />
-                  </div>
-                )
-              }
-            </div>
-            <h1 transition:name="title">{title}</h1>
-            <hr />
-          </div>
-          <slot />
-        </div>
-      </article>
-    </main>
-    <Footer />
-  </body>
-</html>
+<Base banner={banner}>
+  <TOC headings={headings} />
+  <div
+    class="w-screen h-full flex flex-col items-center backdrop-blur-2xl bg-white/60 dark:bg-black/60 backdrop-grayscale"
+  >
+    <div class="h-80 bg-sky-400 w-screen relative">
+      <img src={banner} alt="" class="object-cover w-full h-full absolute" />
+      <h1 class="text-4xl font-bold mb-4 mix-blend-overlay">
+        {title}
+      </h1>
+      <div class="text-sm">
+        <span>Published on: <FormattedDate date={dateCreated} /></span>
+        {
+          dateModified && (
+            <span class="ml-4">
+              Last modified: <FormattedDate date={dateModified} />
+            </span>
+          )
+        }
+      </div>
+    </div>
+    <div class="flex justify-center w-full relative">
+      <slot />
+    </div>
+  </div>
+</Base>
+<script>
+  window.addEventListener("load", () => {
+    window.dispatchEvent(new Event("Intro:end"));
+  });
+</script>

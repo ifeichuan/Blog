@@ -9,15 +9,18 @@ import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 
 import cloudflare from "@astrojs/cloudflare";
-
+import remarkToc from "remark-toc";
 // https://astro.build/config
 export default defineConfig({
-  site: "https://example.com",
+  site: "https://feichuans.com",
   integrations: [mdx(), sitemap(), vue(), react()],
 
   vite: {
     plugins: [tailwindcss()],
   },
-
+  prefetch: true,
   adapter: cloudflare(),
+  markdown: {
+    remarkPlugins: [[remarkToc, { heading: "Toc" }]],
+  },
 });

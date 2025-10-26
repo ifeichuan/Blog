@@ -6,6 +6,7 @@ tags:
 dateCreated: 2025-08-24T03:20:59+08:00
 dateModified: 2025-10-18T23:37:42+08:00
 banner: https://t.alcy.cc/fj
+description: File 是 Blob 的子类, 拥有 Blob 对象的所有方法, 以及其他的元（meta）信息。File 对象常见于 Input, DataTransfer (拖动操作), Clipboard（剪贴板）File 是 Blob 的子类, 拥有 Blob 对象的所有方法, 以及其他的元（meta）信息。File 对象常见于 Input, DataTransfer (拖动操作), Clipboard（剪贴板）File 是 Blob 的子类, 拥有 Blob 对象的所有方法, 以及其他的元（meta）信息。File 对象常见于 Input, DataTransfer (拖动操作), Clipboard（剪贴板）File 是 Blob 的子类, 拥有 Blob 对象的所有方法, 以及其他的元（meta）信息。File 对象常见于 Input, DataTransfer (拖动操作), Clipboard（剪贴板）
 ---
 
 ## `for of for in` 区别

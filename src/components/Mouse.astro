@@ -18,7 +18,7 @@
     height: 3rem;
     background: #8194e7;
     transition: all 0.2s ease-out;
-    filter: blur(0.5px) brightness(1.1) saturate(1.5);
+    backdrop-filter: blur(0.5px) brightness(1.1) saturate(1.5);
     z-index: 9999;
   }
 </style>
@@ -88,7 +88,10 @@
     const observer = new MutationObserver(() => {
       const allClickElement = document.querySelectorAll("a,button");
       // console.log(allClickElement)
-      allClickElement.forEach((e) => [e.classList.toggle("g-animation", true)]);
+      allClickElement.forEach((e) => {
+        if (!e.classList.contains("g-not"))
+          e.classList.toggle("g-animation", true);
+      });
     });
     observer.observe(document.documentElement, {
       childList: true,

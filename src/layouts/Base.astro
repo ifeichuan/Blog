@@ -16,20 +16,20 @@ const {
   title = SITE_TITLE,
   description = SITE_DESCRIPTION,
   banner = "/src/assets/mesh.png",
-} = Astro.props;
+}: Props = Astro.props;
 ---
 
 <!doctype html>
-<html lang="zh-cn">
+<html>
   <head>
     <BaseHead title={title} description={description} />
   </head>
   <body>
     <Noise client:visible />
-    <Mouse />
+    <Mouse client:load />
     <Nav />
     <main
-      class=`background w-screen  h-screen  bg-scroll bg-no-repeat fixed `
+      class=`background w-screen  h-full  bg-fixed bg-no-repeat bg-cover `
       style={`background-image: url('${banner}');`}
     >
       <slot />

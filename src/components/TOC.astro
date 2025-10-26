@@ -1,0 +1,96 @@
+---
+import type { RenderResult } from "astro:content";
+
+export interface MarkdownHeading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+const { headings } = Astro.props as { headings: MarkdownHeading[] };
+---
+
+<div
+  class="links-wrapper fixed right-40 top-1/3 z-30 p-4 text-black dark:text-white max-md:opacity-0"
+>
+  <div class="font-bold mb-2 text-xl">目录</div>
+  <div
+    class="pos absolute my-2 left-0 w-1 h-6 bg-green-400 rounded-4xl transition-all"
+  >
+  </div>
+  {
+    headings.map((heading) => (
+      <div style={`transform:translateX(${(heading.depth - 2) * 16}px)`}>
+        <a
+          href={`#${heading.slug}`}
+          class="toc-link p-2 "
+          data-id={heading.slug}
+          data-depth={heading.depth}
+        >
+          {heading.text}
+        </a>
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  // 获取所有的目录,使用 intersection,监听所有标题的进入和离开视口
+  const linksWrapper = document.querySelector(".links-wrapper") as HTMLElement;
+  const pos = document.querySelector(".pos") as HTMLElement;
+  const tocLinks = document.querySelectorAll(".toc-link");
+  const nav = document.querySelector(".nav") as HTMLElement;
+  const setPos = (toclink: HTMLElement) => {
+    console.log(toclink, toclink.getBoundingClientRect());
+    pos.style.top =
+      toclink.getBoundingClientRect().top -
+      linksWrapper.getBoundingClientRect().top +
+      "px";
+  };
+  console.log(pos, tocLinks, nav);
+
+  let headingArray: Array<HTMLElement> = [];
+  tocLinks.forEach((link) => {
+    const id = link.getAttribute("data-id") as string;
+    const heading = document.getElementById(id) as HTMLElement;
+    if (heading) {
+      headingArray.push(heading);
+    }
+  });
+  let option = {
+    root: null,
+    rootMargin: "-90px 0px -100% 0px",
+    threshold: 0,
+  };
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      //   console.log(entry);
+      const id = entry.target.getAttribute("id") as string;
+      const tocLink = document.querySelector(
+        `.toc-link[data-id='${id}']`
+      ) as HTMLElement;
+      if (entry.isIntersecting) {
+        tocLinks.forEach((link) => {
+          link.classList.remove("font-bold", "text-blue-500");
+        });
+        tocLink.classList.add("font-bold", "text-blue-500");
+
+        setPos(tocLink);
+      }
+    });
+  }, option);
+  headingArray.forEach((heading) => {
+    observer.observe(heading);
+  });
+</script>
+
+<style>
+  .toc-link {
+    transition: color 0.3s;
+    display: block;
+  }
+  .toc-link:hover {
+    color: #3b82f6; /* Tailwind's blue-500 */
+    transform: scale(1.1);
+  }
+</style>

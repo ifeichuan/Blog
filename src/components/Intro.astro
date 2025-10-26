@@ -1,7 +1,16 @@
 ---
-
+import BaseHead from "./BaseHead.astro";
+import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
+const {
+  title = SITE_TITLE,
+  description = SITE_DESCRIPTION,
+  banner = "/src/assets/mesh.png",
+} = Astro.props;
 ---
 
+<head>
+  <BaseHead title={title} description={description} />
+</head>
 <style lang="scss">
   :root {
     box-sizing: border-box;

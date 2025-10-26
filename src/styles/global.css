@@ -5,6 +5,8 @@
  */
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
 /*
   ---break---
  */
@@ -54,7 +56,7 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 @theme {
-  --font-serif: "Times New Roman";
+  --font-serif: "Times New Roman", Noto Serif SC, "Georgia", serif;
 }
 body {
   /* cursor: none !important; */

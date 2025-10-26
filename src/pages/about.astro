@@ -9,3 +9,9 @@ import Base from "../layouts/Base.astro";
   heroImage={AboutHeroImage}
 > -->
 <Base />
+
+<script>
+  window.addEventListener("load", () => {
+    window.dispatchEvent(new Event("Intro:end"));
+  });
+</script>

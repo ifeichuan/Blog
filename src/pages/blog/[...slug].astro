@@ -1,27 +1,57 @@
 ---
-import { type CollectionEntry, getCollection, render } from 'astro:content';
-import BlogPost from '../../layouts/BlogPost.astro';
-
+import { type CollectionEntry, getCollection, render } from "astro:content";
+import BlogPost from "../../layouts/BlogPost.astro";
+import TOC from "@/components/TOC.astro";
 export async function getStaticPaths() {
-	const posts = await getCollection('blog');
-	return posts.map((post) => ({
-		params: { slug: post.id },
-		props: post,
-	}));
+  const posts = await getCollection("blog");
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: post,
+  }));
 }
-type Props = CollectionEntry<'blog'>;
+type Props = CollectionEntry<"blog">;
 
 const post = Astro.props;
 
-const { Content,headings} = await render(post);
-
+const { Content, headings } = await render(post);
 ---
 
-<BlogPost {...post.data}>
-	<Content />
-	<div>
-		{headings.map((head)=>{
-			return <div>{head.depth + head.slug + head.text}</div>
-		})}
-	</div>
+<BlogPost {...post}>
+  
+  <div
+    class="prose mt-20 overscroll-auto max-md:prose-sm overscroll-auto dark:prose-invert"
+  >
+    <Content />
+  </div>
 </BlogPost>
+
+<style is:global>
+  @reference "../../styles/global.css";
+
+  /* 行内代码样式 - Obsidian 风格 */
+  .prose :not(pre) > code {
+    @apply relative;
+    background-color: rgba(135, 131, 120, 0.15);
+    color: var(--color-blue-500);
+    border-radius: 0.3rem;
+    padding: 0.1em 0.2em;
+    font-size: 0.9em;
+    font-weight: 500;
+    border: 1px solid rgba(135, 131, 120, 0.2);
+  }
+
+  /* 暗色模式 */
+  .dark .prose :not(pre) > code {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--color-blue-500);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  /* 代码块样式 */
+
+  /* 移除 before/after 伪元素 */
+  .prose code::before,
+  .prose code::after {
+    content: "" !important;
+  }
+</style>

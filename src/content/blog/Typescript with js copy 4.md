@@ -98,3 +98,26 @@ File 是 Blob 的子类, 拥有 Blob 对象的所有方法, 以及其他的元�
 1. 手写 Promise 包括 all, allsettler
 2. 手写 EventBus on emit off once
 3. 手写 flat 扁平化数组
+
+#### 生成文件下载
+
+你可以通过 Blob 创建文件并通过 `a` 标签来让用户下载文
+
+#### 生成文件下载
+
+你可以通过 Blob 创建文件并通过 `a` 标签来让用户下载文
+
+#### 生成文件下载
+
+你可以通过 Blob 创建文件并通过 `a` 标签来让用户下载文
+
+#### 生成文件下载
+
+你可以通过 Blob 创建文件并通过 `a` 标签来让用户下载文
+
+> [!note]+ 简历一
+> ![|400](https://img.feichuans.com/file/1758008091708_20250916153409.png) > ![|400](https://img.feichuans.com/file/1758008092278_20250916153418.png)
+
+> [!note]+ 简历二
+> 亮点: 数据埋点 SEO 优化
+> ![](https://img.feichuans.com/file/1758618677418_20250923171111.png)
