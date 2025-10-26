@@ -1,21 +1,22 @@
 ---
 import BaseHead from "../components/BaseHead.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
-
+import path from "node:path";
 import Mouse from "../components/Mouse.astro";
 import Nav from "@/components/Nav.astro";
 import type { Image } from "astro:assets";
-import BaseBackground from "@/components/BaseBackground.astro";
+
 import Noise from "@/components/Noise";
+import mesh from "@/assets/mesh.png";
 export type Props = {
   title?: string;
   description?: string;
-  banner?: Image | string;
+  banner?: string;
 };
 const {
   title = SITE_TITLE,
   description = SITE_DESCRIPTION,
-  banner = "/src/assets/mesh.png",
+  banner = mesh.src,
 }: Props = Astro.props;
 ---
 

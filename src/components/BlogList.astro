@@ -27,7 +27,7 @@ const posts = (await getCollection("blog")).sort(
             {/* 根据 p 元素的内容动态修改h2位置 */}
             <h2
               transition:name="title"
-              class="title left-0  z-[1]  absolute bg-white/40 p-2 backdrop-blur-2xl w-full    mix-blend-overlay text-3xl [text-shadow:0_4px_5px_rgba(0,0,0,1)] font-extrabold "
+              class="title left-0  z-[1]  absolute bg-white/40 p-2 backdrop-blur-2xl w-full    mix-blend-overlay text-3xl [text-shadow:0_0_5px_rgba(0,0,0,0.8)] font-extrabold "
             >
               {p.data.title}
             </h2>
