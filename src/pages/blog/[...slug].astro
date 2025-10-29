@@ -35,6 +35,8 @@ const { Content, headings } = await render(post);
     font-size: 0.9em;
     font-weight: 500;
     border: 1px solid rgba(135, 131, 120, 0.2);
+    margin: 0 0.3rem;
+    transition: all 0.3s ease;
   }
 
   /* 暗色模式 */
@@ -49,6 +51,6 @@ const { Content, headings } = await render(post);
   /* 移除 before/after 伪元素 */
   .prose code::before,
   .prose code::after {
-    content: "" !important;
+    content: none !important;
   }
 </style>
