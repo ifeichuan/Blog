@@ -1,5 +1,6 @@
 ---
 tags:
+  - Linux
 title: Tmux速记
 dateCreated: 2025-09-21T22:25:17+08:00
 dateModified: 2025-10-18T23:39:00+08:00
