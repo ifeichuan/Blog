@@ -17,7 +17,9 @@ const { Content, headings } = await render(post);
 ---
 
 <BlogPost {...post}>
-  <div class="prose mt-20 overscroll-auto max-md:prose-sm dark:prose-invert">
+  <div
+    class="prose lg:prose-lg xl:prose-lg mt-20 overscroll-auto max-md:prose-sm dark:prose-invert"
+  >
     <Content />
   </div>
 </BlogPost>
@@ -32,8 +34,8 @@ const { Content, headings } = await render(post);
     color: var(--color-blue-500);
     border-radius: 0.3rem;
     padding: 0.1em 0.2em;
-    font-size: 0.9em;
-    font-weight: 500;
+    /* font-size: 0.9em;
+    font-weight: 500; */
     border: 1px solid rgba(135, 131, 120, 0.2);
     margin: 0 0.3rem;
     transition: all 0.3s ease;

@@ -4,7 +4,7 @@ import { NavList, SITE_TITLE } from "../consts";
 ---
 
 <header
-  class="nav w-screen mix-blend-difference h-16 z-[1] font-serif fixed top-0 left-0 right-0 mx-auto shadow-inner text-white backdrop-blur-lg -translate-y-full"
+  class="nav w-screen mix-blend-difference h-16 z-50 font-serif fixed top-0 left-0 right-0 mx-auto shadow-inner text-white backdrop-blur-lg -translate-y-full"
 >
   <div class="flex justify-between h-full w-full p-5">
     <div class="left mix-blend-overlay">
@@ -68,21 +68,22 @@ import { NavList, SITE_TITLE } from "../consts";
     }
   }, 100);
   window.addEventListener("load", (e) => {
+    console.log("Nav loaded");
     gsap.set(".nav", { y: "-100%" });
-    const logoText = document.getElementById("logoText") as HTMLAnchorElement;
-    const nav = document.querySelector(".nav") as HTMLElement;
-    const linkArray = document.querySelectorAll(
-      ".nav .right a"
-    ) as NodeListOf<HTMLAnchorElement>;
-    console.log(linkArray);
+    // const logoText = document.getElementById("logoText") as HTMLAnchorElement;
+    // const nav = document.querySelector(".nav") as HTMLElement;
+    // const linkArray = document.querySelectorAll(
+    //   ".nav .right a"
+    // ) as NodeListOf<HTMLAnchorElement>;
+    // console.log(linkArray);
 
-    linkArray.forEach((link) => {
-      const path = link.dataset.href;
-      console.log(path, window.location.pathname);
-      if (path === window.location.pathname) {
-        link.dataset.current = "true";
-      }
-    });
+    // linkArray.forEach((link) => {
+    //   const path = link.dataset.href;
+    //   console.log(path, window.location.pathname);
+    //   if (path === window.location.pathname) {
+    //     link.dataset.current = "true";
+    //   }
+    // });
     window.addEventListener("Intro:start", () => {
       // gsap.to(nav, {
       //   y: "-100%",

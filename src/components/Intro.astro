@@ -8,9 +8,6 @@ const {
 } = Astro.props;
 ---
 
-<head>
-  <BaseHead title={title} description={description} />
-</head>
 <style lang="scss">
   :root {
     box-sizing: border-box;
@@ -245,7 +242,6 @@ const {
   }
 
   .slot {
-    clip-path: inset(50% 38%);
     width: 100vw;
     height: 100vh;
   }
@@ -464,7 +460,6 @@ const {
     <div class="load-cover"></div>
   </div>
 </div>
-<div class="slot"><slot /></div>
 
 <script>
   import gsap from "gsap";
@@ -552,9 +547,19 @@ const {
         ".slot",
         {
           label: "slot",
-          clipPath: "inset(0% 0%)",
+          "--clip-top": "0%",
+          "--clip-right": "0%",
+          "--clip-bottom": "0%",
+          "--clip-left": "0%",
           duration: 1.5,
           ease: "power3",
+          onComplete: () => {
+            // 动画完成后移除 clip-path,避免影响 ScrollSmoother
+            const slot = document.querySelector(".slot") as HTMLElement;
+            if (slot) {
+              slot.style.clipPath = "none";
+            }
+          },
         },
         ">+0.2"
       )
@@ -578,6 +583,7 @@ const {
     if (sessionStorage.getItem("isLoaded") === "true") {
       timeLine.seek("slot");
       document.querySelector(".load-w")?.remove();
+      console.log("Animation complete");
       window.dispatchEvent(new Event("Intro:end"));
     }
   };

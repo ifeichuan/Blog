@@ -14,46 +14,47 @@ import mesh from "../assets/mesh.png";
 ---
 
 <!-- <div class="noise"></div> -->
-<Intro>
-  <Base banner={"https://s2.loli.net/2025/10/29/EucqwWi18kdsRBp.png"}>
-    <div class="index w-screen h-screen overflow-scroll">
-      <div
-        class="banner h-screen w-screen relative left-0 p-10 flex flex-col mix-blend-overlay"
-      >
-        <div class="arrow -translate-x-10">
-          <DownArrow class={"mix-blend-overlay"} />
-        </div>
-        <SplitText
-          text={Banner_Title}
-          client:visible
-          className="text-[16rem] font-serif  "
-        />
-        <SplitText
-          text={Banner_Desc}
-          client:visible
-          className="text-[4rem]  font-serif text-center   px-10"
-          delay={20}
-        />
-        <TextType
-          text={SITE_DESCRIPTION}
-          client:visible
-          className="text-[2rem] font-mono text-center mt-10"
-          textColors={["black"]}
-        />
+<Base
+  banner={"https://s2.loli.net/2025/10/29/EucqwWi18kdsRBp.png"}
+  showIntro={true}
+>
+  <div class="index">
+    <div
+      class="banner h-screen w-screen relative left-0 p-10 flex flex-col mix-blend-overlay"
+    >
+      <div class="arrow -translate-x-10">
+        <DownArrow class={"mix-blend-overlay"} />
       </div>
-
-      <div
-        class="content w-screen p-4 h-fit backdrop-blur-2xl bg-white/20 flex [&_>div]:w-1/3"
-      >
-        <div class="left"></div>
-        <div class="center">
-          <BlogList />
-        </div>
-        <div class="right"></div>
-      </div>
+      <SplitText
+        text={Banner_Title}
+        client:visible
+        className="text-[16rem] font-serif  "
+      />
+      <SplitText
+        text={Banner_Desc}
+        client:visible
+        className="text-[4rem]  font-serif text-center   px-10"
+        delay={20}
+      />
+      <TextType
+        text={SITE_DESCRIPTION}
+        client:visible
+        className="text-[2rem] font-mono text-center mt-10"
+        textColors={["black"]}
+      />
     </div>
-  </Base>
-</Intro>
+
+    <div
+      class="content w-screen p-4 h-fit backdrop-blur-2xl bg-white/20 flex [&_>div]:w-1/3"
+    >
+      <div class="left"></div>
+      <div class="center">
+        <BlogList />
+      </div>
+      <div class="right"></div>
+    </div>
+  </div>
+</Base>
 
 <script>
   import gsap from "gsap";

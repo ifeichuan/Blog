@@ -17,7 +17,7 @@ const posts = (await getCollection("blog")).sort(
             data-astro-prefetch
           >
             <img
-              src={p.data.banner}
+              src={p.data.banner || `https://t.alcy.cc/fj?${p.id}`}
               alt={p.data.title}
               class="object-cover absolute z-[-1] w-full h-full rounded-lg"
             />
