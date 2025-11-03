@@ -56,6 +56,9 @@ importers:
       lucide-react:
         specifier: ^0.544.0
         version: 0.544.0(react@19.2.0)
+      mitt:
+        specifier: ^3.0.1
+        version: 3.0.1
       ogl:
         specifier: ^1.0.11
         version: 1.0.11
