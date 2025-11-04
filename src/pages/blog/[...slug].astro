@@ -31,7 +31,7 @@ const { Content, headings } = await render(post);
   .prose :not(pre) > code {
     @apply relative;
     background-color: rgba(135, 131, 120, 0.15);
-    color: var(--color-blue-500);
+    color: var(--color-blue-400);
     border-radius: 0.3rem;
     padding: 0.1em 0.2em;
     /* font-size: 0.9em;
@@ -40,11 +40,13 @@ const { Content, headings } = await render(post);
     margin: 0 0.3rem;
     transition: all 0.3s ease;
   }
-
+  .prose strong {
+    color: var(--color-blue-500);
+  }
   /* 暗色模式 */
   .dark .prose :not(pre) > code {
     background-color: rgba(255, 255, 255, 0.1);
-    color: var(--color-blue-500);
+    color: var(--color-blue-400);
     border: 1px solid rgba(255, 255, 255, 0.15);
   }
 
