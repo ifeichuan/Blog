@@ -9,13 +9,13 @@ const { headings } = Astro.props as { headings: MarkdownHeading[] };
 ---
 
 <div
-  class="links-wrapper fixed right-40 h-screen mt-96 p-4 z-[999999] text-black dark:text-white max-md:opacity-0"
+  class="links-wrapper p-4 z-[999999] text-black dark:text-white bg-white/80 dark:bg-black/50 backdrop-blur-md rounded-lg shadow-lg space-y-2 relative"
+  aria-label="目录"
 >
   <div class="font-bold mb-2 text-xl">目录</div>
   <div
-    class="pos absolute my-2 left-0 w-1 h-6 bg-green-400 rounded-4xl transition-all"
-  >
-  </div>
+    class="pos absolute left-0 w-1 h-6 bg-green-400 rounded-4xl transition-all"
+  />
   {
     headings.map((heading) => (
       <div style={`transform:translateX(${(heading.depth - 2) * 16}px)`}>
@@ -80,9 +80,27 @@ const { headings } = Astro.props as { headings: MarkdownHeading[] };
   headingArray.forEach((heading) => {
     observer.observe(heading);
   });
+
+  // 初始定位到第一项，避免刷新后指示条停在顶部
+  if (tocLinks.length) {
+    setPos(tocLinks[0] as HTMLElement);
+  }
 </script>
 
 <style>
+  .links-wrapper {
+    position: fixed;
+    right: clamp(16px, 4vw, 48px);
+    top: 50%;
+    transform: translateY(-50%);
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+  }
+  @media (max-width: 768px) {
+    .links-wrapper {
+      display: none;
+    }
+  }
   .toc-link {
     transition: color 0.3s;
     display: block;
