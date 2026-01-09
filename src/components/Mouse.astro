@@ -24,6 +24,8 @@
   }
 </style>
 <script>
+  import { makeIssue } from "astro:schema";
+
   // console.log(g1, g2);
   window.addEventListener("load", () => {
     const body = document.body;
@@ -81,10 +83,16 @@
         g2.style.mixBlendMode = "overlay";
       }
     };
-
+    const onMouseWheel = (e: WheelEvent) => {
+      if (isHovering) {
+        onMouseOut(e);
+        onMouseMove(e);
+      }
+    };
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseover", onMouseOver);
     window.addEventListener("mouseout", onMouseOut);
+    window.addEventListener("wheel", onMouseWheel);
 
     const observer = new MutationObserver(() => {
       const allClickElement = document.querySelectorAll("a,button,pre,code");
@@ -97,6 +105,14 @@
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
+    });
+    // 添加卸载
+    window.addEventListener("unload", () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseover", onMouseOver);
+      window.removeEventListener("mouseout", onMouseOut);
+      window.removeEventListener("wheel", onMouseWheel);
+      observer.disconnect();
     });
   });
 </script>

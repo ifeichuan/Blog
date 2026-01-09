@@ -1,6 +1,10 @@
 // Place any global data in this file.
 // You can import this data from anywhere in your site by using the `import` keyword.
 
+const ENV = import.meta.env;
+
+export const isProd = ENV.MODE === "production";
+
 export const SITE_TITLE = "Feichuan's Blog";
 export const Banner_Title = "Feichuan";
 export const Banner_Desc =
