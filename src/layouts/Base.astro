@@ -5,6 +5,7 @@ import Mouse from "../components/Mouse.astro";
 import Nav from "@/components/Nav.astro";
 import Intro from "@/components/Intro.astro";
 import OnDevMode from "@/components/OnDevMode.astro";
+import Noise from "@/components/Noise";
 export type Props = {
   title?: string;
   description?: string;
@@ -30,11 +31,13 @@ const {
     <OnDevMode />
     <Mouse />
     <Nav />
+
     <div class="smooth-wrapper slot overflow-scroll">
       <main
-        class=`background w-screen  smooth-content bg-fixed bg-no-repeat bg-cover `
+        class=`background w-screen  smooth-content bg-fixed bg-no-repeat bg-cover  `
         style={`background-image: url('${banner}');`}
       >
+        
         <slot />
       </main>
     </div>

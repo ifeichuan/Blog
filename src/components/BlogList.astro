@@ -6,7 +6,7 @@ const posts = (await getCollection("blog")).sort(
 );
 ---
 
-<div class="ssss flex flex-col gap-20 w-full h-full overflow-scroll">
+<div class="ssss flex flex-col gap-20 w-full">
   {
     posts.map((p) => {
       return (
@@ -19,15 +19,16 @@ const posts = (await getCollection("blog")).sort(
             <img
               src={p.data.banner || `https://t.alcy.cc/fj?${p.id}`}
               alt={p.data.title}
-              class="object-cover absolute z-[-1] w-full h-full rounded-lg"
+              class="object-cover absolute w-full h-full rounded-lg"
+              loading="lazy"
             />
-            <time class="absolute left-2 top-2   bg-white/40 backdrop-blur-2xl rounded-sm p-0.5">
+            <time class="absolute left-2 top-2 bg-white/40 backdrop-blur-2xl rounded-sm p-0.5">
               {p.data.dateCreated.toLocaleDateString()}
             </time>
             {/* 根据 p 元素的内容动态修改h2位置 */}
             <h2
               transition:name="title"
-              class="title left-0  z-[1]  absolute bg-white/40 p-2 backdrop-blur-2xl w-full    mix-blend-overlay text-3xl [text-shadow:0_0_5px_rgba(0,0,0,0.8)] font-extrabold "
+              class="title left-0 absolute bg-white/40 p-2 backdrop-blur-2xl w-full mix-blend-overlay text-3xl [text-shadow:0_0_5px_rgba(0,0,0,0.8)] font-extrabold "
             >
               {p.data.title}
             </h2>

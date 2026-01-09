@@ -13,11 +13,10 @@ import BlogList from "@/components/BlogList.astro";
 import mesh from "../assets/mesh.png";
 ---
 
-<!-- <div class="noise"></div> -->
 <Base
   banner={"https://s2.loli.net/2025/10/29/EucqwWi18kdsRBp.png"}
   showIntro={true}
->
+  ><Noise client:visible />
   <div class="index">
     <div
       class="banner h-screen w-screen relative left-0 p-10 flex flex-col mix-blend-overlay"
@@ -45,7 +44,7 @@ import mesh from "../assets/mesh.png";
     </div>
 
     <div
-      class="content w-screen p-4 h-fit backdrop-blur-2xl bg-white/20 flex [&_>div]:w-1/3"
+      class="content w-screen p-4 backdrop-blur-2xl bg-white/20 flex [&_>div]:w-1/3"
     >
       <div class="left"></div>
       <div class="center">
