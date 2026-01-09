@@ -1,0 +1,12 @@
+---
+import { isDev } from "@/consts";
+// 考虑添加一些开发模式下的提示信息
+---
+{isDev && (
+      <style is:inline>
+    * {
+      scrollbar-width: auto !important;
+      cursor: auto !important;
+    }
+  </style>
+)}

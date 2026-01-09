@@ -3,7 +3,7 @@
 
 const ENV = import.meta.env;
 
-export const isProd = ENV.MODE === "production";
+export const isDev = ENV.DEV;
 
 export const SITE_TITLE = "Feichuan's Blog";
 export const Banner_Title = "Feichuan";

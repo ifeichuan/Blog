@@ -1,17 +1,10 @@
 ---
 import BaseHead from "../components/BaseHead.astro";
-import { isProd, SITE_DESCRIPTION, SITE_TITLE } from "../consts";
-import path from "node:path";
+import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
 import Mouse from "../components/Mouse.astro";
 import Nav from "@/components/Nav.astro";
-import type { Image } from "astro:assets";
-
-import Noise from "@/components/Noise";
-import mesh from "@/assets/mesh.png";
 import Intro from "@/components/Intro.astro";
-if (!isProd) {
-  import("../styles/dev.css");
-}
+import OnDevMode from "@/components/onDevMode.astro";
 export type Props = {
   title?: string;
   description?: string;
@@ -34,7 +27,7 @@ const {
   </head>
   <body>
     <Intro class:list={[showIntro ? "opacity-0" : ""]} />
-
+    <OnDevMode />
     <Mouse />
     <Nav />
     <div class="smooth-wrapper slot overflow-scroll">
