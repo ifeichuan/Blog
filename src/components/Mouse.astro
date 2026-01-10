@@ -89,13 +89,17 @@
         onMouseMove(e);
       }
     };
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseover", onMouseOver);
-    window.addEventListener("mouseout", onMouseOut);
-    window.addEventListener("wheel", onMouseWheel);
+    window.addEventListener("mousemove", onMouseMove, {
+      passive: true,
+    });
+    window.addEventListener("mouseover", onMouseOver, { passive: true });
+    window.addEventListener("mouseout", onMouseOut, { passive: true });
+    window.addEventListener("wheel", onMouseWheel, { passive: true });
 
     const observer = new MutationObserver(() => {
-      const allClickElement = document.querySelectorAll("a,button,pre,code");
+      const allClickElement = document.querySelectorAll(
+        "a,button,pre,code,img"
+      );
       // console.log(allClickElement)
       allClickElement.forEach((e) => {
         if (!e.classList.contains("g-not"))
