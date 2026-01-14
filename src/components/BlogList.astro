@@ -46,9 +46,6 @@ const posts = (await getCollection("blog")).sort(
 </div>
 
 <script>
-  import gsap from "gsap";
-  import { ScrollTrigger } from "gsap/ScrollTrigger";
-  gsap.registerPlugin(ScrollTrigger);
   const articles = document.querySelectorAll("article");
   console.log(articles);
   articles.forEach((article) => {

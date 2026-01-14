@@ -2,7 +2,7 @@
 import Base from "../layouts/Base.astro";
 import About from "./about.astro";
 import Intro from "../components/Intro.astro";
-import Prism from "@/components/Prism";
+
 import SplitText from "@/components/SplitText";
 import TextType from "@/components/TextType";
 import DownArrow from "@/assets/svg/downArrow.svg";
@@ -13,10 +13,8 @@ import BlogList from "@/components/BlogList.astro";
 import mesh from "../assets/mesh.png";
 ---
 
-<Base
-  banner={"https://s2.loli.net/2025/10/29/EucqwWi18kdsRBp.png"}
-  showIntro={true}
-  ><Noise client:visible />
+<!-- banner={"https://s2.loli.net/2025/10/29/EucqwWi18kdsRBp.png"} -->
+<Base showIntro={true}>
   <div class="index">
     <div
       class="banner h-screen w-screen relative left-0 p-10 flex flex-col mix-blend-overlay"
@@ -55,11 +53,7 @@ import mesh from "../assets/mesh.png";
   </div>
 </Base>
 
-<script>
-  import gsap from "gsap";
-  import { ScrollTrigger } from "gsap/ScrollTrigger";
-  gsap.registerPlugin(ScrollTrigger);
-</script>
+<script></script>
 
 <style>
   .arrow {

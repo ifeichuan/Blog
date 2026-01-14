@@ -110,13 +110,5 @@
       childList: true,
       subtree: true,
     });
-    // 添加卸载
-    window.addEventListener("unload", () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseover", onMouseOver);
-      window.removeEventListener("mouseout", onMouseOut);
-      window.removeEventListener("wheel", onMouseWheel);
-      observer.disconnect();
-    });
   });
 </script>

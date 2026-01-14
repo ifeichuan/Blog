@@ -6,38 +6,38 @@ import Nav from "@/components/Nav.astro";
 import Intro from "@/components/Intro.astro";
 import OnDevMode from "@/components/OnDevMode.astro";
 import Noise from "@/components/Noise";
+import mesh from "../assets/mesh.png";
 export type Props = {
   title?: string;
   description?: string;
-  banner?: string;
+  banner?: ImageMetadata;
   showIntro?: boolean;
 };
 
 const {
   title = SITE_TITLE,
   description = SITE_DESCRIPTION,
-  banner = "https://s2.loli.net/2025/10/29/EucqwWi18kdsRBp.png",
+  banner = mesh,
   showIntro = false,
 }: Props = Astro.props;
 ---
 
 <!doctype html>
-<html>
+<html lang="zh-cn">
   <head>
     <BaseHead title={title} description={description} />
   </head>
   <body>
     <Intro class:list={[showIntro ? "opacity-0" : ""]} />
-    <OnDevMode />
-    <Mouse />
+    <OnDevMode client:idle />
+    <Mouse client:idle />
     <Nav />
 
     <div class="smooth-wrapper slot overflow-scroll">
       <main
         class=`background w-screen  smooth-content bg-fixed bg-no-repeat bg-cover  `
-        style={`background-image: url('${banner}');`}
+        style={`background-image:url(${banner.src});`}
       >
-        
         <slot />
       </main>
     </div>

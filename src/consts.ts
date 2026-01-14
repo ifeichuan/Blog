@@ -14,3 +14,4 @@ export const SITE_DESCRIPTION = "Welcome to my blog!";
 export const NavList = [{ label: "Posts", href: "/posts", icon: "" }];
 // Google AdSense Client ID
 export const googleAdClient = "ca-pub-7584944935192060";
+
