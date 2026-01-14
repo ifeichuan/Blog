@@ -1,5 +1,4 @@
 ---
-import { Image } from "astro:assets";
 import { getCollection } from "astro:content";
 const posts = (await getCollection("blog")).sort(
   (a, b) => b.data.dateCreated.valueOf() - a.data.dateCreated.valueOf()
@@ -13,14 +12,21 @@ const posts = (await getCollection("blog")).sort(
         <article class="w-full h-full">
           <a
             href={`/blog/${p.id}`}
-            class="w-full h-80  block relative overflow-hidden rounded-lg [&_*]:font-serif"
+            class="w-full h-80  block relative overflow-hidden rounded-lg **:font-serif"
+            data-random-container
             data-astro-prefetch
           >
             <img
-              src={p.data.banner || `https://t.alcy.cc/fj?${p.id}`}
+              src={
+                p.data.banner || `https://picsum.photos/seed/${p.id}/800/600`
+              }
               alt={p.data.title}
               class="object-cover absolute w-full h-full rounded-lg"
               loading="lazy"
+              data-random-seed={!p.data.banner ? p.id : undefined}
+              data-random-base={
+                !p.data.banner ? "https://picsum.photos" : undefined
+              }
             />
             <time class="absolute left-2 top-2 bg-white/40 backdrop-blur-2xl rounded-sm p-0.5">
               {p.data.dateCreated.toLocaleDateString()}
@@ -47,7 +53,6 @@ const posts = (await getCollection("blog")).sort(
 
 <script>
   const articles = document.querySelectorAll("article");
-  console.log(articles);
   articles.forEach((article) => {
     const description = article.querySelector(".description") as HTMLElement;
     const title = article.querySelector(".title") as HTMLElement;
@@ -64,5 +69,56 @@ const posts = (await getCollection("blog")).sort(
       // 监听窗口大小变化
       window.addEventListener("resize", updateTitlePosition);
     }
+  });
+
+  const randomImages = document.querySelectorAll<HTMLImageElement>(
+    "img[data-random-seed]"
+  );
+  const resizeObservers: ResizeObserver[] = [];
+
+  const buildSrc = (
+    base: string,
+    seed: string,
+    width: number,
+    height: number,
+    scale = 1
+  ) => {
+    const w = Math.max(1, Math.round(width * scale));
+    const h = Math.max(1, Math.round(height * scale));
+    return `${base}/seed/${seed}/${w}/${h}`;
+  };
+
+  const applyAdaptiveSrc = (img: HTMLImageElement, rect: DOMRectReadOnly) => {
+    const seed = img.dataset.randomSeed;
+    const base = img.dataset.randomBase || "https://picsum.photos";
+    if (!seed || rect.width === 0 || rect.height === 0) return;
+
+    const primary = buildSrc(base, seed, rect.width, rect.height, 1);
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const retina = buildSrc(base, seed, rect.width, rect.height, dpr);
+    img.src = primary;
+    img.srcset = `${primary} 1x, ${retina} 2x`;
+  };
+
+  randomImages.forEach((img) => {
+    const container = img.closest<HTMLElement>("[data-random-container]");
+    if (!container) return;
+
+    applyAdaptiveSrc(img, container.getBoundingClientRect());
+
+    const observer = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.target === container) {
+          applyAdaptiveSrc(img, entry.contentRect);
+        }
+      });
+    });
+
+    observer.observe(container);
+    resizeObservers.push(observer);
+  });
+
+  window.addEventListener("beforeunload", () => {
+    resizeObservers.forEach((observer) => observer.disconnect());
   });
 </script>
