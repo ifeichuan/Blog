@@ -5,9 +5,10 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
+    "preview": "wrangler pages dev ./dist",
     "astro": "astro",
-    "preview-Cloudflare": "wrangler pages dev ./dist"
+    "bp": "pnpm build && pnpm preview"
+    
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.10",
@@ -25,6 +26,7 @@
     "clsx": "^2.1.1",
     "es-toolkit": "^1.39.10",
     "gsap": "^3.13.0",
+    "lenis": "^1.3.17",
     "lucide-react": "^0.544.0",
     "mitt": "^3.0.1",
     "ogl": "^1.0.11",

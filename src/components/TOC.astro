@@ -8,9 +8,7 @@ interface MarkdownHeading {
 const { headings } = Astro.props as { headings: MarkdownHeading[] };
 ---
 
-<div
-  class="links-wrapper fixed right-40 h-screen mt-96 p-4 z-[999999] text-black dark:text-white max-md:opacity-0"
->
+<div class="links-wrapper text-black dark:text-white max-md:opacity-0">
   <div class="font-bold mb-2 text-xl">目录</div>
   <div
     class="pos absolute my-2 left-0 w-1 h-6 bg-green-400 rounded-4xl transition-all"

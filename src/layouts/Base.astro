@@ -7,6 +7,7 @@ import Intro from "@/components/Intro.astro";
 import OnDevMode from "@/components/OnDevMode.astro";
 import Noise from "@/components/Noise";
 import mesh from "../assets/mesh.webp";
+
 export type Props = {
   title?: string;
   description?: string;
@@ -26,6 +27,10 @@ const {
 <html lang="zh-cn">
   <head>
     <BaseHead title={title} description={description} />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/lenis@1.3.17/dist/lenis.css"
+    />
   </head>
   <body>
     <Intro class:list={[showIntro ? "opacity-0" : ""]} />
@@ -33,17 +38,74 @@ const {
     <Mouse />
     <Nav />
 
-    <div class="smooth-wrapper slot overflow-scroll">
+    <div class="smooth-wrapper slot">
       <main
-        class=`background w-screen  smooth-content bg-fixed bg-no-repeat bg-cover  `
+        class=`background w-screen smooth-content bg-fixed bg-no-repeat bg-cover`
         style={`background-image:url(${banner.src});`}
       >
         <slot />
       </main>
     </div>
     <!-- <Footer /> -->
-    <script></script>
+    <script>
+      import Lenis from "lenis";
+      import { gsap } from "gsap";
+      import { ScrollTrigger } from "gsap/ScrollTrigger";
+      gsap.registerPlugin(ScrollTrigger);
+
+      // 获取滚动容器
+      const wrapper = document.querySelector(".smooth-wrapper");
+
+      // 初始化 Lenis - 针对特定容器的虚拟滚动
+      const lenis = new Lenis({
+        wrapper: wrapper, // 滚动容器
+        content: document.querySelector(".smooth-content"), // 内容元素
+        duration: 1.2, // 滚动动画持续时间
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // 缓动函数
+        orientation: "vertical", // 滚动方向
+        gestureOrientation: "vertical", // 手势方向
+        smoothWheel: true, // 平滑鼠标滚轮
+        wheelMultiplier: 1, // 滚轮速度倍数
+        smoothTouch: false, // 移动端触摸滚动是否平滑（建议关闭以保持原生体验）
+        touchMultiplier: 2, // 触摸滚动速度倍数
+        infinite: false, // 是否无限滚动
+      });
+
+      // 同步 Lenis 滚动与 GSAP ScrollTrigger
+      lenis.on("scroll", ScrollTrigger.update);
+
+      // 将 Lenis 的 RAF 添加到 GSAP ticker
+      gsap.ticker.add((time) => {
+        lenis.raf(time * 1000);
+      });
+
+      // 禁用 GSAP 的 lag smoothing
+      gsap.ticker.lagSmoothing(0);
+
+      // 停止滚动的方法（可选）
+      // lenis.stop();
+
+      // 启动滚动的方法（可选）
+      // lenis.start();
+
+      // 滚动到指定位置（可选）
+      // lenis.scrollTo(0); // 滚动到顶部
+      // lenis.scrollTo('#target'); // 滚动到指定元素
+    </script>
     <style>
+      .smooth-wrapper {
+        /* position: fixed; */
+        /* top: 0; */
+        /* left: 0; */
+        width: 100%;
+        height: 100vh;
+        overflow: hidden; /* 关键：隐藏溢出，让 Lenis 接管滚动 */
+      }
+
+      .smooth-content {
+        min-height: 100vh;
+      }
+
       .slot {
         clip-path: inset(
           var(--clip-top) var(--clip-right) var(--clip-bottom) var(--clip-left)
