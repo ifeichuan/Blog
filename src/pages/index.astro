@@ -10,7 +10,6 @@ import path from "node:path";
 import Noise from "@/components/Noise";
 import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
 import BlogList from "@/components/BlogList.astro";
-import mesh from "../assets/mesh.png";
 ---
 
 <!-- banner={"https://s2.loli.net/2025/10/29/EucqwWi18kdsRBp.png"} -->
@@ -54,7 +53,19 @@ import mesh from "../assets/mesh.png";
   </div>
 </Base>
 
-<script></script>
+<script>
+  import { isMobileDevice } from "@/lib/utils";
+  window.addEventListener("load", () => {
+    if (isMobileDevice()) {
+      window.location.href = "/mobile";
+    }
+  });
+  window.addEventListener("resize", () => {
+    if (isMobileDevice()) {
+      window.location.href = "/mobile";
+    }
+  });
+</script>
 
 <style>
   .arrow {

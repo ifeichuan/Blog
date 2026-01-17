@@ -1,0 +1,35 @@
+---
+import BaseHead from "@/components/BaseHead.astro";
+import { SITE_TITLE } from "@/consts";
+---
+
+<html lang="zh-CN">
+  <head
+    ><BaseHead title={SITE_TITLE} description="Mobile Page on building" /></head
+  >
+  <body>
+    <main
+      class="w-screen h-screen flex flex-col justify-center items-center p-4"
+    >
+      <h1 class="text-4xl font-bold mb-4" style="font-size: 2rem;">
+        暂时不支持手机页面,请使用电脑访问
+      </h1>
+      <p class="text-lg text-center">
+        目前本站的移动端页面正在建设中，敬请期待！建议使用电脑访问以获得最佳体验。
+      </p>
+      <p class="text-lg">(纯手写还是太慢了)</p>
+    </main>
+  </body><script>
+    import { isMobileDevice } from "@/lib/utils";
+    window.addEventListener("load", () => {
+      if (!isMobileDevice()) {
+        window.location.href = "/";
+      }
+    });
+    window.addEventListener("resize", () => {
+      if (!isMobileDevice()) {
+        window.location.href = "/";
+      }
+    });
+  </script>
+</html>

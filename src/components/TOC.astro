@@ -8,7 +8,7 @@ interface MarkdownHeading {
 const { headings } = Astro.props as { headings: MarkdownHeading[] };
 ---
 
-<div class="links-wrapper text-black dark:text-white max-md:opacity-0">
+<div class="links-wrapper text-black dark:text-white max-md:opacity-0 pt-8">
   <div class="font-bold mb-2 text-xl">目录</div>
   <div
     class="pos absolute my-2 left-0 w-1 h-6 bg-green-400 rounded-4xl transition-all"
@@ -63,7 +63,7 @@ const { headings } = Astro.props as { headings: MarkdownHeading[] };
       //   console.log(entry);
       const id = entry.target.getAttribute("id") as string;
       const tocLink = document.querySelector(
-        `.toc-link[data-id='${id}']`
+        `.toc-link[data-id='${id}']`,
       ) as HTMLElement;
       if (entry.isIntersecting) {
         tocLinks.forEach((link) => {
