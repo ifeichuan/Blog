@@ -7,7 +7,7 @@ import Intro from "@/components/Intro.astro";
 import OnDevMode from "@/components/OnDevMode.astro";
 import Noise from "@/components/Noise";
 import mesh from "../assets/mesh.webp";
-
+import "../styles/global.css";
 export type Props = {
   title?: string;
   description?: string;
@@ -39,12 +39,12 @@ const {
     <Nav />
 
     <div class="smooth-wrapper slot">
-      <main
+      <div
         class=`background w-screen smooth-content bg-fixed bg-no-repeat bg-cover`
         style={`background-image:url(${banner.src});`}
       >
         <slot />
-      </main>
+      </div>
     </div>
     <!-- <Footer /> -->
     <script>
@@ -72,7 +72,15 @@ const {
       });
 
       // 同步 Lenis 滚动与 GSAP ScrollTrigger
-      lenis.on("scroll", ScrollTrigger.update);
+      lenis.on("scroll", ({ scroll, limit }) => {
+        // 发送自定义事件给 Nav 组件
+        window.dispatchEvent(
+          new CustomEvent("lenis-scroll", {
+            detail: { scroll, limit },
+          }),
+        );
+        ScrollTrigger.update();
+      });
 
       // 将 Lenis 的 RAF 添加到 GSAP ticker
       gsap.ticker.add((time) => {

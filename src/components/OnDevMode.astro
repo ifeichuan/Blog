@@ -3,6 +3,13 @@ import { isDev } from "@/consts";
 // 考虑添加一些开发模式下的提示信息
 ---
 {isDev && (
+  <div>
+      <div
+        class="fixed w-20 h-40 bottom-10 right-10 bg-red-500 z-9999"
+      >
+        开发模式已启用
+      </div>
+  </div>
       <style is:inline>
     * {
       scrollbar-width: auto !important;

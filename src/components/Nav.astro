@@ -5,6 +5,7 @@ import { NavList, SITE_TITLE } from "../consts";
 
 <header
   class="nav w-screen mix-blend-difference h-16 z-50 font-serif fixed top-0 left-0 right-0 mx-auto shadow-inner text-white backdrop-blur-lg -translate-y-full"
+  data-status="grow"
 >
   <div class="flex justify-between h-full w-full p-5">
     <div class="left mix-blend-overlay">
@@ -38,17 +39,28 @@ import { NavList, SITE_TITLE } from "../consts";
   import { debounce, throttle } from "es-toolkit";
   import { emitter } from "../lib/utils";
   gsap.registerPlugin(ScrambleTextPlugin);
+  const NAV_GROW_WIDTH = "100%";
+  const NAV_SHRINK_WIDTH = "40rem";
   const isNearWindowTop = () => {
     return window.scrollY <= 30;
   };
   let navStatus: string = "undefined";
+  const navEl = document.querySelector(".nav") as HTMLElement | null;
+  const setNavStatus = (status: "grow" | "shrink") => {
+    navStatus = status;
+    navEl?.setAttribute("data-status", status);
+  };
+  const setProgress = (scroll: number, limit: number) => {
+    const progress = limit > 0 ? Math.min(1, Math.max(0, scroll / limit)) : 0;
+    navEl?.style.setProperty("--scroll-p", progress.toString());
+  };
   const debounceNav = throttle((direction: string) => {
     if (direction === "up" && isNearWindowTop() && navStatus === "shrink") {
       console.log(navStatus);
-      navStatus = "grow";
+      setNavStatus("grow");
       gsap.to(".nav", {
         translateY: "0",
-        width: "100%",
+        width: NAV_GROW_WIDTH,
         borderRadius: "0",
         duration: 0.3,
         ease: "none",
@@ -58,10 +70,10 @@ import { NavList, SITE_TITLE } from "../consts";
       navStatus === "undefined"
     ) {
       console.log(navStatus);
-      navStatus = "shrink";
+      setNavStatus("shrink");
       gsap.to(".nav", {
         translateY: "20px",
-        width: "40rem",
+        width: NAV_SHRINK_WIDTH,
         borderRadius: "99999px",
         duration: 0.3,
         ease: "none",
@@ -108,6 +120,10 @@ import { NavList, SITE_TITLE } from "../consts";
     window.addEventListener("Intro:end", () => {
       console.log("ENd");
     });
+    window.addEventListener("lenis-scroll", (e: Event) => {
+      const detail = (e as CustomEvent).detail || { scroll: 0, limit: 0 };
+      setProgress(detail.scroll, detail.limit);
+    });
     window.addEventListener("wheel", (e: any) => {
       const direction = (e.wheelDelta as number) >= 0 ? "up" : "down";
       // console.log(window.scrollY, e, direction);
@@ -120,5 +136,60 @@ import { NavList, SITE_TITLE } from "../consts";
   .nav {
     background: transparent;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    --scroll-p: 0;
+    --progress-color: rgba(59, 130, 246, 0.9);
+    --progress-line-thickness: 4px;
+    --progress-ring-thickness: 3px;
+    position: fixed;
+    overflow: visible;
+  }
+
+  .nav::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: var(--progress-line-thickness);
+    width: calc(var(--scroll-p) * 100%);
+    background: var(--progress-color);
+    transform-origin: left center;
+    opacity: 0;
+    pointer-events: none;
+    isolation: isolate;
+  }
+
+  .nav::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: var(--progress-ring-thickness);
+    background: conic-gradient(
+      var(--progress-color) calc(var(--scroll-p) * 360deg),
+      rgba(203, 85, 85, 0.2) 0
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .nav[data-status="grow"]::before {
+    opacity: 1;
+  }
+
+  .nav[data-status="shrink"]::after {
+    opacity: 1;
+  }
+
+  .nav[data-status="grow"] {
+    --progress-line-thickness: 4px;
+  }
+
+  .nav[data-status="shrink"] {
+    --progress-ring-thickness: 3px;
   }
 </style>
