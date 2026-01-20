@@ -3,6 +3,7 @@ isPub: true
 tags:
   - Linux
 title: Linux学习
+description: Linux基础学习笔记，包含命令行使用、权限管理、文件操作等常用命令速查
 dateCreated: 2025-09-08T15:36:55+08:00
 dateModified: 2025-11-04T16:26:22+08:00
 ---

@@ -1,7 +1,7 @@
 ---
 // Import the global.css file here so that it is included on
 // all pages through the use of the <BaseHead /> component.
-import "../styles/global.css";
+
 import type { ImageMetadata } from "astro";
 import FallbackImage from "../assets/blog-placeholder-1.jpg";
 import { SITE_TITLE, googleAdClient, isDev } from "../consts";
@@ -10,6 +10,8 @@ interface Props {
   description: string;
   image?: ImageMetadata;
   cancelTwStyle?: boolean;
+  keywords?: string[];
+  ogType?: "website" | "article";
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -19,6 +21,8 @@ const {
   description,
   image = FallbackImage,
   cancelTwStyle,
+  keywords = [],
+  ogType = "website",
 } = Astro.props;
 console.log(cancelTwStyle);
 ---
@@ -49,9 +53,10 @@ console.log(cancelTwStyle);
 <title>{title}</title>
 <meta name="title" content={title} />
 <meta name="description" content={description} />
+<meta name="keywords" content={keywords.join(", ")} />
 
 <!-- Open Graph / Facebook -->
-<meta property="og:type" content="website" />
+<meta property="og:type" content={ogType} />
 <meta property="og:url" content={Astro.url} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
@@ -63,3 +68,24 @@ console.log(cancelTwStyle);
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />
 <meta property="twitter:image" content={new URL(image.src, Astro.url)} />
+
+<!-- Structured Data -->
+<script
+  type="application/ld+json"
+  set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": ogType === "article" ? "BlogPosting" : "WebSite",
+    headline: title,
+    description: description,
+    url: canonicalURL.toString(),
+    image: new URL(image.src, Astro.url).toString(),
+    ...(ogType === "article" && {
+      datePublished: new Date().toISOString(),
+      dateModified: new Date().toISOString(),
+      author: {
+        "@type": "Person",
+        name: "Feichuan",
+      },
+    }),
+  })}
+/>

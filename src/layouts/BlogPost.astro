@@ -5,20 +5,20 @@ import Base from "./Base.astro";
 import TOC from "@/components/TOC.astro";
 type Props = CollectionEntry<"blog">["data"];
 
-const { title, description, banner, dateCreated, dateModified, isPub } =
+const { title, description, banner, dateCreated, dateModified, isPub, tags } =
   Astro.props.data;
 
 const { headings } = await render(Astro.props);
 ---
 
-<Base banner={banner}>
+<Base banner={banner} keywords={tags} ogType="article">
   <div
     class="w-screen h-full flex flex-col items-center backdrop-blur-2xl bg-white/60 dark:bg-black/60 backdrop-grayscale"
   >
     <div class="h-80 bg-sky-400 w-screen relative">
       <img
         src={banner}
-        alt=""
+        alt={title}
         class="object-cover w-full h-full absolute g-not"
       />
       <div class="absolute mx-auto left-0 right-0 bottom-16">

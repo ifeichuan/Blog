@@ -118,7 +118,6 @@ const SplitText: React.FC<SplitTextProps> = ({
                 animationCompletedRef.current = true;
                 onLetterAnimationComplete?.();
               },
-              willChange: "transform, opacity",
               force3D: true,
             }
           );
@@ -157,7 +156,6 @@ const SplitText: React.FC<SplitTextProps> = ({
     const style: React.CSSProperties = {
       textAlign,
       wordWrap: "break-word",
-      willChange: "transform, opacity",
       mixBlendMode: "color",
     };
     const classes = `split-parent overflow-hidden inline-block whitespace-normal ${className} `;

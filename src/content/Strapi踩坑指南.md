@@ -2,6 +2,7 @@
 title: Strapi踩坑指南
 tags:
   - Nodejs
+description: Strapi CMS 实战踩坑记录，深入解析 populate 深层数据、自定义路由、控制器等高级用法
 banner: https://images.unsplash.com/photo-1753458198651-4752b7b7960e?q=80&w=1624&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
 dateCreated: 2025-07-14T18:03:48+08:00
 dateModified: 2025-10-18T23:39:00+08:00

@@ -2,6 +2,7 @@
 tags:
   - Linux
 title: Tmux速记
+description: Tmux 终端复用器快速上手教程，涵盖会话管理、窗格操作、常用命令等实用技巧
 dateCreated: 2025-09-21T22:25:17+08:00
 dateModified: 2025-10-18T23:39:00+08:00
 isPub: true
