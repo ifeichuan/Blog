@@ -4,8 +4,7 @@ import { NavList, SITE_TITLE } from "../consts";
 ---
 
 <header
-  class="nav w-screen mix-blend-difference h-16 z-50 font-serif fixed top-0 left-0 right-0 mx-auto shadow-inner text-white backdrop-blur-lg -translate-y-full"
-  data-status="grow"
+  class="nav w-screen mix-blend-difference h-16 z-50 font-serif fixed top-0 left-0 right-0 mx-auto shadow-inner text-white backdrop-blur-lg"
 >
   <div class="flex justify-between h-full w-full p-5">
     <div class="left mix-blend-overlay">
@@ -35,101 +34,81 @@ import { NavList, SITE_TITLE } from "../consts";
 </header>
 <script>
   import gsap from "gsap";
-  import ScrambleTextPlugin from "gsap/ScrambleTextPlugin";
-  import { debounce, throttle } from "es-toolkit";
-  import { emitter } from "../lib/utils";
-  gsap.registerPlugin(ScrambleTextPlugin);
-  const NAV_GROW_WIDTH = "100%";
-  const NAV_SHRINK_WIDTH = "40rem";
-  const isNearWindowTop = () => {
-    return window.scrollY <= 30;
-  };
-  let navStatus: string = "undefined";
+
   const navEl = document.querySelector(".nav") as HTMLElement | null;
-  const setNavStatus = (status: "grow" | "shrink") => {
-    navStatus = status;
-    navEl?.setAttribute("data-status", status);
+  let introActive = false;
+
+  const lockScroll = () => {
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
   };
+
+  const unlockScroll = () => {
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+  };
+
+  const blockScroll = (e: Event) => {
+    if (!introActive) return;
+    e.preventDefault();
+  };
+
+  const blockKeys = (e: KeyboardEvent) => {
+    if (!introActive) return;
+    const keys = [
+      "ArrowUp",
+      "ArrowDown",
+      "PageUp",
+      "PageDown",
+      "Home",
+      "End",
+      " ",
+    ];
+    if (keys.includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   const setProgress = (scroll: number, limit: number) => {
+    if (introActive) return;
     const progress = limit > 0 ? Math.min(1, Math.max(0, scroll / limit)) : 0;
     navEl?.style.setProperty("--scroll-p", progress.toString());
   };
-  const debounceNav = throttle((direction: string) => {
-    if (direction === "up" && isNearWindowTop() && navStatus === "shrink") {
-      console.log(navStatus);
-      setNavStatus("grow");
-      gsap.to(".nav", {
-        translateY: "0",
-        width: NAV_GROW_WIDTH,
-        borderRadius: "0",
-        duration: 0.3,
-        ease: "none",
-      });
-    } else if (
-      (direction === "down" && navStatus === "grow") ||
-      navStatus === "undefined"
-    ) {
-      console.log(navStatus);
-      setNavStatus("shrink");
-      gsap.to(".nav", {
-        translateY: "20px",
-        width: NAV_SHRINK_WIDTH,
-        borderRadius: "99999px",
-        duration: 0.3,
-        ease: "none",
-      });
-    }
-  }, 100);
-  document.addEventListener("DOMContentLoaded", (e) => {
-    console.log("Nav DOMContentLoaded");
-    emitter.on("Intro:end", () => {
-      console.log("HALos");
-      gsap.to(".nav", {
+
+  if (navEl) {
+    gsap.set(navEl, { y: "-100%" });
+  }
+
+  window.addEventListener("Intro:start", () => {
+    introActive = true;
+    lockScroll();
+  });
+
+  window.addEventListener("Intro:end", () => {
+    introActive = false;
+    unlockScroll();
+    if (navEl) {
+      gsap.to(navEl, {
         y: 0,
         duration: 1,
-        // position: "sticky",
         ease: "power2.inOut",
       });
-    });
+    }
   });
-  window.addEventListener("load", (e) => {
-    console.log("Nav loaded");
-    // gsap.set(".nav", { y: "-100%" });
-    // const logoText = document.getElementById("logoText") as HTMLAnchorElement;
-    // const nav = document.querySelector(".nav") as HTMLElement;
-    // const linkArray = document.querySelectorAll(
-    //   ".nav .right a"
-    // ) as NodeListOf<HTMLAnchorElement>;
-    // console.log(linkArray);
 
-    // linkArray.forEach((link) => {
-    //   const path = link.dataset.href;
-    //   console.log(path, window.location.pathname);
-    //   if (path === window.location.pathname) {
-    //     link.dataset.current = "true";
-    //   }
-    // });
-    window.addEventListener("Intro:start", () => {
-      // gsap.to(nav, {
-      //   y: "-100%",
-      //   duration: 0.1,
-      //   ease: "power2.inOut",
-      // });
-    });
+  document.addEventListener("wheel", blockScroll, { passive: false });
+  document.addEventListener("touchmove", blockScroll, { passive: false });
+  document.addEventListener("keydown", blockKeys);
 
-    window.addEventListener("Intro:end", () => {
-      console.log("ENd");
-    });
-    window.addEventListener("lenis-scroll", (e: Event) => {
-      const detail = (e as CustomEvent).detail || { scroll: 0, limit: 0 };
-      setProgress(detail.scroll, detail.limit);
-    });
-    window.addEventListener("wheel", (e: any) => {
-      const direction = (e.wheelDelta as number) >= 0 ? "up" : "down";
-      // console.log(window.scrollY, e, direction);
+  window.addEventListener("lenis-scroll", (e: Event) => {
+    const detail = (e as CustomEvent).detail || { scroll: 0, limit: 0 };
+    setProgress(detail.scroll, detail.limit);
+  });
 
-      debounceNav(direction);
-    });
+  window.addEventListener("scroll", () => {
+    const scroll = window.scrollY;
+    const limit = document.documentElement.scrollHeight - window.innerHeight;
+    setProgress(scroll, limit);
   });
 </script>
 <style>
@@ -139,7 +118,6 @@ import { NavList, SITE_TITLE } from "../consts";
     --scroll-p: 0;
     --progress-color: rgba(59, 130, 246, 0.9);
     --progress-line-thickness: 4px;
-    --progress-ring-thickness: 3px;
     position: fixed;
     overflow: visible;
   }
@@ -153,42 +131,6 @@ import { NavList, SITE_TITLE } from "../consts";
     width: calc(var(--scroll-p) * 100%);
     background: var(--progress-color);
     transform-origin: left center;
-    opacity: 0;
     pointer-events: none;
-  }
-
-  .nav::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: var(--progress-ring-thickness);
-    background: conic-gradient(
-      var(--progress-color) calc(var(--scroll-p) * 360deg),
-      rgba(203, 85, 85, 0.2) 0
-    );
-    -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .nav[data-status="grow"]::before {
-    opacity: 1;
-  }
-
-  .nav[data-status="shrink"]::after {
-    opacity: 1;
-  }
-
-  .nav[data-status="grow"] {
-    --progress-line-thickness: 4px;
-  }
-
-  .nav[data-status="shrink"] {
-    --progress-ring-thickness: 3px;
   }
 </style>
