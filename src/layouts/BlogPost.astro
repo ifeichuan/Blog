@@ -6,7 +6,7 @@ import TOC from "@/components/TOC.astro";
 type Props = CollectionEntry<"blog">["data"];
 
 const { title, description, banner, dateCreated, dateModified, isPub, tags } =
-  Astro.props.data;
+  Astro.props;
 
 const { headings } = await render(Astro.props);
 ---
@@ -17,7 +17,7 @@ const { headings } = await render(Astro.props);
   >
     <div class="h-80 bg-sky-400 w-screen relative">
       <img
-        src={banner}
+        src={banner?.src}
         alt={title}
         class="object-cover w-full h-full absolute g-not"
       />

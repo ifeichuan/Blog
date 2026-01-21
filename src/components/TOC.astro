@@ -55,7 +55,8 @@ const { headings } = Astro.props as { headings: MarkdownHeading[] };
   });
   let option = {
     root: null,
-    rootMargin: "-90px 0px -100% 0px",
+    // 修改为 mt-32 导致标题进入视口时位置偏移
+    rootMargin: `-80px 0px -80% 0px`,
     threshold: 0,
   };
   const observer = new IntersectionObserver((entries) => {

@@ -1,7 +1,7 @@
 ---
 import { getCollection } from "astro:content";
 const posts = (await getCollection("blog")).sort(
-  (a, b) => b.data.dateCreated.valueOf() - a.data.dateCreated.valueOf()
+  (a, b) => b.data.dateCreated.valueOf() - a.data.dateCreated.valueOf(),
 );
 ---
 
@@ -18,7 +18,8 @@ const posts = (await getCollection("blog")).sort(
           >
             <img
               src={
-                p.data.banner || `https://picsum.photos/seed/${p.id}/800/600`
+                p.data.banner?.src ||
+                `https://picsum.photos/seed/${p.id}/800/600`
               }
               alt={p.data.title}
               class="object-cover absolute w-full h-full rounded-lg"
@@ -72,7 +73,7 @@ const posts = (await getCollection("blog")).sort(
   });
 
   const randomImages = document.querySelectorAll<HTMLImageElement>(
-    "img[data-random-seed]"
+    "img[data-random-seed]",
   );
   const resizeObservers: ResizeObserver[] = [];
 
@@ -81,7 +82,7 @@ const posts = (await getCollection("blog")).sort(
     seed: string,
     width: number,
     height: number,
-    scale = 1
+    scale = 1,
   ) => {
     const w = Math.max(1, Math.round(width * scale));
     const h = Math.max(1, Math.round(height * scale));

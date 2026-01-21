@@ -74,11 +74,8 @@ const {
       height: 100%;
       background-size: 5em 5em;
       background-position: center center;
-      background-image: linear-gradient(
-          to right,
-          #409eff 1.5px,
-          transparent 1.5px
-        ),
+      background-image:
+        linear-gradient(to right, #409eff 1.5px, transparent 1.5px),
         linear-gradient(to bottom, #409eff 1.5px, transparent 1.5px);
     }
   }
@@ -150,7 +147,8 @@ const {
           inset: 0%;
           background-size: 1.6785em 1.6785em;
           background-position: left top;
-          background-image: linear-gradient(
+          background-image:
+            linear-gradient(
               to right,
               var(--color-slate-600) 1px,
               transparent 1px
@@ -468,7 +466,7 @@ const {
     console.log("NIhao");
 
     const loadProcessElement = document.getElementById(
-      "load-progress"
+      "load-progress",
     ) as HTMLElement;
     const initText = gsap.to("#load-status", {
       opacity: 0.1,
@@ -476,6 +474,54 @@ const {
       yoyo: true,
       repeat: -1,
     });
+
+    const introAudio = new Audio(
+      new URL("../assets/sound.wav", import.meta.url).toString(),
+    );
+    introAudio.preload = "auto";
+    introAudio.volume = 0.45;
+    introAudio.loop = false;
+
+    const SEGMENT_END = 0.3;
+    let shouldPlay = false;
+    let loopRaf = 0;
+
+    const loopSegment = () => {
+      if (!shouldPlay) return;
+      if (introAudio.currentTime >= SEGMENT_END) {
+        introAudio.currentTime = 0;
+        if (introAudio.paused) {
+          introAudio.play().catch(() => {});
+        }
+      }
+      loopRaf = requestAnimationFrame(loopSegment);
+    };
+
+    const startIntroSound = () => {
+      shouldPlay = true;
+      introAudio.currentTime = 0;
+      introAudio.play().catch(() => {});
+      if (loopRaf) cancelAnimationFrame(loopRaf);
+      loopRaf = requestAnimationFrame(loopSegment);
+    };
+
+    const stopIntroSound = () => {
+      shouldPlay = false;
+      if (loopRaf) cancelAnimationFrame(loopRaf);
+      loopRaf = 0;
+      introAudio.pause();
+      introAudio.currentTime = 0;
+    };
+
+    const tryResumeAudio = () => {
+      if (!shouldPlay) return;
+      introAudio.play().catch(() => {});
+      document.removeEventListener("pointerdown", tryResumeAudio);
+      document.removeEventListener("keydown", tryResumeAudio);
+    };
+
+    document.addEventListener("pointerdown", tryResumeAudio, { once: true });
+    document.addEventListener("keydown", tryResumeAudio, { once: true });
 
     const timeLine = gsap.timeline({ defaults: { ease: "power3.inOut" } });
     let loadProcess = { process: 0 };
@@ -488,6 +534,12 @@ const {
         onUpdate: () => {
           console.log("updating");
           loadProcessElement.innerText = Math.floor(loadProcess.process) + "%";
+          if (loadProcess.process < 100 && shouldPlay && introAudio.paused) {
+            introAudio.play().catch(() => {});
+          }
+          if (loadProcess.process >= 100) {
+            stopIntroSound();
+          }
         },
         onComplete: () => {
           initText.seek(0);
@@ -495,6 +547,7 @@ const {
         },
         onStart: () => {
           window.dispatchEvent(new Event("Intro:start"));
+          startIntroSound();
         },
       })
       .to(
@@ -504,7 +557,7 @@ const {
           stagger: 0.1,
           duration: 0.8,
         },
-        "<"
+        "<",
       )
       .to(
         ".purple",
@@ -513,7 +566,7 @@ const {
             document.querySelector(".card-grid__inner")?.clientWidth || 0,
           duration: 1,
         },
-        ">+0.2"
+        ">+0.2",
       )
       .to(
         ".load-bottom",
@@ -522,7 +575,7 @@ const {
           transformOrigin: "top",
           duration: 1,
         },
-        "<+0.5"
+        "<+0.5",
       )
       .to(
         ".load-bar-block",
@@ -531,7 +584,7 @@ const {
           stagger: 0.02,
           duration: 0.5,
         },
-        "<-0.1"
+        "<-0.1",
       )
       .to(
         ".card-top",
@@ -541,7 +594,7 @@ const {
           duration: 0.5,
           onComplete: () => {},
         },
-        ">-0.2"
+        ">-0.2",
       )
       .to(
         ".slot",
@@ -561,7 +614,7 @@ const {
             }
           },
         },
-        ">+0.2"
+        ">+0.2",
       )
       .to(
         ".load-modal",
@@ -577,9 +630,10 @@ const {
             window.dispatchEvent(new Event("Intro:end"));
             // @ts-ignore
             sessionStorage.setItem("isLoaded", "true");
+            stopIntroSound();
           },
         },
-        "<+0.05"
+        "<+0.05",
       );
     if (sessionStorage.getItem("isLoaded") === "true") {
       timeLine.seek("slot");
@@ -587,6 +641,7 @@ const {
       console.log("Animation complete");
       window.dispatchEvent(new Event("Intro:end"));
       emitter.emit("Intro:end");
+      stopIntroSound();
     }
   };
 </script>

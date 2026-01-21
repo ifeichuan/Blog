@@ -1,0 +1,527 @@
+---
+
+---
+
+<div
+  class="visual-root-margin w-full h-full flex flex-col lg:flex-row gap-6 font-sans p-4"
+>
+  <!-- Left Side: Controls & Stage -->
+  <div class="flex-1 flex flex-col gap-6 min-w-0">
+    <div
+      class="controls bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700"
+    >
+      <h3 class="text-lg font-semibold mb-4 dark:text-gray-100">
+        RootMargin 控制器 (px/%)
+      </h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div class="flex flex-col gap-1">
+          <label for="mt" class="text-xs font-medium text-slate-500 uppercase"
+            >Top</label
+          >
+          <input
+            type="text"
+            id="mt"
+            value="0"
+            class="control-input px-3 py-2 border rounded bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="mr" class="text-xs font-medium text-slate-500 uppercase"
+            >Right</label
+          >
+          <input
+            type="text"
+            id="mr"
+            value="0"
+            class="control-input px-3 py-2 border rounded bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="mb" class="text-xs font-medium text-slate-500 uppercase"
+            >Bottom</label
+          >
+          <input
+            type="text"
+            id="mb"
+            value="0"
+            class="control-input px-3 py-2 border rounded bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="ml" class="text-xs font-medium text-slate-500 uppercase"
+            >Left</label
+          >
+          <input
+            type="text"
+            id="ml"
+            value="0"
+            class="control-input px-3 py-2 border rounded bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button
+          id="add-x"
+          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded text-sm font-medium transition-colors flex items-center gap-2"
+        >
+          <span>➡️</span> 添加水平元素
+        </button>
+        <button
+          id="add-y"
+          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded text-sm font-medium transition-colors flex items-center gap-2"
+        >
+          <span>⬇️</span> 添加垂直元素
+        </button>
+        <button
+          id="reset-scroll"
+          class="px-4 py-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded text-sm font-medium transition-colors ml-auto"
+        >
+          重置滚动
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="stage-container relative w-full flex-1 min-h-[500px] border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50 overflow-hidden flex justify-center items-center select-none"
+      id="stage"
+    >
+      <!-- 辅助标尺/网格背景 (可选) -->
+      <div
+        class="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"
+      >
+      </div>
+
+      <!-- Root Margin Visualizer Box -->
+      <div
+        id="root-margin-box"
+        class="absolute pointer-events-none border-2 border-dashed border-red-500 bg-red-500/5 z-20 transition-all duration-300 ease-out flex items-start justify-end p-1"
+      >
+        <span
+          class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded shadow-sm opacity-80"
+          >Root Margin</span
+        >
+      </div>
+
+      <!-- The Scroll Root Element -->
+      <div
+        id="scroll-root"
+        class="relative w-4/5 h-4/5 bg-white dark:bg-black border-[3px] border-blue-500 shadow-xl overflow-auto z-10 resize both"
+      >
+        <div class="sticky top-0 left-0 p-1 z-50 pointer-events-none">
+          <span
+            class="bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded shadow-sm opacity-80 uppercase tracking-wider"
+            >Viewport (Root)</span
+          >
+        </div>
+
+        <!-- Content Container -->
+        <div
+          id="scroll-content"
+          class="relative min-w-full min-h-full p-10 flex flex-nowrap"
+        >
+          <!-- Initial Elements will be injected here -->
+        </div>
+      </div>
+    </div>
+
+    <div class="instructions text-sm text-slate-500 dark:text-slate-400">
+      <p>
+        💡 <span class="font-bold">提示：</span> 蓝色框是视口 (Root)，红色虚线框是
+        Root Margin 作用域。拖动蓝色框内的内容或滚动来触发交叉检测。方块变绿表示进入了
+        margin 定义的检测区域。
+      </p>
+    </div>
+  </div>
+
+  <!-- Right Side: Logs (Fixed width on desktop) -->
+  <div
+    class="logs-wrapper w-full lg:w-80 flex-shrink-0 flex flex-col h-64 lg:h-auto"
+  >
+    <div
+      class="logs-container w-full h-full bg-slate-900 text-slate-200 p-4 rounded-lg font-mono text-xs flex flex-col border border-slate-700 shadow-inner overflow-hidden"
+    >
+      <div
+        class="flex justify-between items-center mb-2 bg-slate-900 border-b border-slate-700 pb-2"
+      >
+        <span class="font-bold text-slate-400">Console Output</span>
+        <button
+          id="clear-logs"
+          class="text-xs px-2 py-0.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 transition-colors"
+          >Clear</button
+        >
+      </div>
+      <div id="log-content" class="flex-1 flex flex-col gap-1 overflow-auto">
+        <div class="text-slate-500 italic">Logs will appear here...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // @ts-nocheck
+  document.addEventListener("astro:page-load", init);
+  // Fallback for initial load if view transitions aren't used or haven't fired
+  if (document.readyState === "complete") {
+    init();
+  } else {
+    document.addEventListener("DOMContentLoaded", init);
+  }
+
+  function init() {
+    const root = document.getElementById("scroll-root");
+    const content = document.getElementById("scroll-content");
+    const marginBox = document.getElementById("root-margin-box");
+    const inputs = document.querySelectorAll(".control-input");
+    const btnAddX = document.getElementById("add-x");
+    const btnAddY = document.getElementById("add-y");
+    const btnReset = document.getElementById("reset-scroll");
+    const stage = document.getElementById("stage");
+
+    // Log elements
+    const logContent = document.getElementById("log-content");
+    const btnClearLogs = document.getElementById("clear-logs");
+
+    if (!root || !content || !marginBox) return;
+
+    if (btnClearLogs) {
+      btnClearLogs.addEventListener("click", () => {
+        if (logContent) logContent.innerHTML = "";
+      });
+    }
+
+    function logToScreen(msg) {
+      if (!logContent) return;
+      const entry = document.createElement("div");
+      entry.className =
+        "border-l-2 border-slate-600 pl-2 py-0.5 hover:bg-slate-800 transition-colors break-words";
+
+      // Timestamp
+      const time = new Date().toLocaleTimeString();
+      const timeSpan = document.createElement("span");
+      timeSpan.className = "text-slate-500 mr-2 select-none";
+      timeSpan.textContent = `[${time}]`;
+
+      entry.appendChild(timeSpan);
+      entry.appendChild(document.createTextNode(msg));
+
+      // Auto-scroll to bottom
+      logContent.appendChild(entry);
+      logContent.parentElement.scrollTop =
+        logContent.parentElement.scrollHeight;
+    }
+    let observer;
+    let items = [];
+
+    // Initialize with some items
+    addItems("y", 3);
+    addItems("x", 2);
+
+    // Initial Render
+    updateAll();
+
+    // Event Listeners
+    inputs.forEach((input) => {
+      input.addEventListener("input", updateAll);
+    });
+
+    btnAddX.addEventListener("click", () => addItems("x", 1));
+    btnAddY.addEventListener("click", () => addItems("y", 1));
+
+    btnReset.addEventListener("click", () => {
+      root.scrollTop = 0;
+      root.scrollLeft = 0;
+    });
+
+    // ResizeObserver to update visualizer when root is resized via CSS resize handle
+    const resizeObserver = new ResizeObserver(() => {
+      updateVisualizer();
+    });
+    resizeObserver.observe(root);
+
+    // Manual Drag to Scroll Logic
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+    let startY;
+    let scrollTop;
+
+    root.addEventListener("mousedown", (e) => {
+      isDown = true;
+      root.classList.add("cursor-grabbing");
+      root.classList.remove("cursor-grab");
+      startX = e.pageX - root.offsetLeft;
+      scrollLeft = root.scrollLeft;
+      startY = e.pageY - root.offsetTop;
+      scrollTop = root.scrollTop;
+    });
+
+    root.addEventListener("mouseleave", () => {
+      isDown = false;
+      root.classList.remove("cursor-grabbing");
+      root.classList.remove("cursor-grab");
+    });
+
+    root.addEventListener("mouseup", () => {
+      isDown = false;
+      root.classList.remove("cursor-grabbing");
+      root.classList.remove("cursor-grab");
+    });
+
+    root.addEventListener("mousemove", (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      // Calculate cursor position relative to page, adjust for offset
+      // Actually standard drag scroll implementation:
+      const x = e.pageX - root.offsetLeft;
+      const walkX = (x - startX) * 1.5; // scroll-fast
+      root.scrollLeft = scrollLeft - walkX;
+
+      const y = e.pageY - root.offsetTop;
+      const walkY = (y - startY) * 1.5;
+      root.scrollTop = scrollTop - walkY;
+    });
+
+    // Set initial cursor
+    root.classList.add("cursor-grab");
+
+    // Functions
+    function updateAll() {
+      updateObserver();
+      updateVisualizer();
+    }
+
+    function getMargins() {
+      // Return raw strings now
+      const t = document.getElementById("mt").value || "0px";
+      const r = document.getElementById("mr").value || "0px";
+      const b = document.getElementById("mb").value || "0px";
+      const l = document.getElementById("ml").value || "0px";
+      return { t, r, b, l };
+    }
+
+    /*
+     * Helper to parse margin string to pixels
+     * value: string ("10px", "10%", "10")
+     * refSize: number (pixels, for percentage calculation)
+     */
+    function parseMargin(value, refSize) {
+      if (!value) return 0;
+      const strVal = String(value).trim();
+      const numVal = parseFloat(strVal);
+      if (isNaN(numVal)) return 0;
+
+      if (strVal.endsWith("%")) {
+        return (numVal / 100) * refSize;
+      }
+      return numVal;
+    }
+
+    function updateVisualizer() {
+      const { t, r, b, l } = getMargins();
+
+      // Calculate position relative to stage
+      const rootRect = root.getBoundingClientRect();
+      const stageRect = stage.getBoundingClientRect();
+
+      const offsetTop = rootRect.top - stageRect.top;
+      const offsetLeft = rootRect.left - stageRect.left;
+
+      // Convert all to Pixels
+      const mtPx = parseMargin(t, rootRect.height);
+      const mrPx = parseMargin(r, rootRect.width);
+      const mbPx = parseMargin(b, rootRect.height);
+      const mlPx = parseMargin(l, rootRect.width);
+
+      // Apply styles
+
+      marginBox.style.top = `${offsetTop - mtPx}px`;
+      marginBox.style.left = `${offsetLeft - mlPx}px`;
+      marginBox.style.width = `${rootRect.width + mlPx + mrPx}px`;
+      marginBox.style.height = `${rootRect.height + mtPx + mbPx}px`;
+    }
+
+    function formatMargin(str) {
+      const s = String(str).trim();
+      // If just a number, append px. If standard CSS units (px, %, em, etc) are present, leave it.
+      // Simple check: if it ends with a digit, append px
+      if (/^-?\d+(\.\d+)?$/.test(s)) {
+        return s + "px";
+      }
+      return s;
+    }
+
+    function updateObserver() {
+      if (observer) observer.disconnect();
+
+      const { t, r, b, l } = getMargins();
+      // Ensure we format them correctly for the API (must have units unless 0)
+      // Actually 0 needs no unit, but we can be safe.
+      // However, user input might be "10", we treat as "10px".
+
+      const rootMarginStr = `${formatMargin(t)} ${formatMargin(r)} ${formatMargin(b)} ${formatMargin(l)}`;
+      const updateMsg = `Updating Observer with rootMargin: "${rootMarginStr}"`;
+      console.log(`[VisualRootMargin] ${updateMsg}`);
+      logToScreen(updateMsg);
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const el = entry.target;
+            const status = el.querySelector(".status");
+            // Get element "ID" or text to identify it
+            const elId = el.querySelector("span")?.textContent || "Element";
+            // Get coords
+            const rect = el.getBoundingClientRect();
+            const pos = `(top: ${Math.round(rect.top)}, left: ${Math.round(rect.left)})`;
+
+            if (entry.isIntersecting) {
+              // Log the element as requested
+              const msg = `Intersecting: ${elId} ${pos}`;
+              console.log("[VisualRootMargin]", msg, el);
+              logToScreen(`✅ ${msg}`);
+
+              el.classList.add(
+                "bg-green-500",
+                "border-green-600",
+                "text-white",
+              );
+              el.classList.remove(
+                "bg-gray-100",
+                "border-gray-300",
+                "text-gray-500",
+                "dark:bg-slate-800",
+                "dark:text-slate-400",
+              );
+              if (status) status.textContent = "Intersecting";
+            } else {
+              // Optional: log exit? Maybe too noisy. Let's log exit too for clarity but maybe simpler.
+              // const msg = `Exited: ${elId}`;
+              // logToScreen(`❌ ${msg}`);
+
+              el.classList.remove(
+                "bg-green-500",
+                "border-green-600",
+                "text-white",
+              );
+              el.classList.add(
+                "bg-gray-100",
+                "border-gray-300",
+                "text-gray-500",
+                "dark:bg-slate-800",
+                "dark:text-slate-400",
+              );
+              if (status) status.textContent = "Outside";
+            }
+          });
+        },
+        {
+          root: root,
+          rootMargin: rootMarginStr,
+          threshold: 0.01,
+        },
+      );
+
+      items.forEach((item) => observer.observe(item));
+    }
+
+    function addItems(direction, count) {
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement("div");
+        el.className =
+          "target-item w-24 h-24 flex-shrink-0 flex flex-col items-center justify-center border-2 rounded transition-colors duration-300 text-xs font-mono font-bold bg-gray-100 border-gray-300 text-gray-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-400 m-4 shadow-sm";
+        el.innerHTML = `<span>BOX</span><span class="status mt-1 font-normal opacity-75">Outside</span>`;
+
+        // Layout logic
+        if (direction === "x") {
+          // Add to a row container or just flow?
+          // The requirements say "add xy elements".
+          // If scroll-content is flex-nowrap, adding items just appends them horizontally if we aren't careful.
+          // But we want to simulate a long page or wide page.
+
+          // Let's create a visual structure.
+          // Simple approach: Use absolute positioning for "scattered" feel? Or just flex?
+
+          // Let's make "scroll-content" contain rows.
+          // Actually simple is better:
+          // Flex container wrapping.
+          // But flex-wrap wraps to next line, filling Y.
+          // To fill X, we need `flex-wrap: nowrap` (which is set on #scroll-content).
+
+          // Wait, if I want to add in Y direction (down), I need vertical stacking.
+          // If I want X (right), I need horizontal stacking.
+
+          // Mixed layout is hard with just one flex container.
+          // Let's force layout:
+          // We will append items.
+          // To force horizontal scroll, we need wide content.
+          // To force vertical scroll, we need tall content.
+
+          // Let's use `position: absolute` for verifying intersection is fun,
+          // but standard flow is easier to code.
+
+          // HACK: Just toggle a spacer?
+          // No, let's just make the container Flex, but change direction? No.
+
+          // Let's just create a row-based layout.
+          // Default: Flex Row (Nowrap). This grows X.
+          // To grow Y: Add a new "Row" container?
+
+          // Let's revise structure of scroll-content to be a relative container
+          // and we absolutely position new items to ensure they expand bounds.
+
+          // Generate random position OR simple grid.
+          // Let's go with Simple Grid Logic managed by JS.
+
+          const currentWidth = content.scrollWidth;
+          const currentHeight = content.scrollHeight;
+
+          // If X, place nicely to the right.
+          // If Y, place nicely at bottom.
+
+          // Actually easiest: Just append to Flow, but force dimensions on container?
+          // Let's try: `scroll-content` is `block`.
+          // Add X: Add a `div` floated right or margin-left?
+          // Let's just use a Row div and Col div structure.
+
+          // Re-think: "Add XY elements".
+          // User wants to test scrolling.
+          // Button 1: "Add Block Down" -> Appends a block with `margin-top: 100px`.
+          // Button 2: "Add Block Right" -> Appends a block with `margin-left: 100px` (on a wide line).
+        }
+
+        // To support both directions simply:
+        // content is relative.
+        // We maintain a "cursor" or just random positions that extend the box.
+
+        el.style.position = "absolute";
+
+        // Heuristic placement to ensure scrolling
+        if (direction === "y") {
+          // Find max Top currently
+          const maxTop = items.reduce(
+            (max, item) => Math.max(max, parseInt(item.style.top || 0)),
+            0,
+          );
+          const newTop = maxTop + 140; // 100px height + gap
+          el.style.top = `${newTop}px`;
+          el.style.left = `${Math.random() * 200}px`; // Random X
+        } else {
+          // Find max Left
+          const maxLeft = items.reduce(
+            (max, item) => Math.max(max, parseInt(item.style.left || 0)),
+            0,
+          );
+          const newLeft = maxLeft + 140;
+          el.style.left = `${newLeft}px`;
+          el.style.top = `${Math.random() * 200}px`; // Random Y
+        }
+
+        content.appendChild(el);
+        items.push(el);
+        if (observer) observer.observe(el);
+      }
+    }
+  }
+</script>

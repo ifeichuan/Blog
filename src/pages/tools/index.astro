@@ -1,0 +1,174 @@
+---
+import Base from "@/layouts/Base.astro";
+
+// 使用 Astro.glob 批量读取 components/tools 下的所有 .astro 文件
+const tools = await Astro.glob("../../components/tools/*.astro");
+
+// Helper to get name
+const getToolName = (file: string) => {
+  return file.split('/').pop()?.replace('.astro', '').replace(/([A-Z])/g, ' $1').trim();
+};
+---
+
+<Base>
+  <div class="h-screen pt-20 overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-950 font-sans">
+    
+    <!-- Desktop / App Grid Area -->
+    <main class="flex-1 p-8 overflow-auto">
+      <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-slate-800 dark:text-slate-100 tracking-tight">Apps</h1>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+          {tools.map((Tool, index) => {
+            const name = getToolName(Tool.file);
+            const id = `tool-${index}`;
+            // Generate a consistent color based on name/index
+            const hue = (index * 137.5) % 360;
+            
+            return (
+              <button 
+                data-app-id={id}
+                class="app-icon group flex flex-col items-center gap-3 p-4 rounded-xl hover:bg-white/50 dark:hover:bg-white/5 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              >
+                <div 
+                  class="w-16 h-16 rounded-2xl shadow-lg flex items-center justify-center text-white text-2xl font-bold transform group-hover:scale-105 transition-transform"
+                  style={`background: hsl(${hue}, 70%, 50%)`}
+                >
+                  {name?.charAt(0)}
+                </div>
+                <span class="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white text-center line-clamp-2">
+                  {name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </main>
+
+    <!-- Windows / Portals Layer -->
+    <!-- These render hidden initially. JS controls visibility. -->
+    <div id="windows-layer">
+      {tools.map((Tool, index) => {
+        const name = getToolName(Tool.file);
+        const id = `tool-${index}`;
+        
+        return (
+          <dialog 
+            id={id}
+            class="tool-window fixed inset-0 z-50 bg-transparent p-0 w-full h-full max-w-none max-h-none m-0 backdrop:bg-black/30 backdrop:backdrop-blur-sm open:flex justify-center items-center pointer-events-none hidden"
+          >
+            <!-- Window Frame -->
+            <div class="window-frame pointer-events-auto bg-white dark:bg-slate-900 w-11/12 h-5/6 rounded-lg shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              
+              <!-- Title Bar -->
+              <div class="window-header bg-slate-100 dark:bg-slate-800 px-4 py-3 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 select-none">
+                <div class="flex items-center gap-2">
+                   <div class="flex gap-1.5 mr-2">
+                      <button class="close-btn w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 border border-red-600/20" aria-label="Close"></button>
+                      <div class="w-3 h-3 rounded-full bg-yellow-500 border border-yellow-600/20"></div>
+                      <div class="w-3 h-3 rounded-full bg-green-500 border border-green-600/20"></div>
+                   </div>
+                   <span class="font-semibold text-sm text-slate-700 dark:text-slate-200">{name}</span>
+                </div>
+              </div>
+
+              <!-- Tool Content -->
+              <div class="window-content flex-1 overflow-auto bg-slate-50 dark:bg-black/20 p-4 relative">
+                 <div class="h-full w-full">
+                    <Tool.default />
+                 </div>
+              </div>
+            </div>
+          </dialog>
+        );
+      })}
+    </div>
+
+  </div>
+</Base>
+
+<script>
+  // @ts-nocheck
+  document.addEventListener('astro:page-load', initApps);
+  if (document.readyState === 'complete') initApps();
+  else document.addEventListener('DOMContentLoaded', initApps);
+
+  function initApps() {
+    const triggers = document.querySelectorAll('.app-icon');
+    const windows = document.querySelectorAll('.tool-window');
+
+    triggers.forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+            const id = trigger.dataset.appId;
+            const dialog = document.getElementById(id);
+            if (dialog) {
+                openWindow(dialog);
+            }
+        });
+    });
+
+    windows.forEach(dialog => {
+        // Close on backdrop click (optional, but requested "window" feel usually implies explicit close, but backdrop is nice)
+        dialog.addEventListener('click', (e) => {
+             if (e.target === dialog) {
+                 closeWindow(dialog);
+             }
+        });
+
+        const closeBtn = dialog.querySelector('.close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => closeWindow(dialog));
+        }
+    });
+
+    function openWindow(dialog) {
+        dialog.classList.remove('hidden');
+        if (typeof dialog.showModal === 'function') {
+            dialog.showModal();
+        } else {
+             // Fallback
+             dialog.setAttribute('open', '');
+        }
+        document.body.style.overflow = 'hidden'; // Lock body scroll
+    }
+
+    function closeWindow(dialog) {
+        // Animation out?
+        dialog.classList.add('hidden');
+        if (typeof dialog.close === 'function') {
+            dialog.close();
+        } else {
+            dialog.removeAttribute('open');
+        }
+        document.body.style.overflow = '';
+    }
+  }
+</script>
+
+<style>
+  /* Native dialog backdrop fix for Tailwind */
+  dialog::backdrop {
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+  }
+  
+  /* Custom Scrollbar for windows */
+  .window-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .window-content::-webkit-scrollbar-track {
+    background: transparent; 
+  }
+  .window-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1; 
+    border-radius: 4px;
+  }
+  .dark .window-content::-webkit-scrollbar-thumb {
+    background: #475569; 
+  }
+  .window-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8; 
+  }
+</style>

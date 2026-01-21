@@ -10,6 +10,7 @@ import react from "@astrojs/react";
 
 import cloudflare from "@astrojs/cloudflare";
 import remarkToc from "remark-toc";
+import { remarkAlert } from "remark-github-blockquote-alert";
 import tailwindcss from "@tailwindcss/vite";
 // https://astro.build/config
 export default defineConfig({
@@ -22,6 +23,9 @@ export default defineConfig({
   prefetch: true,
   adapter: cloudflare(),
   markdown: {
-    remarkPlugins: [[remarkToc, { heading: "Toc" }]],
+    remarkPlugins: [
+      [remarkToc, { heading: "Toc" }],
+      remarkAlert,
+    ],
   },
 });

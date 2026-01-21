@@ -159,3 +159,60 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Helper styles for remark-github-blockquote-alert */
+.markdown-alert {
+  border-left: 0.25rem solid;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.25rem;
+  background-color: var(--color-muted);
+}
+
+.markdown-alert-title {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-alert-title svg {
+  margin-right: 0.5rem;
+  width: 16px;
+  height: 16px;
+}
+
+.markdown-alert-note {
+  border-color: #0969da;
+}
+.markdown-alert-note .markdown-alert-title {
+  color: #0969da;
+}
+
+.markdown-alert-tip {
+  border-color: #1a7f37;
+}
+.markdown-alert-tip .markdown-alert-title {
+  color: #1a7f37;
+}
+
+.markdown-alert-important {
+  border-color: #8250df;
+}
+.markdown-alert-important .markdown-alert-title {
+  color: #8250df;
+}
+
+.markdown-alert-warning {
+  border-color: #9a6700;
+}
+.markdown-alert-warning .markdown-alert-title {
+  color: #9a6700;
+}
+
+.markdown-alert-caution {
+  border-color: #d1242f;
+}
+.markdown-alert-caution .markdown-alert-title {
+  color: #d1242f;
+}
