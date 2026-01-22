@@ -3,17 +3,42 @@ import { isDev } from "@/consts";
 // 考虑添加一些开发模式下的提示信息
 ---
 {isDev && (
+  
   <div>
       <div
         class="fixed w-20 h-40 bottom-10 right-10 bg-red-500 z-9999"
       >
         开发模式已启用
+        当前帧率:<strong id="fps">0</strong> FPS
       </div>
   </div>
+  <script>
+        let frameCount = 0;
+let lastTime = performance.now();
+  
+function loop () {
+    let now = performance.now();
+    frameCount++;
+  
+    // 超过 1s，重置计算下一秒
+    if (now > lastTime + 1000) {
+        let fps = Math.round((frameCount * 1000) / (now - lastTime));
+        console.log(`${now} 1S 内 FPS：`, fps);
+        document.getElementById('fps').innerText = fps.toString();
+        frameCount = 0;
+        lastTime = now;
+    };
+  
+    window.requestAnimationFrame(loop);
+}
+ 
+loop();
+  </script>
       <style is:inline>
     * {
       scrollbar-width: auto !important;
       cursor: auto !important;
     }
   </style>
+
 )}
