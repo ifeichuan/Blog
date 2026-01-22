@@ -62,7 +62,7 @@
         g2.style.mixBlendMode = "soft-light";
         const borderRadius = style.borderRadius.slice(
           0,
-          style.borderRadius.lastIndexOf("p")
+          style.borderRadius.lastIndexOf("p"),
         );
         // console.log(border);
         const border = "inset 0 0 5px rgba(0,0,0,0.2)";
@@ -98,7 +98,7 @@
 
     const observer = new MutationObserver(() => {
       const allClickElement = document.querySelectorAll(
-        "a,button,pre,code,img"
+        "a,button,pre,code,img",
       );
       // console.log(allClickElement)
       allClickElement.forEach((e) => {

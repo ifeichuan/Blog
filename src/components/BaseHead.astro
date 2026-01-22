@@ -4,13 +4,12 @@
 
 import type { ImageMetadata } from "astro";
 import FallbackImage from "../assets/blog-placeholder-1.jpg";
-import { SITE_TITLE, googleAdClient, isDev } from "../consts";
+import { Delimiter, SITE_TITLE, googleAdClient, isDev } from "../consts";
 interface Props {
   title: string;
   description: string;
   image?: ImageMetadata;
   cancelTwStyle?: boolean;
-  keywords?: string[];
   ogType?: "website" | "article";
 }
 
@@ -21,10 +20,10 @@ const {
   description,
   image = FallbackImage,
   cancelTwStyle,
-  keywords = [],
   ogType = "website",
 } = Astro.props;
 console.log(cancelTwStyle);
+const finalTitle = title ? title + Delimiter + SITE_TITLE : SITE_TITLE;
 ---
 
 <!-- Global Metadata -->
@@ -45,27 +44,26 @@ console.log(cancelTwStyle);
 <!-- Font preloads -->
 <!-- <link rel="preload" href="/fonts/atkinson-regular.woff" as="font" type="font/woff" crossorigin />
 <link rel="preload" href="/fonts/atkinson-bold.woff" as="font" type="font/woff" crossorigin /> -->
-
+<link rel="stylesheet" href="https://unpkg.com/lenis@1.3.17/dist/lenis.css" />
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
 
 <!-- Primary Meta Tags -->
-<title>{title}</title>
-<meta name="title" content={title} />
+<title>{finalTitle}</title>
+<meta name="title" content={finalTitle} />
 <meta name="description" content={description} />
-<meta name="keywords" content={keywords.join(", ")} />
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content={ogType} />
 <meta property="og:url" content={Astro.url} />
-<meta property="og:title" content={title} />
+<meta property="og:title" content={finalTitle} />
 <meta property="og:description" content={description} />
 <meta property="og:image" content={new URL(image.src, Astro.url)} />
 
 <!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:url" content={Astro.url} />
-<meta property="twitter:title" content={title} />
+<meta property="twitter:title" content={finalTitle} />
 <meta property="twitter:description" content={description} />
 <meta property="twitter:image" content={new URL(image.src, Astro.url)} />
 

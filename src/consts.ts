@@ -6,6 +6,8 @@ const ENV = import.meta.env;
 export const isDev = ENV.DEV;
 
 export const SITE_TITLE = "Feichuan's Blog";
+// 文章标题和站点标题的分隔符
+export const Delimiter = " | ";
 export const Banner_Title = "Feichuan";
 export const Banner_Desc =
   "A newbie Frontend developer  who loves designing and coding.";
