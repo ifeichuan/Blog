@@ -102,7 +102,7 @@
       );
       // console.log(allClickElement)
       allClickElement.forEach((e) => {
-        if (!e.classList.contains("g-not"))
+        if (!e.classList.contains("g-not") && !e.closest(".g-not"))
           e.classList.toggle("g-animation", true);
       });
     });

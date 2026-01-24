@@ -47,7 +47,26 @@ const finalTitle = title ? title + Delimiter + SITE_TITLE : SITE_TITLE;
 <link rel="stylesheet" href="https://unpkg.com/lenis@1.3.17/dist/lenis.css" />
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
-
+<link rel="preload" as="image" href="/mesh.webp" />
+<link
+  href="https://fontsapi.zeoseven.com/442/main/result.css"
+  onload="this.rel='stylesheet'"
+  rel="preload"
+  as="style"
+  crossorigin
+/>
+<noscript
+  ><link
+    rel="stylesheet"
+    href="https://fontsapi.zeoseven.com/442/main/result.css"
+  /></noscript
+>
+<style>
+  body {
+    font-family: "Maple Mono NF CN";
+    font-weight: normal;
+  }
+</style>
 <!-- Primary Meta Tags -->
 <title>{finalTitle}</title>
 <meta name="title" content={finalTitle} />
@@ -87,3 +106,5 @@ const finalTitle = title ? title + Delimiter + SITE_TITLE : SITE_TITLE;
     }),
   })}
 />
+<script src="https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.min.js"
+></script>

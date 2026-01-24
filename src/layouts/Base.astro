@@ -6,7 +6,6 @@ import Nav from "@/components/Nav.astro";
 import Intro from "@/components/Intro.astro";
 import OnDevMode from "@/components/OnDevMode.astro";
 
-import mesh from "../assets/mesh.webp";
 import "../styles/global.css";
 export type Props = {
   title?: string;
@@ -19,7 +18,7 @@ export type Props = {
 const {
   title = "",
   description = SITE_DESCRIPTION,
-  banner = mesh,
+  banner = "/mesh.webp",
   showIntro = false,
   ogType = "website",
 }: Props = Astro.props;
@@ -39,7 +38,7 @@ const {
     <div class="smooth-wrapper slot">
       <div
         class=`background w-screen smooth-content bg-fixed bg-no-repeat bg-cover`
-        style={`background-image:url(${banner.src});`}
+        style={`background-image:url(${banner});`}
       >
         <slot />
       </div>
