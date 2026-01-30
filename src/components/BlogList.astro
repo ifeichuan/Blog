@@ -10,7 +10,7 @@ const posts = (await getCollection("blog")).sort(
   {
     posts.map((p) => {
       return (
-        <article class="w-full h-full">
+        <article class="w-full h-full blog-item">
           <a
             href={`/blog/${p.id}`}
             class="w-full h-80  block relative overflow-hidden rounded-lg **:font-serif"
@@ -55,6 +55,11 @@ const posts = (await getCollection("blog")).sort(
 </div>
 
 <script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  gsap.registerPlugin(ScrollTrigger);
+
   const articles = document.querySelectorAll("article");
   articles.forEach((article) => {
     const description = article.querySelector(".description") as HTMLElement;
@@ -123,5 +128,80 @@ const posts = (await getCollection("blog")).sort(
 
   window.addEventListener("beforeunload", () => {
     resizeObservers.forEach((observer) => observer.disconnect());
+  });
+
+  // 滚动入场动画
+  function initScrollAnimations() {
+    const blogItems = document.querySelectorAll(".blog-item");
+    const scroller = document.querySelector(".smooth-wrapper");
+
+    if (!blogItems.length || !scroller) {
+      console.log("BlogList: Elements not found, retrying...");
+      setTimeout(initScrollAnimations, 100);
+      return;
+    }
+
+    console.log(
+      "BlogList: Initializing scroll animations for",
+      blogItems.length,
+      "items",
+    );
+
+    blogItems.forEach((item, index) => {
+      // 设置初始状态
+      gsap.set(item, {
+        y: 100, // 减小初始偏移，减少空白感
+        opacity: 0,
+      });
+
+      // 创建滚动触发动画
+      gsap.to(item, {
+        y: 0,
+        opacity: 1,
+        duration: 1, // 缩短动画时间，让动画更快完成
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: item,
+          scroller: ".smooth-wrapper",
+          start: "top bottom-=120", // 恢复原来的提前触发
+          end: "top center",
+          toggleActions: "play none none none",
+          // markers: true,
+          id: `blog-item-${index}`,
+        },
+      });
+
+      // 创建滚动触发动画
+      gsap.to(item, {
+        y: 0,
+        opacity: 1,
+        duration: 1.2,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: item,
+          scroller: ".smooth-wrapper",
+          start: "top bottom", // 减小提前量，元素更接近视口时才触发
+          end: "top center",
+          toggleActions: "play none none none",
+          // markers: true,
+          id: `blog-item-${index}`,
+        },
+      });
+    });
+
+    // 强制刷新 ScrollTrigger
+    ScrollTrigger.refresh();
+    console.log("ScrollTrigger refresh complete");
+  }
+
+  // 等待 Lenis 和 ScrollTrigger 初始化完成
+  window.addEventListener("load", () => {
+    setTimeout(initScrollAnimations, 500);
+  });
+
+  // 也监听 astro 的页面加载事件
+  document.addEventListener("astro:page-load", () => {
+    ScrollTrigger.getAll().forEach((st) => st.kill());
+    setTimeout(initScrollAnimations, 500);
   });
 </script>

@@ -5,6 +5,7 @@ import Mouse from "../components/Mouse.astro";
 import Nav from "@/components/Nav.astro";
 import Intro from "@/components/Intro.astro";
 import OnDevMode from "@/components/OnDevMode.astro";
+import Footer from "@/components/Footer.astro";
 
 import "../styles/global.css";
 export type Props = {
@@ -41,10 +42,8 @@ const {
         style={`background-image:url(${banner});`}
       >
         <slot />
+        <Footer />
       </div>
-      <footer>
-        <div class="h-40 w-screen">你好</div>
-      </footer>
     </div>
 
     <script>
@@ -71,6 +70,25 @@ const {
         infinite: false, // 是否无限滚动
       });
 
+      // 配置 ScrollTrigger 使用自定义滚动容器
+      ScrollTrigger.scrollerProxy(".smooth-wrapper", {
+        scrollTop(value) {
+          if (arguments.length) {
+            lenis.scrollTo(value, { immediate: true });
+          }
+          return lenis.scroll;
+        },
+        getBoundingClientRect() {
+          return {
+            top: 0,
+            left: 0,
+            width: window.innerWidth,
+            height: window.innerHeight,
+          };
+        },
+        pinType: wrapper.style.transform ? "transform" : "fixed",
+      });
+
       // 同步 Lenis 滚动与 GSAP ScrollTrigger
       lenis.on("scroll", ({ scroll, limit }) => {
         // 发送自定义事件给 Nav 组件
@@ -89,6 +107,9 @@ const {
 
       // 禁用 GSAP 的 lag smoothing
       gsap.ticker.lagSmoothing(0);
+
+      // 监听 ScrollTrigger 的刷新事件
+      ScrollTrigger.addEventListener("refresh", () => lenis.resize());
 
       // 停止滚动的方法（可选）
       // lenis.stop();
