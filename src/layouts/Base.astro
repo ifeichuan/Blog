@@ -50,6 +50,17 @@ const {
       import Lenis from "lenis";
       import { gsap } from "gsap";
       import { ScrollTrigger } from "gsap/ScrollTrigger";
+      import { isMobileDevice } from "@/lib/utils";
+      window.addEventListener("load", () => {
+        if (isMobileDevice()) {
+          window.location.href = "/mobile";
+        }
+      });
+      window.addEventListener("resize", () => {
+        if (isMobileDevice()) {
+          window.location.href = "/mobile";
+        }
+      });
       gsap.registerPlugin(ScrollTrigger);
 
       // 获取滚动容器
