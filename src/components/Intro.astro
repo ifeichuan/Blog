@@ -1,4 +1,4 @@
----
+---:
 import BaseHead from "./BaseHead.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
 const {
@@ -526,6 +526,7 @@ const {
     const timeLine = gsap.timeline({ defaults: { ease: "power3.inOut" } });
     let loadProcess = { process: 0 };
     gsap.set(".load-w", { opacity: 1 });
+    const ease = "cubic-bezier(0.27,0.78,0.36,0.97);";
     timeLine
       .to(loadProcess, {
         process: 100,
@@ -590,6 +591,7 @@ const {
         ".card-top",
         {
           scaleY: 0,
+          scaleX: 0,
           transformOrigin: "center",
           duration: 0.5,
           onComplete: () => {},
@@ -604,8 +606,8 @@ const {
           "--clip-right": "0%",
           "--clip-bottom": "0%",
           "--clip-left": "0%",
-          duration: 1.5,
-          ease: "power3",
+          duration: 1,
+          ease: ease,
           onComplete: () => {
             // 动画完成后移除 clip-path,避免影响 ScrollSmoother
             const slot = document.querySelector(".slot") as HTMLElement;
@@ -621,8 +623,8 @@ const {
         {
           width: () => window.innerWidth + 150,
           height: () => window.innerHeight + 150,
-          ease: "power3",
-          duration: 1.2,
+          ease: ease,
+          duration: 1,
           onComplete: () => {
             console.log("Animation complete");
             document.querySelector(".load-w")?.remove();
