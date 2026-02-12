@@ -11,9 +11,7 @@ export const Delimiter = " | ";
 export const Banner_Title = "Feichuan";
 export const Banner_Desc =
   "A newbie Frontend developer  who loves designing and coding.";
-export const SITE_DESCRIPTION = "Frontend developer blog sharing tutorials on JavaScript, React, Astro, AI development, and web technologies. Learn about modern frontend development, streaming rendering, and more.";
+export const SITE_DESCRIPTION =
+  "Frontend developer blog sharing tutorials on JavaScript, React, Astro, AI development, and web technologies. Learn about modern frontend development, streaming rendering, and more.";
 
 export const NavList = [{ label: "Posts", href: "/posts", icon: "" }];
-// Google AdSense Client ID
-export const googleAdClient = "ca-pub-7584944935192060";
-

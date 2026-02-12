@@ -158,6 +158,9 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  .post-card {
+    @apply backdrop-blur-sm backdrop-saturate-180 text-[12px] bg-white/20 px-2.5 py-1.25 rounded-sm text-white/90 border border-white/10;
+  }
 }
 
 /* Helper styles for remark-github-blockquote-alert */

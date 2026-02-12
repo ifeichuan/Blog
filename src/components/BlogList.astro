@@ -4,11 +4,27 @@ import { Image } from "astro:assets";
 const posts = (await getCollection("blog")).sort(
   (a, b) => b.data.dateCreated.valueOf() - a.data.dateCreated.valueOf(),
 );
+import { umami } from "@/actions/umami";
+
+for (let p of posts) {
+}
+let views = await Promise.all(
+  posts.map(async (p) => {
+    console.log("Getting views for post:", p.data.title);
+    let path = "/blog/" + p.filePath?.split("content/")[1].split(".md")[0];
+    return {
+      views: await umami.getVisitors(path),
+      path: path,
+    };
+  }),
+);
+
+console.log("Views data:", views);
 ---
 
 <div class="ssss flex flex-col gap-20 w-full">
   {
-    posts.map((p) => {
+    posts.map((p, index) => {
       return (
         <article class="w-full h-full blog-item">
           <a
@@ -31,9 +47,20 @@ const posts = (await getCollection("blog")).sort(
                 !p.data.banner ? "https://picsum.photos" : undefined
               }
             />
-            <time class="absolute left-2 top-2 bg-white/40 backdrop-blur-2xl rounded-sm p-0.5">
+            <time class="post-time absolute left-2 top-2 post-card">
               {p.data.dateCreated.toLocaleDateString()}
             </time>
+            <div class="post-meta absolute top-2 right-2 post-card">
+              <div class="unit flex items-center ">
+                <i class="fa-regular fa-eye fa-sm" />
+                <span class="ml-1">
+                  <span id="views" data-href={views[index]?.path}>
+                    {views[index]?.views.totalPageviews || 0}
+                  </span>
+                  热度
+                </span>
+              </div>
+            </div>
             {/* 根据 p 元素的内容动态修改h2位置 */}
             <h2
               transition:name="title"
@@ -57,14 +84,21 @@ const posts = (await getCollection("blog")).sort(
 <script>
   import { gsap } from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
-
+  import { actions } from "astro:actions";
   gsap.registerPlugin(ScrollTrigger);
 
   const articles = document.querySelectorAll("article");
   articles.forEach((article) => {
     const description = article.querySelector(".description") as HTMLElement;
     const title = article.querySelector(".title") as HTMLElement;
-
+    const viewsElement = article.querySelector("#views") as HTMLElement;
+    const viewsPath = viewsElement?.dataset.href || "";
+    actions.getVisitors(viewsPath).then((data) => {
+      if (data && viewsElement) {
+        console.log(`Updating views for ${viewsPath}:`, data);
+        viewsElement.textContent = data.data.totalPageviews || "0";
+      }
+    });
     if (description && title) {
       const updateTitlePosition = () => {
         const descriptionHeight = description.offsetHeight;

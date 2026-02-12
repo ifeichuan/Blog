@@ -11,5 +11,9 @@
   },
   "observability": {
     "enabled": true
+  },
+  "vars":{
+    "UMAMI_API_CLIENT_ENDPOINT": "https://api.umami.is/v1",
+    "UMAMI_WEBSITE_ID": "e68649b2-93c5-4ee5-abd9-78cca185ebed"
   }
 }
