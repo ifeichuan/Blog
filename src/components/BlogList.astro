@@ -91,14 +91,7 @@ console.log("Views data:", views);
   articles.forEach((article) => {
     const description = article.querySelector(".description") as HTMLElement;
     const title = article.querySelector(".title") as HTMLElement;
-    const viewsElement = article.querySelector("#views") as HTMLElement;
-    const viewsPath = viewsElement?.dataset.href || "";
-    actions.getVisitors(viewsPath).then((data) => {
-      if (data && viewsElement) {
-        console.log(`Updating views for ${viewsPath}:`, data);
-        viewsElement.textContent = data.data.totalPageviews || "0";
-      }
-    });
+
     if (description && title) {
       const updateTitlePosition = () => {
         const descriptionHeight = description.offsetHeight;
