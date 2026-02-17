@@ -5,7 +5,6 @@ tags:
   - Nodejs
 isPub: true
 title: 被 AI 逼疯的前端：从手搓流式打字机，到浏览器端跑 React
-description: 前端 AI 应用开发实战，深入讲解流式传输、Markdown 实时渲染、NDJSON 数据流和浏览器端代码编译等技术
 dateCreated: 2026-01-08T22:37:48+08:00
 dateModified: 2026-01-08T22:39:44+08:00
 ---

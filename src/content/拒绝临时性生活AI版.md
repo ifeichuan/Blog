@@ -3,7 +3,6 @@ tags:
   - 认知
 isPub: true
 title: 拒绝临时性生活AI版
-description: 深度解析"临时性生活"的本质与危害，探讨如何拒绝用"将来会更好"作为借口，学会活在当下、认真生活
 dateCreated: 2025-12-28T13:46:45+08:00
 dateModified: 2025-12-28T13:46:58+08:00
 ---
