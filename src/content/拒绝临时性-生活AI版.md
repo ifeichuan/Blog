@@ -2,9 +2,9 @@
 tags:
   - 认知
 isPub: true
-title: 拒绝临时性生活AI版
+title: 拒绝临时性-生活AI版
 dateCreated: 2025-12-28T13:46:45+08:00
-dateModified: 2025-12-28T13:46:58+08:00
+dateModified: 2026-03-04T17:21:50+08:00
 ---
 > 你说说你说说, AI 咋就这么会写呢
 
