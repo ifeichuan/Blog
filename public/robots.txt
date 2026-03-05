@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-Disallow: /mobile
+
 
 Sitemap: https://feichuans.com/sitemap-index.xml
 Sitemap: https://feichuans.com/sitemap-0.xml
