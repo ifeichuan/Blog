@@ -8,8 +8,7 @@ isPub: true
 title: OpenClaw 架构解析：一个生产级 AI Agent 是如何设计的
 dateCreated: 2026-03-05T17:29:41+08:00
 dateModified: 2026-03-05T17:29:51+08:00
-description:
-  - 深入解析 Claude tool use、Anthropic SDK、Vercel AI SDK 与 pi-ai 的架构差异，结合 git worktree 实现多 Agent 并行隔离执行，附完整代码示例。
+description: 深入解析 Claude tool use、Anthropic SDK、Vercel AI SDK 与 pi-ai 的架构差异，结合 git worktree 实现多 Agent 并行隔离执行，附完整代码示例。
 ---
 # OpenClaw 架构解析：一个生产级 AI Agent 是如何设计的
 
