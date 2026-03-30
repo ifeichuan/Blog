@@ -31,7 +31,7 @@ const menuItems = [
   </head>
   <body class="resumes-body">
     <main class="resumes-menu-shell">
-      <InfiniteMenu client:load items={menuItems} scale={1.32} />
+      <InfiniteMenu client:load items={menuItems} scale={1} />
     </main>
   </body>
 </html>
@@ -46,22 +46,14 @@ const menuItems = [
 
   .resumes-body {
     margin: 0;
-    background:
-      radial-gradient(
-        circle at 50% 18%,
-        rgba(255, 255, 255, 0.92),
-        transparent 28rem
-      ),
-      linear-gradient(
-        180deg,
-        rgba(244, 244, 242, 0.98),
-        rgba(226, 229, 234, 0.95)
-      );
+    background: rgb(244 244 242);
   }
 
   .resumes-menu-shell {
+    position: relative;
     width: 100vw;
     height: 100vh;
     height: 100dvh;
+    overflow: hidden;
   }
 </style>

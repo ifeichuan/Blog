@@ -1124,6 +1124,9 @@ const InfiniteMenu: FC<InfiniteMenuProps> = ({ items = [], scale = 1.0 }) => {
           [font-size:4rem]
           left-[1.6em]
           top-1/2
+          z-10
+          text-white
+          [text-shadow:0_6px_24px_rgba(0,0,0,0.5)]
           transform
           translate-x-[20%]
           -translate-y-1/2
@@ -1147,6 +1150,9 @@ const InfiniteMenu: FC<InfiniteMenuProps> = ({ items = [], scale = 1.0 }) => {
           text-[1.5rem]
           top-1/2
           right-[1%]
+          z-10
+          text-white/92
+          [text-shadow:0_6px_24px_rgba(0,0,0,0.45)]
           transition-all
           ease-[cubic-bezier(0.25,0.1,0.25,1.0)]
           ${
