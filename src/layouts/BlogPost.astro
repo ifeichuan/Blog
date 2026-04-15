@@ -26,7 +26,7 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
           if (s.fontIndex !== undefined) {
             var fonts = [
               '"Noto Serif SC", "Source Han Serif SC", "Songti SC", serif',
-              '"Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
+              '"Maple Mono NF CN", "Maple Mono", system-ui, sans-serif',
               '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             ];
             if (fonts[s.fontIndex]) article.style.fontFamily = fonts[s.fontIndex];
@@ -37,6 +37,8 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
   </script>
 
   <div id="reader-root" data-reader-theme="light">
+    {/* 阅读进度条 */}
+    <div class="reader-progress-bar"></div>
     {/* 顶部渐变遮罩 */}
     <div class="reader-mask-top"></div>
     {/* 底部渐变遮罩 */}
@@ -53,7 +55,7 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
         </a>
       </div>
 
-      <div class="flex-1 flex justify-center pt-24">
+      <div class="flex-1 flex justify-center pt-[124px]">
         <div class="reader-article prose prose-lg max-w-3xl w-full px-6 pb-20">
           {/* 标题 */}
           <h1 class="reader-title">{title}</h1>
@@ -100,7 +102,7 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
       </div>
 
       {/* 右侧栏：设置 + 目录 */}
-      <aside class="sticky top-20 w-72 right-20 flex flex-col gap-4 pt-24 max-md:hidden">
+      <aside class="sticky top-[124px] w-72 right-20 flex flex-col gap-4 pt-[124px] max-md:hidden">
         <div class="flex justify-end pr-4">
           <ReaderControls client:load />
         </div>
@@ -124,10 +126,42 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
         el: "#tcomment",
       });
     });
+
+    // 阅读进度条 — 复用 Nav 的 --scroll-p 模式，监听 Lenis 或原生滚动
+    const bar = document.querySelector(".reader-progress-bar") as HTMLElement;
+    if (bar) {
+      const update = (scroll: number, limit: number) => {
+        const p = limit > 0 ? Math.min(1, Math.max(0, scroll / limit)) : 0;
+        bar.style.setProperty("--reading-progress", String(p));
+      };
+      window.addEventListener("lenis-scroll", (e: Event) => {
+        const { scroll, limit } = (e as CustomEvent).detail;
+        update(scroll, limit);
+      });
+      window.addEventListener("scroll", () => {
+        const scroll = window.scrollY;
+        const limit =
+          document.documentElement.scrollHeight - window.innerHeight;
+        update(scroll, limit);
+      });
+    }
   </script>
 </Base>
 
 <style>
+  /* 阅读进度条 */
+  .reader-progress-bar {
+    position: fixed;
+    top: 28px;
+    left: 0;
+    height: 3px;
+    width: calc(var(--reading-progress, 0) * 100%);
+    background: var(--reader-link);
+    z-index: 50;
+    transition: width 0.1s linear;
+    pointer-events: none;
+  }
+
   /* 左侧返回按钮列 — sticky 垂直居中 */
   .reader-back-col {
     position: sticky;
@@ -170,7 +204,7 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
     z-index: 5;
   }
   .reader-mask-top {
-    top: 0;
+    top: 28px;
     background: linear-gradient(to bottom, color-mix(in srgb, var(--reader-bg) 80%, transparent), transparent);
   }
   .reader-mask-bottom {

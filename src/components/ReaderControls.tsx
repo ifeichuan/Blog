@@ -19,9 +19,9 @@ const FONT_OPTIONS = [
   },
   {
     id: "sans",
-    label: "无衬线",
+    label: "Maple",
     family:
-      '"Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
+      '"Maple Mono NF CN", "Maple Mono", system-ui, sans-serif',
   },
   {
     id: "system",
