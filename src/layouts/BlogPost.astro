@@ -182,7 +182,7 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
     border-radius: 12px;
     color: var(--reader-secondary);
     text-decoration: none !important;
-    transition: all 0.2s;
+    transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
     cursor: pointer;
     background: var(--reader-ctrl-bg);
     border: 1px solid var(--reader-ctrl-border);
@@ -193,7 +193,7 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
     background: var(--reader-ctrl-hover);
   }
 
-  /* 顶部/底部渐变遮罩 - 参考 BrewReader */
+  /* 顶部/底部渐变遮罩 */
   .reader-mask-top,
   .reader-mask-bottom {
     position: fixed;
@@ -220,6 +220,7 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
     color: var(--reader-heading);
     margin-bottom: 1.5rem;
     letter-spacing: -0.01em;
+    transition: color 0.4s ease;
   }
 
   /* 元信息栏 */
@@ -233,6 +234,7 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
     padding-bottom: 1.5rem;
     margin-bottom: 1.5rem;
     border-bottom: 1px solid var(--reader-border);
+    transition: color 0.4s ease, border-color 0.4s ease;
   }
   .reader-meta-item {
     display: flex;
@@ -257,7 +259,7 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
     border-radius: 9999px;
     border: 1px solid var(--reader-border);
     color: var(--reader-secondary);
-    transition: all 0.2s;
+    transition: color 0.4s ease, border-color 0.4s ease;
   }
 
   /* 封面图 */
@@ -276,5 +278,6 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
     height: 1px;
     background: var(--reader-border);
     margin-bottom: 2rem;
+    transition: background-color 0.4s ease;
   }
 </style>

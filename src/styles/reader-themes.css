@@ -134,7 +134,7 @@
 [data-reader-theme] {
   background-color: var(--reader-bg);
   color: var(--reader-text);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 /* reader-root 需要不透明背景，遮住 Base 的 mesh.webp */
@@ -142,10 +142,48 @@
   background-color: var(--reader-bg);
   position: relative;
   z-index: 1;
+  transition: background-color 0.4s ease;
 }
 
 .reader-article {
   color: var(--reader-text);
+  transition: font-size 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              line-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              font-family 0.3s ease,
+              color 0.4s ease;
+}
+
+/* 标题/链接/代码/引用等元素颜色也跟着过渡 */
+.reader-article :is(h1, h2, h3, h4, h5, h6),
+.reader-article strong,
+.reader-article b {
+  transition: color 0.4s ease;
+}
+.reader-article a {
+  transition: color 0.3s ease;
+}
+.reader-article :not(pre) > code {
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+.reader-article pre {
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+.reader-article blockquote {
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+.reader-article hr {
+  transition: background-color 0.4s ease;
+}
+.reader-article thead,
+.reader-article td,
+.reader-article tbody tr:nth-child(even) {
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+.reader-article mark {
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+.reader-article li::marker {
+  transition: color 0.4s ease;
 }
 
 /* Headings — color override only, sizing handled by Tailwind prose */
@@ -207,7 +245,7 @@
   color: var(--reader-text);
 }
 .reader-article blockquote p {
-  color: var(--reader-text);
+  color: inherit;
 }
 
 /* Horizontal rule */

@@ -235,7 +235,7 @@ export default function ReaderControls() {
           border: 1px solid var(--reader-ctrl-border, #e8e2d4);
           color: var(--reader-ctrl-text, #555);
           cursor: pointer;
-          transition: all 0.2s;
+          transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
           backdrop-filter: blur(12px);
         }
         .reader-ctrl-toggle:hover {
@@ -257,6 +257,7 @@ export default function ReaderControls() {
           flex-direction: column;
           gap: 8px;
           animation: reader-panel-in 0.15s ease-out;
+          transition: background-color 0.4s ease, border-color 0.4s ease;
         }
         @keyframes reader-panel-in {
           from { opacity: 0; transform: translateY(-6px) scale(0.97); }
@@ -273,6 +274,7 @@ export default function ReaderControls() {
           color: var(--reader-secondary, #666);
           flex-shrink: 0;
           user-select: none;
+          transition: color 0.4s ease;
         }
         .reader-ctrl-group {
           display: flex;
@@ -285,6 +287,7 @@ export default function ReaderControls() {
           min-width: 32px;
           text-align: center;
           font-variant-numeric: tabular-nums;
+          transition: color 0.4s ease;
         }
         .reader-ctrl-btn {
           height: 30px;
@@ -296,7 +299,7 @@ export default function ReaderControls() {
           color: var(--reader-ctrl-text, #555);
           font-size: 13px;
           cursor: pointer;
-          transition: all 0.15s;
+          transition: background-color 0.15s ease, color 0.4s ease, border-color 0.4s ease;
           display: flex;
           align-items: center;
           justify-content: center;
