@@ -24,14 +24,6 @@
   font-display: fallback;
   box-sizing: border-box !important;
   cursor: none;
-  /*  */
-  --clip-top: 50%;
-  --clip-right: 38%;
-  --clip-bottom: 50%;
-  --clip-left: 38%;
-  --clip-height: 100vh;
-  --clip-width: 100vw;
-  /*  */
 
   --radius: 0.625rem;
   --background: oklch(1 0 0);
