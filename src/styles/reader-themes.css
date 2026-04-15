@@ -1,0 +1,298 @@
+/* ========================================
+   Blog Reader Theme System
+   4 themes: light, sepia, dark, night
+   ======================================== */
+
+/* --- Light --- */
+[data-reader-theme="light"] {
+  --reader-bg: #f8f5ec;
+  --reader-text: #2c2c2c;
+  --reader-secondary: #666;
+  --reader-border: #e8e2d4;
+  --reader-surface: #fff9f0;
+  --reader-link: #b8860b;
+  --reader-link-hover: #996515;
+  --reader-code-bg: rgba(0, 0, 0, 0.04);
+  --reader-code-text: #b8860b;
+  --reader-pre-bg: #282c34;
+  --reader-pre-text: #abb2bf;
+  --reader-blockquote-bg: rgba(0, 0, 0, 0.02);
+  --reader-blockquote-border: rgba(0, 0, 0, 0.08);
+  --reader-hr: rgba(0, 0, 0, 0.06);
+  --reader-table-header: rgba(0, 0, 0, 0.02);
+  --reader-table-stripe: rgba(0, 0, 0, 0.015);
+  --reader-table-border: rgba(0, 0, 0, 0.06);
+  --reader-strong: #1a1a1a;
+  --reader-heading: #1a1a1a;
+  --reader-mark-bg: rgba(184, 134, 11, 0.15);
+  --reader-mark-text: #6b4c00;
+  --reader-toc-text: #555;
+  --reader-toc-active: #b8860b;
+  --reader-ctrl-bg: rgba(255, 249, 240, 0.95);
+  --reader-ctrl-hover: rgba(0, 0, 0, 0.05);
+  --reader-ctrl-text: #555;
+  --reader-ctrl-border: #e8e2d4;
+}
+
+/* --- Sepia --- */
+[data-reader-theme="sepia"] {
+  --reader-bg: #f4ecd8;
+  --reader-text: #3d3229;
+  --reader-secondary: #6b5d4d;
+  --reader-border: #d4c8b0;
+  --reader-surface: #faf4e6;
+  --reader-link: #8b6914;
+  --reader-link-hover: #6b5010;
+  --reader-code-bg: rgba(0, 0, 0, 0.05);
+  --reader-code-text: #8b6914;
+  --reader-pre-bg: #2d2518;
+  --reader-pre-text: #c4b99a;
+  --reader-blockquote-bg: rgba(0, 0, 0, 0.03);
+  --reader-blockquote-border: rgba(0, 0, 0, 0.1);
+  --reader-hr: rgba(0, 0, 0, 0.08);
+  --reader-table-header: rgba(0, 0, 0, 0.03);
+  --reader-table-stripe: rgba(0, 0, 0, 0.02);
+  --reader-table-border: rgba(0, 0, 0, 0.08);
+  --reader-strong: #2a2015;
+  --reader-heading: #2a2015;
+  --reader-mark-bg: rgba(139, 105, 20, 0.15);
+  --reader-mark-text: #5a4010;
+  --reader-toc-text: #6b5d4d;
+  --reader-toc-active: #8b6914;
+  --reader-ctrl-bg: rgba(250, 244, 230, 0.95);
+  --reader-ctrl-hover: rgba(0, 0, 0, 0.06);
+  --reader-ctrl-text: #6b5d4d;
+  --reader-ctrl-border: #d4c8b0;
+}
+
+/* --- Dark --- */
+[data-reader-theme="dark"] {
+  --reader-bg: #1a1a1a;
+  --reader-text: #c9c9c9;
+  --reader-secondary: #888;
+  --reader-border: #333;
+  --reader-surface: #242424;
+  --reader-link: #fbbf24;
+  --reader-link-hover: #fcd34d;
+  --reader-code-bg: rgba(255, 255, 255, 0.08);
+  --reader-code-text: #fbbf24;
+  --reader-pre-bg: rgba(255, 255, 255, 0.04);
+  --reader-pre-text: #abb2bf;
+  --reader-blockquote-bg: rgba(255, 255, 255, 0.03);
+  --reader-blockquote-border: rgba(255, 255, 255, 0.1);
+  --reader-hr: rgba(255, 255, 255, 0.06);
+  --reader-table-header: rgba(255, 255, 255, 0.03);
+  --reader-table-stripe: rgba(255, 255, 255, 0.02);
+  --reader-table-border: rgba(255, 255, 255, 0.08);
+  --reader-strong: #e5e5e5;
+  --reader-heading: #e5e5e5;
+  --reader-mark-bg: rgba(251, 191, 36, 0.2);
+  --reader-mark-text: #fbbf24;
+  --reader-toc-text: #888;
+  --reader-toc-active: #fbbf24;
+  --reader-ctrl-bg: rgba(36, 36, 36, 0.95);
+  --reader-ctrl-hover: rgba(255, 255, 255, 0.08);
+  --reader-ctrl-text: #999;
+  --reader-ctrl-border: #333;
+}
+
+/* --- Night --- */
+[data-reader-theme="night"] {
+  --reader-bg: #0d1117;
+  --reader-text: #b8bfc7;
+  --reader-secondary: #6e7681;
+  --reader-border: #21262d;
+  --reader-surface: #161b22;
+  --reader-link: #58a6ff;
+  --reader-link-hover: #79b8ff;
+  --reader-code-bg: rgba(255, 255, 255, 0.06);
+  --reader-code-text: #79c0ff;
+  --reader-pre-bg: rgba(255, 255, 255, 0.04);
+  --reader-pre-text: #b8bfc7;
+  --reader-blockquote-bg: rgba(255, 255, 255, 0.03);
+  --reader-blockquote-border: rgba(255, 255, 255, 0.08);
+  --reader-hr: rgba(255, 255, 255, 0.06);
+  --reader-table-header: rgba(255, 255, 255, 0.03);
+  --reader-table-stripe: rgba(255, 255, 255, 0.02);
+  --reader-table-border: rgba(255, 255, 255, 0.06);
+  --reader-strong: #d2dce6;
+  --reader-heading: #d2dce6;
+  --reader-mark-bg: rgba(88, 166, 255, 0.15);
+  --reader-mark-text: #58a6ff;
+  --reader-toc-text: #6e7681;
+  --reader-toc-active: #58a6ff;
+  --reader-ctrl-bg: rgba(22, 27, 34, 0.95);
+  --reader-ctrl-hover: rgba(255, 255, 255, 0.06);
+  --reader-ctrl-text: #6e7681;
+  --reader-ctrl-border: #21262d;
+}
+
+/* ========================================
+   Reader Article Prose Overrides
+   ======================================== */
+
+[data-reader-theme] {
+  background-color: var(--reader-bg);
+  color: var(--reader-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* reader-root 需要不透明背景，遮住 Base 的 mesh.webp */
+#reader-root {
+  background-color: var(--reader-bg);
+  position: relative;
+  z-index: 1;
+}
+
+.reader-article {
+  color: var(--reader-text);
+}
+
+/* Headings — color override only, sizing handled by Tailwind prose */
+.reader-article :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--reader-heading);
+}
+
+/* Strong */
+.reader-article strong,
+.reader-article b {
+  color: var(--reader-strong);
+}
+
+/* Links */
+.reader-article a {
+  color: var(--reader-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color 0.2s;
+}
+.reader-article a:hover {
+  color: var(--reader-link-hover);
+}
+
+/* Inline code */
+.reader-article :not(pre) > code {
+  background: var(--reader-code-bg);
+  color: var(--reader-code-text);
+  padding: 0.15em 0.4em;
+  border-radius: 0.375rem;
+  font-size: 0.9em;
+}
+
+/* Code blocks */
+.reader-article pre {
+  background: var(--reader-pre-bg) !important;
+  color: var(--reader-pre-text);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  overflow-x: auto;
+}
+.reader-article pre code {
+  background: transparent !important;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+/* Blockquote */
+.reader-article blockquote {
+  background: var(--reader-blockquote-bg);
+  border-left: 3px solid var(--reader-blockquote-border);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.75rem 1.25rem;
+  margin: 1.5em 0;
+  font-style: normal;
+}
+
+/* Horizontal rule */
+.reader-article hr {
+  border: none;
+  height: 1px;
+  background: var(--reader-hr);
+  margin: 2rem 0;
+}
+
+/* Tables */
+.reader-article table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+.reader-article thead {
+  background: var(--reader-table-header);
+}
+.reader-article th {
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  font-weight: 500;
+  color: var(--reader-heading);
+  border-bottom: 1px solid var(--reader-table-border);
+}
+.reader-article td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--reader-table-border);
+}
+.reader-article tbody tr:nth-child(even) {
+  background: var(--reader-table-stripe);
+}
+
+/* Images */
+.reader-article img {
+  border-radius: 0.75rem;
+  margin: 1.5rem auto;
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Lists */
+.reader-article ul,
+.reader-article ol {
+  padding-left: 1.5em;
+}
+.reader-article li {
+  margin: 0.35em 0;
+}
+.reader-article li::marker {
+  color: var(--reader-secondary);
+}
+
+/* Mark */
+.reader-article mark {
+  background: var(--reader-mark-bg);
+  color: var(--reader-mark-text);
+  padding: 0.1em 0.3em;
+  border-radius: 0.25rem;
+}
+
+/* Secondary text */
+.reader-article figcaption,
+.reader-article .footnotes {
+  color: var(--reader-secondary);
+}
+
+/* ========================================
+   TOC Overrides (inside reader)
+   ======================================== */
+
+[data-reader-theme] .links-wrapper {
+  color: var(--reader-toc-text);
+}
+[data-reader-theme] .toc-link:hover {
+  color: var(--reader-toc-active);
+}
+[data-reader-theme] .toc-link.font-bold {
+  color: var(--reader-toc-active);
+}
+
+/* ========================================
+   Markdown Alert Overrides
+   ======================================== */
+
+[data-reader-theme="dark"] .markdown-alert,
+[data-reader-theme="night"] .markdown-alert {
+  background-color: rgba(255, 255, 255, 0.03);
+}

@@ -2,6 +2,7 @@
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import BlogPost from "../../layouts/BlogPost.astro";
 import TOC from "@/components/TOC.astro";
+
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
   return posts.map((post) => ({
@@ -12,56 +13,34 @@ export async function getStaticPaths() {
 type Props = CollectionEntry<"blog">;
 
 const post = Astro.props;
-// console.log(Astro.props);
 const { Content, headings } = await render(post);
 ---
 
 <BlogPost {...post.data}>
-  <main class="flex items-start w-screen h-auto">
-    <div class="flex-1 flex justify-center pt-20">
-      <article
-        class="prose lg:prose-lg xl:prose-lg max-md:prose-sm dark:prose-invert
-        prose-h1:scroll-mt-32 prose-h2:scroll-mt-32 prose-h3:scroll-mt-32 prose-h4:scroll-mt-32 w-full max-w-3xl px-4 mb-20"
-      >
-        <Content />
-      </article>
-    </div>
-    <aside class="sticky top-20 w-72 right-20">
-      <TOC headings={headings} />
-    </aside>
-  </main>
+  <Content />
+  <TOC headings={headings} slot="toc" />
 </BlogPost>
+
 <style is:global>
   @reference "../../styles/global.css";
 
-  /* 行内代码样式 - Obsidian 风格 */
-  .prose :not(pre) > code {
-    @apply relative;
-    background-color: rgba(135, 131, 120, 0.15);
-    color: var(--color-blue-400);
+  /* 行内代码样式 - Obsidian 风格 (fallback for non-reader contexts) */
+  .reader-article :not(pre) > code {
+    background: var(--reader-code-bg, rgba(135, 131, 120, 0.15));
+    color: var(--reader-code-text, var(--color-blue-400));
     border-radius: 0.3rem;
     padding: 0.1em 0.2em;
-    /* font-size: 0.9em;
-    font-weight: 500; */
-    border: 1px solid rgba(135, 131, 120, 0.2);
-    margin: 0 0.3rem;
+    border: none;
+    margin: 0 0.15rem;
     transition: all 0.3s ease;
   }
-  .prose strong {
-    color: var(--color-blue-500);
-  }
-  /* 暗色模式 */
-  .dark .prose :not(pre) > code {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: var(--color-blue-400);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+  .reader-article strong {
+    color: var(--reader-strong, var(--color-blue-500));
   }
 
   /* 代码块样式 */
-
-  /* 移除 before/after 伪元素 */
-  .prose code::before,
-  .prose code::after {
+  .reader-article code::before,
+  .reader-article code::after {
     content: none !important;
   }
 </style>

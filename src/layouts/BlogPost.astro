@@ -2,62 +2,245 @@
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import FormattedDate from "../components/FormattedDate.astro";
 import Base from "./Base.astro";
-import TOC from "@/components/TOC.astro";
+import ReaderControls from "@/components/ReaderControls";
+
+import "../styles/reader-themes.css";
+
 type Props = CollectionEntry<"blog">["data"];
 
 const { title, description, banner, dateCreated, dateModified, isPub, tags } =
   Astro.props;
-
-const { headings } = await render(Astro.props);
 ---
 
-<Base banner={banner} ogType="article" description={description} title={title}>
-  <div
-    class="w-screen h-full flex flex-col items-center backdrop-blur-2xl bg-white/60 dark:bg-black/60 backdrop-grayscale"
-  >
-    <div class="h-80 bg-sky-400 w-screen relative">
-      <img
-        src={banner?.src}
-        alt={title}
-        class="object-cover w-full h-full absolute g-not"
-      />
-      <div class="absolute mx-auto left-0 right-0 bottom-16">
-        <h1
-          class="text-5xl font-serif font-bold mb-4 mix-blend-overlay text-center [text-shadow:0_4px_5px_rgba(0,0,0,1)] shadow-2xl text-white"
-        >
-          {title}
-        </h1>
-      </div>
-      <div class="text-sm">
-        <span>Published on: <FormattedDate date={dateCreated} /></span>
-        {
-          dateModified && (
-            <span class="ml-4">
-              Last modified: <FormattedDate date={dateModified} />
-            </span>
-          )
+<Base ogType="article" description={description} title={title}>
+  <script is:inline>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("blog-reader-settings") || "{}");
+        var root = document.getElementById("reader-root");
+        if (root && s.theme) root.setAttribute("data-reader-theme", s.theme);
+        var article = root && root.querySelector(".reader-article");
+        if (article) {
+          if (s.fontSize) article.style.fontSize = s.fontSize + "px";
+          if (s.lineHeight) article.style.lineHeight = String(s.lineHeight);
+          if (s.fontIndex !== undefined) {
+            var fonts = [
+              '"Noto Serif SC", "Source Han Serif SC", "Songti SC", serif',
+              '"Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            ];
+            if (fonts[s.fontIndex]) article.style.fontFamily = fonts[s.fontIndex];
+          }
         }
+      } catch (e) {}
+    })();
+  </script>
+
+  <div id="reader-root" data-reader-theme="light">
+    {/* 顶部渐变遮罩 */}
+    <div class="reader-mask-top"></div>
+    {/* 底部渐变遮罩 */}
+    <div class="reader-mask-bottom"></div>
+
+    {/* Content area */}
+    <div class="flex items-start w-screen min-h-screen">
+      {/* 左侧返回按钮 — 固定居中 */}
+      <div class="reader-back-col max-md:hidden">
+        <a href="/" class="reader-back" data-astro-prefetch title="返回首页">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </a>
       </div>
+
+      <div class="flex-1 flex justify-center pt-24">
+        <div class="reader-article prose prose-lg max-w-3xl w-full px-6 pb-20">
+          {/* 标题 */}
+          <h1 class="reader-title">{title}</h1>
+
+          {/* 元信息 */}
+          <div class="reader-meta">
+            <span class="reader-meta-item">
+              <svg class="reader-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <FormattedDate date={dateCreated} />
+            </span>
+            {dateModified && (
+              <span class="reader-meta-item">
+                <svg class="reader-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <FormattedDate date={dateModified} />
+              </span>
+            )}
+            {tags && tags.length > 0 && (
+              <div class="reader-tags">
+                {tags.map((tag) => (
+                  <span class="reader-tag">{tag}</span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 封面图（可选） */}
+          {banner && (
+            <div class="reader-cover">
+              <img src={banner.src} alt={title} class="reader-cover-img" loading="eager" />
+            </div>
+          )}
+
+          {/* 正文 */}
+          <slot />
+        </div>
+      </div>
+
+      {/* 右侧栏：设置 + 目录 */}
+      <aside class="sticky top-20 w-72 right-20 flex flex-col gap-4 pt-24 max-md:hidden">
+        <div class="flex justify-end pr-4">
+          <ReaderControls client:load />
+        </div>
+        <slot name="toc" />
+      </aside>
     </div>
-    <div class="">
-      <slot />
-    </div>
-    <div class="h-fit g-not">
+
+    {/* 评论 */}
+    <div class="max-w-3xl mx-auto px-6 pb-20 g-not">
+      <div class="reader-comments-divider"></div>
       <div id="tcomment" class="g-not"></div>
     </div>
   </div>
+
   <script>
     //@ts-ignore
     import * as twikoo from "twikoo";
     window.addEventListener("load", () => {
-      window.dispatchEvent(new Event("Intro:end"));
       twikoo.init({
-        envId: "https://feichuans.netlify.app/.netlify/functions/twikoo", // 腾讯云环境填 envId；Vercel 环境填地址（https://xxx.vercel.app）
-        el: "#tcomment", // 容器元素
-        // region: 'ap-guangzhou', // 环境地域，默认为 ap-shanghai，腾讯云环境填 ap-shanghai 或 ap-guangzhou；Vercel 环境不填
-        // path: location.pathname, // 用于区分不同文章的自定义 js 路径，如果您的文章路径不是 location.pathname，需传此参数
-        // lang: 'zh-CN', // 用于手动设定评论区语言，支持的语言列表 https://github.com/twikoojs/twikoo/blob/main/src/client/utils/i18n/index.js
+        envId: "https://feichuans.netlify.app/.netlify/functions/twikoo",
+        el: "#tcomment",
       });
     });
   </script>
 </Base>
+
+<style>
+  /* 左侧返回按钮列 — sticky 垂直居中 */
+  .reader-back-col {
+    position: sticky;
+    top: 50vh;
+    transform: translateY(-50%);
+    width: 72px;
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .reader-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    color: var(--reader-secondary);
+    text-decoration: none !important;
+    transition: all 0.2s;
+    cursor: pointer;
+    background: var(--reader-ctrl-bg);
+    border: 1px solid var(--reader-ctrl-border);
+    backdrop-filter: blur(12px);
+  }
+  .reader-back:hover {
+    color: var(--reader-text);
+    background: var(--reader-ctrl-hover);
+  }
+
+  /* 顶部/底部渐变遮罩 - 参考 BrewReader */
+  .reader-mask-top,
+  .reader-mask-bottom {
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 5rem;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .reader-mask-top {
+    top: 0;
+    background: linear-gradient(to bottom, var(--reader-bg), transparent);
+  }
+  .reader-mask-bottom {
+    bottom: 0;
+    background: linear-gradient(to top, var(--reader-bg), transparent);
+  }
+
+  /* 标题 */
+  .reader-title {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--reader-heading);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.01em;
+  }
+
+  /* 元信息栏 */
+  .reader-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--reader-secondary);
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--reader-border);
+  }
+  .reader-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .reader-meta-icon {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+  }
+
+  /* 标签 */
+  .reader-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+  .reader-tag {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    border: 1px solid var(--reader-border);
+    color: var(--reader-secondary);
+    transition: all 0.2s;
+  }
+
+  /* 封面图 */
+  .reader-cover {
+    margin-bottom: 2rem;
+  }
+  .reader-cover-img {
+    width: 100%;
+    border-radius: 1rem;
+    object-fit: cover;
+    max-height: 400px;
+  }
+
+  /* 评论分隔线 */
+  .reader-comments-divider {
+    height: 1px;
+    background: var(--reader-border);
+    margin-bottom: 2rem;
+  }
+</style>

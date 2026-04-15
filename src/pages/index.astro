@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import Intro from "@/components/Intro.astro";
 
 import SplitText from "@/components/SplitText";
 import TextType from "@/components/TextType";
@@ -9,7 +10,8 @@ import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
 import BlogList from "@/components/BlogList.astro";
 ---
 
-<Base showIntro={true}>
+<Base enableIntro={true}>
+  <Intro slot="intro" />
   <Noise client:visible />
   <main class="index">
     <div
