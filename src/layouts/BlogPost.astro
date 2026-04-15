@@ -165,17 +165,17 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
     position: fixed;
     left: 0;
     right: 0;
-    height: 5rem;
+    height: 3rem;
     pointer-events: none;
     z-index: 5;
   }
   .reader-mask-top {
     top: 0;
-    background: linear-gradient(to bottom, var(--reader-bg), transparent);
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--reader-bg) 80%, transparent), transparent);
   }
   .reader-mask-bottom {
     bottom: 0;
-    background: linear-gradient(to top, var(--reader-bg), transparent);
+    background: linear-gradient(to top, color-mix(in srgb, var(--reader-bg) 80%, transparent), transparent);
   }
 
   /* 标题 */
