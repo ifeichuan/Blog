@@ -11,10 +11,8 @@ const { headings } = Astro.props as { headings: MarkdownHeading[] };
 <nav class="toc-wrapper max-md:opacity-0" aria-label="文章目录">
   <div class="toc-header">目录</div>
   <div class="toc-scroll" data-lenis-prevent>
-    <div class="toc-track">
-      <div class="toc-indicator"></div>
-    </div>
     <ul class="toc-list">
+      <div class="toc-indicator"></div>
       {
         headings.map((heading) => (
           <li
@@ -45,11 +43,8 @@ const { headings } = Astro.props as { headings: MarkdownHeading[] };
   const setActive = (link: HTMLElement) => {
     const item = link.closest(".toc-item") as HTMLElement;
     if (!item) return;
-    // 指示条位置：相对 toc-scroll 的 top
-    const scrollRect = scrollArea.getBoundingClientRect();
-    const itemRect = item.getBoundingClientRect();
-    indicator.style.top = `${itemRect.top - scrollRect.top + scrollArea.scrollTop}px`;
-    indicator.style.height = `${itemRect.height}px`;
+    indicator.style.top = `${item.offsetTop}px`;
+    indicator.style.height = `${item.offsetHeight}px`;
     indicator.style.opacity = "1";
 
     // 将激活项滚入可视区域
@@ -117,7 +112,6 @@ const { headings } = Astro.props as { headings: MarkdownHeading[] };
     max-height: 40vh;
     overflow-y: auto;
     overscroll-behavior: contain;
-    /* 细窄滚动条 */
     scrollbar-width: thin;
     scrollbar-color: oklch(0.8 0.01 260) transparent;
   }
@@ -125,7 +119,14 @@ const { headings } = Astro.props as { headings: MarkdownHeading[] };
     scrollbar-color: oklch(0.35 0.02 260) transparent;
   }
 
-  .toc-track {
+  .toc-list {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .toc-list::before {
+    content: "";
     position: absolute;
     left: 0;
     top: 0;
@@ -134,7 +135,7 @@ const { headings } = Astro.props as { headings: MarkdownHeading[] };
     background: oklch(0.9 0.005 260);
     border-radius: 1px;
   }
-  :global(.dark) .toc-track {
+  :global(.dark) .toc-list::before {
     background: oklch(0.25 0.015 260);
   }
 
