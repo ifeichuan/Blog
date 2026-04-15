@@ -79,6 +79,10 @@ body {
   font-weight: normal;
   font-display: swap;
 }
+html, body {
+  overflow: hidden;
+  height: 100vh;
+}
 /*
   ---break---
  */
