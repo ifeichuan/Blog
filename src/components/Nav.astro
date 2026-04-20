@@ -1,26 +1,27 @@
 ---
-import { Image } from "astro:assets";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import { NavList, SITE_TITLE } from "../consts";
 ---
 
 <header
-  class="nav w-screen mix-blend-difference h-16 z-50 font-serif fixed top-[28px] left-0 right-0 mx-auto shadow-inner text-white backdrop-blur-lg"
+  class="nav w-screen mix-blend-difference z-50 font-serif fixed top-0 left-0 right-0 mx-auto text-white"
 >
-  <div class="flex justify-between h-full w-full p-5">
+  <div class="announcement-shell">
+    <AnnouncementBar client:load />
+  </div>
+  <div class="nav-main flex justify-between items-center w-full px-5 py-4">
     <div class="left mix-blend-overlay">
-      <a
-        id="logoText"
-        class="h-full flex justify-center items-center text-3xl"
-        href="/">{SITE_TITLE}</a
+      <a id="logoText" class="flex justify-center items-center text-3xl" href="/"
+        >{SITE_TITLE}</a
       >
     </div>
     <div class="center search"></div>
-    <div class="right h-full">
-      <nav class="flex h-full">
+    <div class="right self-stretch">
+      <nav class="flex h-full items-center">
         {
           NavList.map((item) => (
             <a
-              class="mix-blend-overlay text-2xl  h-full flex justify-center items-center hover:bg-blue-500 rounded-[9999px] p-2 data-[current]:underline  data-[current]:text-blue-400"
+              class="mix-blend-overlay text-2xl flex justify-center items-center hover:bg-blue-500 rounded-[9999px] p-2 data-[current]:underline  data-[current]:text-blue-400"
               href={item.href}
               data-href={item.href}
             >
@@ -113,13 +114,22 @@ import { NavList, SITE_TITLE } from "../consts";
 </script>
 <style>
   .nav {
-    background: transparent;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(7, 10, 19, 0.2);
+    backdrop-filter: blur(16px);
     --scroll-p: 0;
     --progress-color: rgba(59, 130, 246, 0.9);
     --progress-line-thickness: 4px;
     position: fixed;
     overflow: visible;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  .announcement-shell {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .nav-main {
+    min-height: 64px;
   }
 
   .nav::before {

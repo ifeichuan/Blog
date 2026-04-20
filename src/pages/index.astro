@@ -7,7 +7,6 @@ import TextType from "@/components/TextType";
 import DownArrow from "@/assets/svg/downArrow.svg";
 import Noise from "@/components/Noise";
 import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
-import BlogList from "@/components/BlogList.astro";
 ---
 
 <Base enableIntro={true}>
@@ -40,16 +39,6 @@ import BlogList from "@/components/BlogList.astro";
         textColors={["black"]}
       />
     </div>
-
-    <div
-      class="content w-screen p-4 backdrop-blur-2xl bg-white/20 flex [&_>div]:w-1/3"
-    >
-      <div class="left"></div>
-      <div class="center">
-        <BlogList />
-      </div>
-      <div class="right"></div>
-    </div>
   </main>
 </Base>
 
@@ -73,8 +62,5 @@ import BlogList from "@/components/BlogList.astro";
     to {
       transform: translateY(20px);
     }
-  }
-  .content {
-    scrollbar-width: none;
   }
 </style>

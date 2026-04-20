@@ -5,7 +5,6 @@ import Mouse from "../components/Mouse.astro";
 import Nav from "@/components/Nav.astro";
 import OnDevMode from "@/components/OnDevMode.astro";
 import Footer from "@/components/Footer.astro";
-import AnnouncementBar from "@/components/AnnouncementBar";
 
 import "../styles/global.css";
 export type Props = {
@@ -33,7 +32,6 @@ const {
   <body>
     <slot name="intro" />
     <OnDevMode />
-    <AnnouncementBar client:load />
     <Mouse />
     <Nav />
 

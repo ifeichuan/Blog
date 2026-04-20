@@ -13,7 +13,7 @@ const items: AnnouncementItem[] = [
 
 export default function AnnouncementBar() {
   return (
-    <div className="announcement-bar" aria-hidden="true">
+    <div className="announcement-bar">
       <Marquee speed={60} direction={1} gap={48}>
         <span className="announcement-content">
           {items.map((item, i) => (
@@ -35,10 +35,6 @@ export default function AnnouncementBar() {
 
       <style>{`
         .announcement-bar {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
           width: 100%;
           height: 28px;
           display: flex;
@@ -47,11 +43,8 @@ export default function AnnouncementBar() {
           font-size: 0.75rem;
           letter-spacing: 0.02em;
           color: rgba(255, 255, 255, 0.7);
-          background: rgba(0, 0, 0, 0.15);
-          backdrop-filter: blur(8px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.04);
           position: relative;
-          z-index: 49;
         }
         .announcement-content {
           display: inline-flex;

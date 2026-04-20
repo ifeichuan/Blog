@@ -15,6 +15,6 @@ export const SITE_DESCRIPTION =
   "Frontend developer blog sharing tutorials on JavaScript, React, Astro, AI development, and web technologies. Learn about modern frontend development, streaming rendering, and more.";
 
 export const NavList = [
-  { label: "Posts", href: "/posts", icon: "" },
+  { label: "Posts", href: "/blogs", icon: "" },
   { label: "Resumes", href: "/resumes", icon: "" },
 ];

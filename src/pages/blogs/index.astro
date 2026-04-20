@@ -1,0 +1,38 @@
+---
+import Base from "../../layouts/Base.astro";
+import BlogList from "@/components/BlogList.astro";
+---
+
+<Base title="Posts">
+  <main class="blogs-page min-h-screen pt-32 pb-20">
+    <section class="blogs-hero px-6 py-6 text-white mix-blend-difference">
+      <h2 class="blogs-title">文章列表</h2>
+    </section>
+
+    <section class="content w-screen p-4 flex [&_>div]:w-1/3">
+      <div class="left"></div>
+      <div class="center">
+        <BlogList />
+      </div>
+      <div class="right"></div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .blogs-hero {
+    display: flex;
+    justify-content: center;
+  }
+
+  .blogs-title {
+    font-size: clamp(1.25rem, 2vw, 1.5rem);
+    line-height: 1.1;
+    font-family: serif;
+    text-align: center;
+  }
+
+  .content {
+    scrollbar-width: none;
+  }
+</style>

@@ -11,7 +11,7 @@ for (let p of posts) {
 let views = await Promise.all(
   posts.map(async (p) => {
     console.log("Getting views for post:", p.data.title);
-    let path = "/blog/" + p.filePath?.split("content/")[1].split(".md")[0];
+    let path = `/blogs/${p.id}`;
     return {
       views: await umami.getVisitors(path),
       path: path,
@@ -28,7 +28,7 @@ console.log("Views data:", views);
       return (
         <article class="w-full h-full blog-item">
           <a
-            href={`/blog/${p.id}`}
+            href={`/blogs/${p.id}`}
             class="w-full h-80  block relative overflow-hidden rounded-lg **:font-serif"
             data-random-container
             data-astro-prefetch
