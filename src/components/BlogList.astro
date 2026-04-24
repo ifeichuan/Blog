@@ -1,34 +1,33 @@
 ---
 import { getCollection } from "astro:content";
 import { Image } from "astro:assets";
+import { umami } from "@/actions/umami";
+
 const posts = (await getCollection("blog")).sort(
   (a, b) => b.data.dateCreated.valueOf() - a.data.dateCreated.valueOf(),
 );
-import { umami } from "@/actions/umami";
 
-for (let p of posts) {
-}
-let views = await Promise.all(
-  posts.map(async (p) => {
-    console.log("Getting views for post:", p.data.title);
-    let path = `/blogs/${p.id}`;
-    return {
-      views: await umami.getVisitors(path),
-      path: path,
-    };
-  }),
-);
+const paths = posts.map((post) => `/blogs/${post.id}`);
+const [activeVisitors, views] = await Promise.all([
+  umami.getActiveVisitors(),
+  umami.getVisitorsBatch(paths),
+]);
 
-console.log("Views data:", views);
+const viewsByPath = new Map(views.map((item) => [item.path, item]));
 ---
 
 <div class="ssss flex flex-col gap-20 w-full">
+  <div class="self-end post-card px-3 py-1.5 text-sm tracking-[0.08em]">
+    当前 <span>{activeVisitors}</span> 人正在看
+  </div>
   {
-    posts.map((p, index) => {
+    posts.map((p) => {
+      const path = `/blogs/${p.id}`;
+      const stats = viewsByPath.get(path);
       return (
         <article class="w-full h-full blog-item">
           <a
-            href={`/blogs/${p.id}`}
+            href={path}
             class="w-full h-80  block relative overflow-hidden rounded-lg **:font-serif"
             data-random-container
             data-astro-prefetch
@@ -54,10 +53,8 @@ console.log("Views data:", views);
               <div class="unit flex items-center ">
                 <i class="fa-regular fa-eye fa-sm" />
                 <span class="ml-1">
-                  <span id="views" data-href={views[index]?.path}>
-                    {views[index]?.views.totalPageviews || 0}
-                  </span>
-                  热度
+                  <span>{stats?.totalVisitors ?? 0}</span>
+                  人看过
                 </span>
               </div>
             </div>
@@ -84,7 +81,6 @@ console.log("Views data:", views);
 <script>
   import { gsap } from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
-  import { actions } from "astro:actions";
   gsap.registerPlugin(ScrollTrigger);
 
   const articles = document.querySelectorAll("article");
