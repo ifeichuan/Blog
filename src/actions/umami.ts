@@ -1,5 +1,6 @@
 import {
   UMAMI_API_CLIENT_ENDPOINT,
+  UMAMI_DEBUG,
   UMAMI_API_KEY,
   UMAMI_WEBSITE_ID,
 } from "astro:env/server";
@@ -46,8 +47,10 @@ const rawApiEndpoint =
   UMAMI_API_CLIENT_ENDPOINT || process.env.UMAMI_API_CLIENT_ENDPOINT;
 const websiteId =
   UMAMI_WEBSITE_ID || process.env.UMAMI_WEBSITE_ID || DEFAULT_WEBSITE_ID;
+const debugFlag = UMAMI_DEBUG || process.env.UMAMI_DEBUG;
 const apiKey = UMAMI_API_KEY || process.env.UMAMI_API_KEY;
 const apiEndpoint = normalizeApiEndpoint(rawApiEndpoint);
+const shouldLogUmami = debugFlag === "1" || debugFlag === "true";
 
 let warnedMissingKey = false;
 let warnedEndpointRewrite = false;
@@ -59,6 +62,15 @@ const warnMissingKey = () => {
     warnedMissingKey = true;
     console.warn("Umami: missing UMAMI_API_KEY");
   }
+};
+
+const logUmami = (message: string, data?: Record<string, unknown>) => {
+  if (!shouldLogUmami) return;
+  if (data) {
+    console.log(`[umami] ${message}`, data);
+    return;
+  }
+  console.log(`[umami] ${message}`);
 };
 
 const warnEndpointRewrite = () => {
@@ -110,18 +122,24 @@ const loadWithCache = async <T>(
   loader: () => Promise<T | null>,
 ): Promise<T | null> => {
   const fresh = getFreshCachedValue<T>(key);
-  if (fresh !== null) return fresh;
+  if (fresh !== null) {
+    logUmami("cache hit", { key });
+    return fresh;
+  }
 
   const existing = inflightRequests.get(key);
   if (existing) {
+    logUmami("inflight hit", { key });
     const value = await existing;
     return (value as T | null) ?? getStaleCachedValue<T>(key);
   }
 
   const request = (async () => {
+    logUmami("cache miss", { key, ttl });
     const value = await loader();
     if (value !== null) {
       setCachedValue(key, value, ttl);
+      logUmami("cache set", { key, ttl });
     }
     return value;
   })().finally(() => {
@@ -161,12 +179,26 @@ const requestUmami = async <T>(
     return null;
   }
 
-  const response = await fetch(buildApiUrl(pathname, params), {
+  const url = buildApiUrl(pathname, params);
+  const startedAt = Date.now();
+
+  logUmami("request start", {
+    pathname,
+    search: url.search,
+  });
+
+  const response = await fetch(url, {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${apiKey}`,
       "x-umami-api-key": apiKey,
     },
+  });
+
+  logUmami("request end", {
+    pathname,
+    status: response.status,
+    durationMs: Date.now() - startedAt,
   });
 
   if (!response.ok) {
