@@ -1,0 +1,164 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base enableIntro={false}>
+  <main class="texture-lab-demo">
+    <canvas id="texture-canvas"></canvas>
+    <div class="controls">
+      <h2>Texture Lab</h2>
+      <div class="preset-list" id="preset-list"></div>
+    </div>
+    <div class="info">
+      <p id="current-preset">analog-film</p>
+    </div>
+  </main>
+</Base>
+
+<script>
+  import { WebGLRenderer } from "../components/texture-lab/renderer";
+  import { PRESETS, createEffect } from "../components/texture-lab/types";
+
+  const canvas = document.getElementById("texture-canvas") as HTMLCanvasElement;
+  const presetList = document.getElementById("preset-list")!;
+  const currentPresetEl = document.getElementById("current-preset")!;
+
+  let renderer: InstanceType<typeof WebGLRenderer>;
+  let animFrame = 0;
+  let seed = Math.random() * 100000;
+  let currentPreset = "analog-film";
+
+  try {
+    renderer = new WebGLRenderer(canvas);
+  } catch (e) {
+    console.error("WebGL not supported", e);
+  }
+
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    renderer.setImage(img);
+    renderPreset(currentPreset);
+    buildUI();
+  };
+  img.src = "/mesh.webp";
+
+  function renderPreset(presetKey: string) {
+    currentPreset = presetKey;
+    currentPresetEl.textContent = PRESETS[presetKey]?.name || presetKey;
+
+    cancelAnimationFrame(animFrame);
+
+    const presetData = PRESETS[presetKey];
+    if (!presetData) return;
+
+    const effects = presetData.effects.map((e: any) => ({
+      ...createEffect(e.type),
+      enabled: e.enabled,
+      params: { ...e.params },
+    }));
+
+    function loop() {
+      seed += 0.5;
+      const width = canvas.clientWidth * window.devicePixelRatio;
+      const height = canvas.clientHeight * window.devicePixelRatio;
+      renderer.render(effects, seed, width, height);
+      animFrame = requestAnimationFrame(loop);
+    }
+    loop();
+  }
+
+  function buildUI() {
+    Object.entries(PRESETS).forEach(([key, preset]: [string, any]) => {
+      const btn = document.createElement("button");
+      btn.textContent = preset.name;
+      btn.dataset.preset = key;
+      if (key === currentPreset) btn.classList.add("active");
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".preset-list button").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderPreset(key);
+      });
+      presetList.appendChild(btn);
+    });
+  }
+</script>
+
+<style>
+  .texture-lab-demo {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #texture-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+  }
+
+  .controls {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 1.5rem;
+    max-height: 80vh;
+    overflow-y: auto;
+    min-width: 180px;
+  }
+
+  .controls h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 1rem;
+    font-family: monospace;
+  }
+
+  .preset-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .preset-list button {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ccc;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: monospace;
+    text-align: left;
+    transition: all 0.2s;
+  }
+
+  .preset-list button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+  }
+
+  .preset-list button.active {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+  }
+
+  .info {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 10;
+    font-family: monospace;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+</style>

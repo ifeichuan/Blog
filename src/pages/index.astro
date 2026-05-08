@@ -2,8 +2,7 @@
 import Base from "../layouts/Base.astro";
 import Intro from "@/components/Intro.astro";
 
-import SplitText from "@/components/SplitText";
-import TextType from "@/components/TextType";
+import IndexTypeSequence from "@/components/IndexTypeSequence";
 import DownArrow from "@/assets/svg/downArrow.svg";
 import Noise from "@/components/Noise";
 import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
@@ -19,24 +18,11 @@ import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
       <div class="arrow -translate-x-10">
         <DownArrow class={"mix-blend-overlay"} />
       </div>
-      <SplitText
-        text={Banner_Title}
+      <IndexTypeSequence
         client:visible
-        className="text-[16rem] font-serif  "
-        tag="h1"
-      />
-      <SplitText
-        text={Banner_Desc}
-        client:visible
-        className="text-[4rem]  font-serif text-center   px-10"
-        delay={20}
-        tag="h2"
-      />
-      <TextType
-        text={SITE_DESCRIPTION}
-        client:visible
-        className="text-[2rem] font-mono text-center mt-10"
-        textColors={["black"]}
+        title={Banner_Title}
+        description={Banner_Desc}
+        siteDescription={SITE_DESCRIPTION}
       />
     </div>
   </main>

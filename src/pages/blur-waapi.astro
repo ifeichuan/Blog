@@ -1,0 +1,11 @@
+---
+import BaseLayout from "../layouts/Base.astro";
+import { ChainTestWAAPI } from "../components/ChainTests";
+---
+
+<BaseLayout title="BlurText WAAPI Test">
+  <main class="min-h-screen p-8 max-w-4xl mx-auto pt-32">
+    <h1 class="text-4xl font-bold mb-10 text-center">WAAPI Sequence</h1>
+    <ChainTestWAAPI client:load />
+  </main>
+</BaseLayout>
