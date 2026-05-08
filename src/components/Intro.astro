@@ -23,6 +23,9 @@ const {
     --size-font: calc(
       var(--size-container) / (var(--size-container-ideal) / var(--size-unit))
     );
+    --size-block-large: 1.6875em;
+    --size-block-small: 0.875em;
+    --gap-m: 1em;
   }
   @media screen and (max-width: 991px) {
     :root {
@@ -63,6 +66,7 @@ const {
     align-items: center;
     width: 100%;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     position: fixed;
 
@@ -215,8 +219,8 @@ const {
         }
       }
       .load-bottom {
-        grid-column-gap: 0.25em;
-        grid-row-gap: 0.25em;
+        --load-bar-gap: 0.25em;
+        gap: var(--load-bar-gap);
         border-style: none solid solid;
         border-width: 1px;
         border-color: var(--color-slate-600);
@@ -230,7 +234,8 @@ const {
         .load-bar-block {
           opacity: 0;
           background-color: var(--color-blue-400);
-          width: 1.125em;
+          flex: 1 1 0;
+          min-width: 0;
           height: 2.5em;
           margin-top: 0.25em;
           margin-bottom: 0.25em;
@@ -240,8 +245,9 @@ const {
   }
 
   .slot {
-    width: 100vw;
+    width: 100%;
     height: 100vh;
+    height: 100dvh;
   }
   @media screen and (max-width: 767px) {
     .load-modal {
@@ -250,19 +256,49 @@ const {
     }
   }
   @media screen and (max-width: 479px) {
-    .load-modal {
-      width: 21em;
-      height: calc(33em + 2px);
+    .load-w {
+      padding: 1em;
     }
-  }
-  @media screen and (max-width: 479px) {
-    .timeline-card {
-      max-width: calc(var(--size-block-large) * 14 - 13px);
+
+    .load-w .load-bg {
+      background-size: 3em 3em;
+    }
+
+    .load-modal {
+      width: min(21em, calc(100vw - 2em));
+      height: min(calc(33em + 2px), calc(100vh - 2em));
+      height: min(calc(33em + 2px), calc(100dvh - 2em));
+    }
+
+    .load-modal__bar {
+      padding-left: var(--gap-m);
+      justify-content: flex-start;
+      align-items: center;
+      font-size: 0.8em;
+    }
+
+    .load-modal__close {
+      aspect-ratio: auto;
+      width: 5em;
+      height: 5em;
     }
   }
   @media screen and (max-width: 479px) {
     .timeline-card.load {
+      max-width: calc(var(--size-block-large) * 14 - 13px);
       font-size: 0.85em;
+
+      .card-top .card-grid__inner {
+        width: calc(var(--size-block-large) * 12 - 18px);
+
+        &.clip {
+          width: calc(var(--size-block-large) * 12 - 12px);
+        }
+
+        .card-grid__icon {
+          height: calc(var(--size-block-large) * 2 - 2px);
+        }
+      }
     }
   }
 </style>
