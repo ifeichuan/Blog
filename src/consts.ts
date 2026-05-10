@@ -16,5 +16,6 @@ export const SITE_DESCRIPTION =
 
 export const NavList = [
   { label: "Posts", href: "/blogs", icon: "" },
+  { label: "Labs", href: "/labs", icon: "" },
   { label: "Resumes", href: "/resumes", icon: "" },
 ];

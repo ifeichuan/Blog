@@ -1,0 +1,199 @@
+---
+import Base from "@/layouts/Base.astro";
+
+const labs = [
+  {
+    title: "Texture Lab",
+    description: "WebGL 后处理引擎，滚动切换纹理效果",
+    href: "/texture-lab",
+    tags: ["WebGL", "Shader"],
+  },
+  {
+    title: "Blur · GSAP",
+    description: "GSAP 驱动的模糊动画效果",
+    href: "/blur-gsap",
+    tags: ["GSAP", "Animation"],
+  },
+  {
+    title: "Blur · Motion",
+    description: "Motion 库实现的模糊过渡",
+    href: "/blur-motion",
+    tags: ["Motion", "Animation"],
+  },
+  {
+    title: "Blur · WAAPI",
+    description: "Web Animations API 原生模糊动画",
+    href: "/blur-waapi",
+    tags: ["WAAPI", "Animation"],
+  },
+  {
+    title: "Lenis Scroll",
+    description: "Lenis 平滑滚动手感对比（6 种配置）",
+    href: "/lenis/default",
+    tags: ["Scroll", "Lenis"],
+  },
+  {
+    title: "Tools",
+    description: "小工具合集",
+    href: "/tools",
+    tags: ["Utility"],
+  },
+];
+---
+
+<Base enableIntro={false}>
+  <main class="labs-page">
+    <header class="labs-header">
+      <h1>Labs</h1>
+      <p>实验性项目和技术演示的合集</p>
+    </header>
+
+    <div class="labs-grid">
+      {labs.map((lab) => (
+        <a href={lab.href} class="lab-card">
+          <div class="lab-card-content">
+            <h2>{lab.title}</h2>
+            <p>{lab.description}</p>
+            <div class="lab-tags">
+              {lab.tags.map((tag) => (
+                <span class="lab-tag">{tag}</span>
+              ))}
+            </div>
+          </div>
+          <span class="lab-arrow">&rarr;</span>
+        </a>
+      ))}
+    </div>
+  </main>
+</Base>
+
+<style>
+  .labs-page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 6rem 2rem 4rem;
+  }
+
+  .labs-header {
+    margin-bottom: 3rem;
+  }
+
+  .labs-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary, #1a1a1a);
+  }
+
+  .labs-header p {
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+    color: var(--text-secondary, #666);
+  }
+
+  .labs-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .lab-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+  }
+
+  .lab-card:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+  }
+
+  .lab-card-content h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary, #1a1a1a);
+  }
+
+  .lab-card-content p {
+    margin: 0.4rem 0 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary, #666);
+  }
+
+  .lab-tags {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .lab-tag {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text-secondary, #555);
+    font-weight: 500;
+  }
+
+  .lab-arrow {
+    font-size: 1.4rem;
+    color: rgba(0, 0, 0, 0.2);
+    transition: color 0.2s, transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .lab-card:hover .lab-arrow {
+    color: rgba(0, 0, 0, 0.5);
+    transform: translateX(3px);
+  }
+
+  :global(.dark) .labs-header h1 {
+    color: #f0f0f0;
+  }
+
+  :global(.dark) .labs-header p {
+    color: #999;
+  }
+
+  :global(.dark) .lab-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  :global(.dark) .lab-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  :global(.dark) .lab-card-content h2 {
+    color: #f0f0f0;
+  }
+
+  :global(.dark) .lab-card-content p {
+    color: #999;
+  }
+
+  :global(.dark) .lab-tag {
+    background: rgba(255, 255, 255, 0.08);
+    color: #aaa;
+  }
+
+  :global(.dark) .lab-arrow {
+    color: rgba(255, 255, 255, 0.2);
+  }
+
+  :global(.dark) .lab-card:hover .lab-arrow {
+    color: rgba(255, 255, 255, 0.5);
+  }
+</style>
