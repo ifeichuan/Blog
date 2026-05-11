@@ -1,7 +1,6 @@
 import { defineAction } from "astro:actions";
 import { z } from "astro:content";
 import { umami } from "./umami";
-import { fetchLinkPreview } from "./link-preview";
 
 const ALLOWED_ACTION_ORIGINS = new Set([
   "https://feichuans.com",
@@ -67,17 +66,6 @@ export const server = {
     }> {
       assertAllowedOrigin(context.request);
       return umami.getVisitors(path);
-    },
-  }),
-  getLinkPreview: defineAction({
-    input: z.string().url(),
-    async handler(url, context): Promise<{
-      screenshotUrl: string;
-      title?: string;
-      description?: string;
-    } | null> {
-      assertAllowedOrigin(context.request);
-      return fetchLinkPreview(url);
     },
   }),
 };

@@ -1,5 +1,4 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { actions } from "astro:actions";
 
 interface PreviewData {
   screenshotUrl: string;
@@ -8,6 +7,49 @@ interface PreviewData {
 }
 
 const previewCache = new Map<string, PreviewData | null>();
+const inflightRequests = new Map<string, Promise<PreviewData | null>>();
+
+async function fetchMicrolink(url: string): Promise<PreviewData | null> {
+  if (previewCache.has(url)) return previewCache.get(url)!;
+  if (inflightRequests.has(url)) return inflightRequests.get(url)!;
+
+  const request = (async () => {
+    try {
+      const params = new URLSearchParams({
+        url,
+        screenshot: "true",
+        "screenshot.width": "1280",
+        "screenshot.height": "800",
+        "screenshot.type": "jpeg",
+      });
+      const res = await fetch(`https://api.microlink.io?${params}`);
+      if (!res.ok) {
+        previewCache.set(url, null);
+        return null;
+      }
+      const json = await res.json();
+      if (json.status !== "success" || !json.data?.screenshot?.url) {
+        previewCache.set(url, null);
+        return null;
+      }
+      const result: PreviewData = {
+        screenshotUrl: json.data.screenshot.url,
+        title: json.data.title,
+        description: json.data.description,
+      };
+      previewCache.set(url, result);
+      return result;
+    } catch {
+      previewCache.set(url, null);
+      return null;
+    } finally {
+      inflightRequests.delete(url);
+    }
+  })();
+
+  inflightRequests.set(url, request);
+  return request;
+}
 
 export function HoverLinkEnhancer() {
   const [preview, setPreview] = useState<PreviewData | null>(null);
@@ -30,15 +72,10 @@ export function HoverLinkEnhancer() {
 
     setIsLoading(true);
     try {
-      const result = await actions.getLinkPreview(url);
-      if (result.data) {
-        previewCache.set(url, result.data);
-        setPreview(result.data);
-      } else {
-        previewCache.set(url, null);
+      const result = await fetchMicrolink(url);
+      if (result) {
+        setPreview(result);
       }
-    } catch {
-      previewCache.set(url, null);
     } finally {
       setIsLoading(false);
     }
