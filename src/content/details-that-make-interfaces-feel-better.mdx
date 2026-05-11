@@ -1,0 +1,250 @@
+---
+tags:
+  - 前端
+  - CSS
+  - UI
+  - 设计工程
+title: 让界面「有感觉」的细节
+description: 好的界面从来不是一个大招搞定的，而是一堆小细节叠加出来的。这篇文章整理了让 UI 从「能用」变成「好用」的实用技巧，附带可交互的 demo。
+dateCreated: 2026-05-10T15:00:00+08:00
+dateModified: 2026-05-11T00:00:00+08:00
+isPub: true
+---
+
+import {
+  BorderRadiusDemo,
+  ShadowVsBorderDemo,
+  ImageOutlineDemo,
+  TabularNumsDemo,
+  StaggerDemo,
+  ScaleOnPressDemo,
+  TextWrapDemo,
+  TransitionAllDemo,
+} from '../components/InterfaceFeelDemos.tsx'
+
+> 好的界面从来不是一个大招搞定的。它是一堆小细节叠加出来的——每一个单独看都不起眼，但合在一起就是「这个 App 手感真好」和「总觉得哪里不对」的区别。
+
+本文整理自 [Jakub Krehel](https://jakub.kr) 的 [Details That Make Interfaces Feel Better](https://jakub.kr/writing/details-that-make-interfaces-feel-better)，结合我自己的开发经验做了扩展和中文化。每个技巧都附带可交互的 demo，你可以直接在页面上感受差异。
+
+---
+
+## 1. 同心圆角（Concentric Border Radius）
+
+当一个圆角容器里嵌套了另一个圆角元素时，如果内外圆角半径相同，视觉上内部元素的圆角会显得更「胖」。
+
+公式很简单：**外部圆角 = 内部圆角 + padding**
+
+<BorderRadiusDemo client:visible />
+
+**实际案例**：iOS 的 App 图标嵌套在文件夹里时，文件夹的圆角比图标大。Stripe 的卡片组件、Vercel 的 Dashboard 面板都严格遵循这个规则。如果你用 Tailwind，一个 `p-2 rounded-2xl` 的容器里应该放 `rounded-xl` 的子元素（16 ≈ 12 + 4）。
+
+```css
+.card {
+  border-radius: 20px; /* 12 + 8 */
+  padding: 8px;
+}
+.card-inner {
+  border-radius: 12px;
+}
+```
+
+---
+
+## 2. 用阴影代替边框
+
+`border: 1px solid #eee` 在浅色背景上还行，但换个背景色就露馅了。多层透明阴影能适配任何环境：
+
+<ShadowVsBorderDemo client:visible />
+
+**实际案例**：Linear 的卡片、Notion 的 block、Raycast 的列表项都用多层阴影而非实色边框。注意切换到深色背景时，阴影方案依然自然，而实色边框会显得格格不入。
+
+```css
+.surface {
+  box-shadow:
+    0px 0px 0px 1px rgba(0, 0, 0, 0.06),
+    0px 1px 2px -1px rgba(0, 0, 0, 0.06),
+    0px 2px 4px 0px rgba(0, 0, 0, 0.04);
+}
+```
+
+---
+
+## 3. 给图片加一层微妙的描边
+
+图片边缘和背景融为一体时，界面会显得「散」。一个 1px 半透明描边就能建立边界感：
+
+<ImageOutlineDemo client:visible />
+
+**实际案例**：Apple 官网的产品图、GitHub 的用户头像、Medium 的文章配图都有这层描边。关键是颜色必须是纯黑/纯白——用 `slate` 或 `zinc` 这类带色调的灰会和图片边缘混合，看起来像脏了。
+
+```css
+img {
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  outline-offset: -1px;
+}
+.dark img {
+  outline-color: rgba(255, 255, 255, 0.1);
+}
+```
+
+---
+
+## 4. 让文字更清晰
+
+macOS 默认的子像素渲染会让文字看起来偏粗偏糊。一行 CSS 就能修复：
+
+```css
+body {
+  -webkit-font-smoothing: antialiased;
+}
+```
+
+**实际案例**：几乎所有现代 Web 应用（Vercel、Linear、Figma、Notion）都在根元素设置了 `antialiased`。Tailwind 的 `antialiased` 类做的就是这件事。对比效果在细体字（font-weight 300-400）和小号字（12-14px）上最明显。
+
+---
+
+## 5. 数字用等宽（Tabular Nums）
+
+动态变化的数字如果每位宽度不同，整个布局会跟着抖动：
+
+<TabularNumsDemo client:visible />
+
+**实际案例**：GitHub 的 star 计数、Stripe Dashboard 的金额显示、任何倒计时组件。只要数字会变化，就该加 `tabular-nums`。
+
+```css
+.counter, .price, .timer {
+  font-variant-numeric: tabular-nums;
+}
+```
+
+---
+
+## 6. 标题用 `text-wrap: balance`
+
+默认换行经常出现一行很长、下一行只剩一两个字的尴尬情况：
+
+<TextWrapDemo client:visible />
+
+**实际案例**：这个博客的标题就用了 `balance`。对比一下「让界面有感觉的细节」如果最后一个字单独掉到第二行，观感会差很多。`pretty` 则适合正文——它只处理最后一行的孤字问题，不会重排整段。
+
+```css
+h1, h2, h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+```
+
+---
+
+## 7. 动画必须可中断
+
+**用 CSS transition 处理交互状态变化，用 keyframe animation 处理一次性入场序列。**
+
+transition 可以被中断——用户在动画进行到一半时再次操作，它会从当前位置平滑转向新目标。keyframe animation 一旦开始就跑完整个时间线。
+
+```css
+/* 交互状态：transition */
+.button {
+  transition: transform 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+.button:active {
+  transform: scale(0.96);
+}
+
+/* 入场序列：keyframes */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+.entering {
+  animation: fade-in 400ms ease-out both;
+}
+```
+
+**实际案例**：试试快速连续 hover 一个 Linear 的按钮——它的颜色变化是 transition，所以每次都能平滑响应。而如果用 keyframes 做 hover 效果，快速移入移出会看到动画「卡住」跑完才能响应下一次。
+
+---
+
+## 8. 按压反馈（Scale on Press）
+
+一个微妙的 `scale(0.96)` 就能让按钮有触感：
+
+<ScaleOnPressDemo client:visible />
+
+**实际案例**：Apple 的 iOS 按钮、Telegram 的消息气泡长按、Arc 浏览器的标签页点击都有这个效果。值永远用 `0.96`，不要低于 `0.95`——再小就夸张了。
+
+```css
+.button {
+  transition: transform 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+.button:active {
+  transform: scale(0.96);
+}
+```
+
+---
+
+## 9. 入场动画要拆分和错开
+
+不要把整个容器作为一个整体做动画。拆成语义化的小块，每块错开 ~100ms：
+
+<StaggerDemo client:visible />
+
+**实际案例**：Stripe 的 Checkout 页面加载时，标题、表单、按钮依次浮现。Framer 的页面切换也是把内容拆成多个 block 错开入场。对比「同时入场」，错开版本明显更有节奏感。
+
+```css
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(4px);
+  }
+}
+.item {
+  animation: enter 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation-delay: calc(120ms * var(--i, 0));
+}
+```
+
+---
+
+## 10. 退出动画要克制
+
+入场可以花哨，退出必须低调。退出应该比入场更快、幅度更小：
+
+- 入场：`translateY(8px)`，500ms，带 blur
+- 退出：`translateY(-12px)`，200ms，无 blur
+
+**实际案例**：macOS 的通知消失时只是轻轻向上滑出+淡出，不会像出现时那样有弹性。Slack 的消息删除动画也是快速收缩消失，不会吸引注意力。退出的元素不需要和入场一样多的运动量。
+
+---
+
+## 11. 永远不要用 `transition: all`
+
+<TransitionAllDemo client:visible />
+
+**实际案例**：如果一个按钮同时有 hover 变色和 active 缩放，`transition: all` 会让 `background-color` 的变化也带上延迟——用户会觉得按钮「反应慢」。指定具体属性后，颜色可以瞬变，缩放可以平滑，各自独立。Tailwind 里用 `transition-transform` 而不是 `transition-all`。
+
+```css
+/* ❌ */
+.element { transition: all 200ms ease; }
+
+/* ✅ */
+.element { transition: transform 200ms, opacity 200ms; }
+```
+
+---
+
+## 总结
+
+这些细节单独看都很小，但效果是乘法不是加法。用户不会说「哇这个圆角算得真准」，但他们会说「这个 App 感觉很舒服」。
+
+这就是设计工程的价值——把「感觉」变成可执行的代码。
+
+---
+
+## 参考
+
+- [Details That Make Interfaces Feel Better](https://jakub.kr/writing/details-that-make-interfaces-feel-better) — Jakub Krehel（本文主要参考）
+- [Refactoring UI](https://www.refactoringui.com/) — Steve Schoger & Adam Wathan
