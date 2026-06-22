@@ -1,29 +1,36 @@
 ---
-import Base from "../../layouts/Base.astro";
+import '../../styles/global.css'
+import { Homepage } from '../../components/homepage'
 ---
 
-<Base>
-  <main>
-    <div id="homepage-root"></div>
-  </main>
-</Base>
-
-<script>
-  import { createElement } from 'react'
-  import { createRoot } from 'react-dom/client'
-  import { Homepage } from '../../components/homepage'
-
-  const root = createRoot(document.getElementById('homepage-root')!)
-  root.render(createElement(Homepage))
-</script>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Feichuan · 首页</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+  <Homepage client:only="react" />
+</body>
+</html>
 
 <style is:global>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --bg: #100F0F; --bg2: #1C1B1A; --ui: #282726; --line: #403E3C;
     --tx: #CECDC3; --tx2: #878580; --tx3: #575653;
     --orange: #DA702C; --orange2: #BC5215; --blue: #4385BE; --green: #879A39;
+    --spring: cubic-bezier(.175,.885,.32,1.275);
   }
-  body { background: var(--bg); color: var(--tx); overflow-x: hidden; }
+  html { scroll-behavior: auto; }
+  body {
+    background: var(--bg); color: var(--tx); overflow-x: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.7;
+  }
+  a { color: inherit; text-decoration: none; }
 
   @keyframes blink { 50% { opacity: 0 } }
   .animate-blink { animation: blink 1s step-end infinite; }
