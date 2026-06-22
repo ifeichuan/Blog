@@ -69,13 +69,30 @@ body{background:var(--bg);color:var(--tx);
   font-size:10px;letter-spacing:.25em;color:var(--tx3);text-transform:uppercase;text-align:center}
 .scroll-hint::before{content:"";display:block;width:1px;height:40px;background:linear-gradient(var(--tx3),transparent);margin:0 auto 8px}
 
-/* ======== §1 SECOND SCREEN (text staged) ======== */
-#second{height:200vh;position:relative}
-#second .pin{position:sticky;top:0;height:100vh;display:flex;align-items:center;padding:0 clamp(24px,5vw,80px);max-width:var(--max);margin:0 auto}
-#second .words{font-size:clamp(24px,3.5vw,42px);font-weight:500;line-height:1.5;letter-spacing:-.02em}
-#second .words span{display:inline;opacity:.1;transition:opacity .05s}
-#second .words span.lit{opacity:1}
-#second .words .em{color:var(--orange)}
+/* ======== §1 SECOND SCREEN (多种文字动画) ======== */
+#second{min-height:350vh;position:relative}
+#second .text-section{height:100vh;position:sticky;top:0;display:flex;align-items:center;padding:0 clamp(24px,5vw,80px);max-width:var(--max);margin:0 auto}
+#second .text-section .anim-label{position:absolute;left:20px;top:20px;font-size:9px;letter-spacing:.15em;
+  color:var(--purple);text-transform:uppercase;border:1px solid var(--purple);padding:2px 8px;border-radius:3px}
+/* Split Text */
+.split-text{font-size:clamp(32px,5vw,56px);font-weight:700;letter-spacing:-.03em;line-height:1.2}
+.split-text span{display:inline-block;opacity:0;transform:translateY(40px) rotateX(-40deg);transition:opacity .4s,transform .5s cubic-bezier(.22,.61,.36,1)}
+.split-text span.in{opacity:1;transform:none}
+/* Blur Text */
+.blur-text{font-size:clamp(24px,3.5vw,42px);font-weight:500;line-height:1.5;letter-spacing:-.02em}
+.blur-text span{display:inline;filter:blur(8px);opacity:.3;transition:filter .6s,opacity .5s}
+.blur-text span.in{filter:blur(0);opacity:1}
+/* Scroll Reveal (word-by-word opacity) */
+.reveal-text{font-size:clamp(20px,3vw,36px);font-weight:500;line-height:1.6;letter-spacing:-.01em}
+.reveal-text span{display:inline;opacity:.08;transition:opacity .05s}
+.reveal-text span.lit{opacity:1}
+.reveal-text span.em{color:var(--orange)}
+/* True Focus */
+.focus-text{font-size:clamp(28px,4vw,48px);font-weight:600;line-height:1.4;letter-spacing:-.02em}
+.focus-text span{display:inline-block;filter:blur(4px);opacity:.35;transition:filter .3s,opacity .3s,transform .3s}
+.focus-text span.focus{filter:blur(0);opacity:1;transform:scale(1.05)}
+/* Decrypted/Scramble */
+.decrypt-text{font-size:clamp(20px,2.5vw,32px);font-weight:500;font-family:'Geist Mono',monospace;color:var(--green);min-height:2em}
 
 /* ======== §2 SCROLL STACKED CARDS (项目 demo) ======== */
 #stacked{position:relative;height:calc(100vh + 300vh)} /* 100vh for sticky + 300vh scroll space (3 cards × 100vh) */
@@ -184,12 +201,39 @@ body{background:var(--bg);color:var(--tx);
   </div>
 </section>
 
-<!-- §1 SECOND SCREEN: word-by-word reveal -->
+<!-- §1 SECOND SCREEN: 多种文字动画 -->
 <section id="second">
-  <span class="section-label">§1 文字揭示 · 200vh</span>
-  <div class="note"><b>Second Screen</b>滚动驱动逐词点亮。重点词橙色。<code>scroll-driven</code></div>
-  <div class="pin">
-    <div class="words" id="wordsContainer"></div>
+  <span class="section-label">§1 文字动画展示 · 350vh</span>
+  <div class="note"><b>多种 ReactBits 文字动画</b>每段用不同效果：Split Text / Blur Text / Scroll Reveal / True Focus / Decrypted Text。全部滚动驱动。</div>
+
+  <!-- Split Text -->
+  <div class="text-section" id="tsplit" style="z-index:5">
+    <span class="anim-label">Split Text</span>
+    <p class="split-text" id="splitText">做有设计意图的交互</p>
+  </div>
+
+  <!-- Blur Text -->
+  <div class="text-section" id="tblur" style="z-index:4">
+    <span class="anim-label">Blur Text</span>
+    <p class="blur-text" id="blurText">不写第一百遍的组件，写没人见过的体验</p>
+  </div>
+
+  <!-- Scroll Reveal (word by word) -->
+  <div class="text-section" id="treveal" style="z-index:3">
+    <span class="anim-label">Scroll Reveal</span>
+    <p class="reveal-text" id="revealText"></p>
+  </div>
+
+  <!-- True Focus -->
+  <div class="text-section" id="tfocus" style="z-index:2">
+    <span class="anim-label">True Focus</span>
+    <p class="focus-text" id="focusText">每一个像素 每一帧动画 每一次滚动反馈 都有存在的理由</p>
+  </div>
+
+  <!-- Decrypted Text -->
+  <div class="text-section" id="tdecrypt" style="z-index:1">
+    <span class="anim-label">Decrypted Text</span>
+    <p class="decrypt-text" id="decryptText"></p>
   </div>
 </section>
 
@@ -332,15 +376,49 @@ function progress(el){
   return Math.min(1,Math.max(0,(window.innerHeight-r.top)/(window.innerHeight+el.offsetHeight)));
 }
 
-// §1 words
-const mText="做 有设计意图 的交互。 不写第一百遍的组件， 写 没人见过 的体验。 代码是手艺， 网站是作品。 我关心的不是「能不能跑」， 而是「为什么这么设计」。 每一个像素、 每一帧动画、 每一次滚动反馈， 都应该有它存在的理由。 大三在读， AI + 前端。 比起复制粘贴， 我更想 从零理解 然后 重新发明。";
-const wc=$('#wordsContainer');
-mText.split(' ').forEach(w=>{
+// §1 Text animations setup
+// Split Text — wrap each char
+const splitEl=$('#splitText');
+const splitChars=splitEl.textContent.split('').map(ch=>{
+  const s=document.createElement('span');s.textContent=ch;splitEl.appendChild(s);return s;
+});splitEl.firstChild&&splitEl.childNodes[0].nodeType===3&&splitEl.removeChild(splitEl.childNodes[0]);
+// re-wrap properly
+splitEl.textContent='';
+splitEl.textContent.split('');
+const splitSrc="做有设计意图的交互";
+splitEl.innerHTML='';
+splitSrc.split('').forEach(ch=>{const s=document.createElement('span');s.textContent=ch;splitEl.appendChild(s);});
+const splitSpans=$$('#splitText span');
+
+// Blur Text — wrap each char
+const blurEl=$('#blurText');
+const blurSrc=blurEl.textContent;
+blurEl.innerHTML='';
+blurSrc.split('').forEach(ch=>{const s=document.createElement('span');s.textContent=ch;blurEl.appendChild(s);});
+const blurSpans=$$('#blurText span');
+
+// Scroll Reveal — wrap each word
+const revealSrc="我关心的不是「能不能跑」 而是 为什么这么设计 。 比起复制粘贴 我更想 从零理解 然后 重新发明 。";
+const revealEl=$('#revealText');
+revealSrc.split(' ').forEach(w=>{
   const s=document.createElement('span');
-  s.className=["有设计意图","没人见过","手艺，","作品。","为什么这么设计","从零理解","重新发明。"].includes(w)?'em':'';
-  s.textContent=w+' ';wc.appendChild(s);
+  s.className=["为什么这么设计","从零理解","重新发明"].includes(w)?'em':'';
+  s.textContent=w+' ';revealEl.appendChild(s);
 });
-const wordSpans=$$('#wordsContainer span');
+const revealSpans=$$('#revealText span');
+
+// True Focus — wrap each segment
+const focusEl=$('#focusText');
+const focusSrc=focusEl.textContent;
+focusEl.innerHTML='';
+focusSrc.split(' ').forEach(w=>{const s=document.createElement('span');s.textContent=w+' ';focusEl.appendChild(s);});
+const focusSpans=$$('#focusText span');
+
+// Decrypted Text
+const decryptTarget="大三在读，AI + 前端。";
+const decryptEl=$('#decryptText');
+const decryptChars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*";
+let lastDecryptProgress=-1;
 
 // Hero auto-appear elements (name + scroll hint appear on load)
 setTimeout(()=>{
@@ -359,7 +437,7 @@ document.querySelectorAll('.bubble').forEach((b,i)=>{
 });
 
 // scroll engine
-const heroEl=$('#hero'),secondEl=$('#second');
+const heroEl=$('#hero');
 const workItems=$$('.work-item'),progressBar=$('#progress');
 const footerEls=$$('#footer > *:not(.note)');
 
@@ -381,10 +459,39 @@ function tick(){
   const hint=$('.scroll-hint');
   if(hint)hint.style.opacity=hp<0.08?'1':'0';
 
-  // §1 words
-  const sp=sectionProgress(secondEl);
-  const litCount=Math.floor(sp*wordSpans.length*1.4);
-  wordSpans.forEach((w,i)=>w.classList.toggle('lit',i<litCount));
+  // §1 Text animations — each section driven by its own scroll progress
+  // Split Text
+  const splitP=progress($('#tsplit'));
+  const splitCount=Math.floor(Math.min(1,(splitP-.1)/.5)*splitSpans.length);
+  splitSpans.forEach((s,i)=>{s.classList.toggle('in',i<splitCount);s.style.transitionDelay=i*30+'ms';});
+
+  // Blur Text
+  const blurP=progress($('#tblur'));
+  const blurCount=Math.floor(Math.min(1,(blurP-.1)/.5)*blurSpans.length);
+  blurSpans.forEach((s,i)=>s.classList.toggle('in',i<blurCount));
+
+  // Scroll Reveal
+  const revP=progress($('#treveal'));
+  const litCount=Math.floor(Math.min(1,(revP-.1)/.6)*revealSpans.length);
+  revealSpans.forEach((w,i)=>w.classList.toggle('lit',i<litCount));
+
+  // True Focus
+  const focP=progress($('#tfocus'));
+  const focIdx=Math.floor(Math.min(1,(focP-.1)/.7)*focusSpans.length);
+  focusSpans.forEach((s,i)=>s.classList.toggle('focus',i===focIdx||i===focIdx-1));
+
+  // Decrypted Text
+  const decP=progress($('#tdecrypt'));
+  const decProgress=Math.min(1,Math.max(0,(decP-.15)/.5));
+  const revealedCount=Math.floor(decProgress*decryptTarget.length);
+  if(revealedCount!==lastDecryptProgress){
+    lastDecryptProgress=revealedCount;
+    let out='';
+    for(let i=0;i<decryptTarget.length;i++){
+      out+=i<revealedCount?decryptTarget[i]:decryptChars[Math.floor(Math.random()*decryptChars.length)];
+    }
+    decryptEl.textContent=out;
+  }
 
   // §2 Scroll Stack — cards land on stack as you scroll
   const stackedEl=document.getElementById('stacked');
