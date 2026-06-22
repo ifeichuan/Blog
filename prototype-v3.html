@@ -23,7 +23,7 @@ body{background:var(--bg);color:var(--tx);
 /* ---- NOTE SYSTEM ---- */
 .note{position:absolute;right:20px;top:12px;z-index:50;
   background:rgba(218,112,44,.1);border:1px dashed var(--orange);color:var(--orange);
-  font-size:11px;line-height:1.5;padding:6px 12px;border-radius:6px;max-width:320px;
+  font-size:11px;line-height:1.5;padding:6px 12px;border-radius:6px;max-width:340px;
   pointer-events:none}
 .note b{font-weight:700;display:block;margin-bottom:2px}
 .note code{background:rgba(218,112,44,.15);padding:1px 4px;border-radius:3px;font-size:10px}
@@ -41,18 +41,33 @@ body{background:var(--bg);color:var(--tx);
   background:var(--ui);border:1px solid var(--line);color:var(--tx2);
   font-size:10px;letter-spacing:.15em;text-transform:uppercase;padding:4px 10px;border-radius:4px;margin:12px 0 0 20px}
 
-/* ======== §0 HERO ======== */
-#hero{height:250vh;position:relative}
+/* ======== §0 HERO (光影背景 + staged + bubbles) ======== */
+#hero{height:200vh;position:relative}
 #hero .pin{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#hero .light-bg{position:absolute;inset:0;pointer-events:none}
+#hero .light-bg .orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:.45;mix-blend-mode:screen}
+#hero .light-bg .orb:nth-child(1){width:420px;height:420px;background:var(--orange);left:5%;top:15%}
+#hero .light-bg .orb:nth-child(2){width:350px;height:350px;background:var(--blue);right:10%;top:25%}
+#hero .light-bg .orb:nth-child(3){width:280px;height:280px;background:var(--green);left:30%;bottom:10%}
 #hero .staged{position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;padding:0 clamp(24px,5vw,80px);max-width:var(--max);width:100%}
-#hero .staged>*{opacity:0;transform:translateY(30px);transition:none}
-#hero .staged .name{font-size:clamp(48px,8vw,88px);font-weight:700;letter-spacing:-.04em;line-height:1}
+#hero .staged>*{opacity:0;transform:translateY(24px)}
+#hero .staged .name{font-size:clamp(52px,9vw,96px);font-weight:700;letter-spacing:-.04em;line-height:1}
 #hero .staged .intro{font-size:clamp(14px,1.8vw,18px);color:var(--tx2);margin-top:16px;max-width:420px}
 #hero .staged .tags{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
 #hero .staged .tags span{font-size:11px;color:var(--tx3);border:1px solid var(--line);padding:4px 10px;border-radius:4px}
-#hero .staged .deco{position:absolute;right:clamp(24px,8vw,120px);top:50%;transform:translateY(-50%);
-  width:160px;height:160px;border-radius:50%;background:conic-gradient(from 45deg,var(--orange),var(--purple),var(--blue),var(--orange));
-  opacity:0;filter:blur(40px)}
+/* bubbles */
+.bubbles{position:absolute;inset:0;pointer-events:none;z-index:1}
+.bubble{position:absolute;border-radius:50%;border:1px solid var(--line);opacity:0}
+.bubble:nth-child(1){width:80px;height:80px;right:12%;top:18%}
+.bubble:nth-child(2){width:48px;height:48px;right:25%;bottom:22%}
+.bubble:nth-child(3){width:64px;height:64px;left:8%;bottom:28%}
+.bubble:nth-child(4){width:36px;height:36px;left:20%;top:20%}
+.bubble:nth-child(5){width:56px;height:56px;right:8%;bottom:40%}
+.bubble:nth-child(6){width:28px;height:28px;left:45%;top:12%}
+/* scroll hint */
+.scroll-hint{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:3;
+  font-size:10px;letter-spacing:.25em;color:var(--tx3);text-transform:uppercase;text-align:center}
+.scroll-hint::before{content:"";display:block;width:1px;height:40px;background:linear-gradient(var(--tx3),transparent);margin:0 auto 8px}
 
 /* ======== §1 SECOND SCREEN (text staged) ======== */
 #second{height:200vh;position:relative}
@@ -62,20 +77,25 @@ body{background:var(--bg);color:var(--tx);
 #second .words span.lit{opacity:1}
 #second .words .em{color:var(--orange)}
 
-/* ======== §2 DAPPLED LIGHT → ZOOM-OUT ======== */
-#dappled{height:300vh;position:relative}
-#dappled .pin{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
-#dappled .light-box{width:100%;height:100%;position:absolute;inset:0;transition:none}
-#dappled .light-box .orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;mix-blend-mode:screen}
-#dappled .light-box .orb:nth-child(1){width:400px;height:400px;background:var(--orange);left:10%;top:20%}
-#dappled .light-box .orb:nth-child(2){width:350px;height:350px;background:var(--blue);right:15%;top:30%}
-#dappled .light-box .orb:nth-child(3){width:300px;height:300px;background:var(--green);left:35%;bottom:15%}
-#dappled .zoom-content{position:relative;z-index:2;opacity:0;transform:scale(.85);
-  max-width:var(--max);width:100%;padding:0 24px;text-align:center}
-#dappled .zoom-content h2{font-size:clamp(28px,4vw,48px);font-weight:700;letter-spacing:-.03em}
-#dappled .zoom-content p{margin-top:16px;color:var(--tx2);font-size:15px;max-width:500px;margin-inline:auto}
+/* ======== §2 SCROLL STACKED CARDS (项目 demo) ======== */
+#stacked{position:relative;height:calc(100vh + 300vh)} /* 100vh for sticky + 300vh scroll space (3 cards × 100vh) */
+#stacked .stack-wrap{position:sticky;top:10vh;height:80vh;display:flex;align-items:center;justify-content:center}
+#stacked .stack-inner{position:relative;width:100%;height:100%;max-width:var(--max)}
+.project-card{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  gap:48px;padding:clamp(24px,5vw,80px);background:var(--bg2);border:1px solid var(--line);border-radius:20px;
+  overflow:hidden;transition:transform .5s cubic-bezier(.22,.61,.36,1),filter .5s,opacity .5s;will-change:transform}
+.project-card .card-info{flex:1;max-width:400px}
+.project-card .card-info .k{font-size:10px;letter-spacing:.15em;color:var(--tx3);text-transform:uppercase;margin-bottom:12px}
+.project-card .card-info h3{font-size:clamp(24px,3.5vw,36px);font-weight:700;letter-spacing:-.02em}
+.project-card .card-info p{font-size:14px;color:var(--tx2);margin-top:12px;line-height:1.7}
+.project-card .card-demo{flex:0 0 clamp(240px,40vw,420px);height:clamp(200px,35vh,320px);
+  border:1px solid var(--line);border-radius:16px;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
+  color:var(--tx3);font-size:11px;letter-spacing:.05em}
+.card-demo .demo-icon{font-size:32px;opacity:.4}
+@media(max-width:760px){.project-card{flex-direction:column;gap:24px}.project-card .card-demo{flex:none;width:100%;height:200px}}
 
-/* ======== §3 WORKS (Image Trail placeholder) ======== */
+/* ======== §3 WORKS + DEMOS ======== */
 #works{position:relative;padding:clamp(80px,12vh,160px) clamp(24px,5vw,80px);max-width:var(--max);margin:0 auto}
 #works .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--tx3);margin-bottom:32px}
 .works-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
@@ -85,13 +105,19 @@ body{background:var(--bg);color:var(--tx);
 .work-item .k{font-size:10px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase}
 .work-item h3{font-size:17px;font-weight:600;margin:8px 0}
 .work-item p{font-size:13px;color:var(--tx2);line-height:1.6}
+/* demo embeds */
+.demo-strip{margin-top:48px;display:flex;gap:16px;overflow-x:auto;padding-bottom:8px}
+.demo-embed{flex:0 0 300px;height:200px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.demo-embed .demo-label{font-size:11px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase}
+.demo-embed .demo-name{font-size:16px;font-weight:600}
 
-/* ======== §4 INFINITE GALLERY (300vh pinned placeholder) ======== */
+/* ======== §4 INFINITE GALLERY ======== */
 #gallery{height:300vh;position:relative}
 #gallery .pin{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center}
 #gallery .placeholder-block{width:90%;max-width:900px;height:70vh}
 
-/* ======== §5 WRITING (Flowing Menu style) ======== */
+/* ======== §5 WRITING ======== */
 #writing{position:relative;padding:clamp(80px,12vh,160px) clamp(24px,5vw,80px);max-width:var(--max);margin:0 auto}
 #writing .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--tx3);margin-bottom:32px}
 .post-item{padding:24px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:16px;
@@ -102,14 +128,23 @@ body{background:var(--bg);color:var(--tx);
 .post-item .arrow{color:var(--tx3);font-size:18px;transition:color .3s,transform .3s}
 .post-item:hover .arrow{color:var(--orange);transform:translateX(4px)}
 
-/* ======== §6 BOOKS / GALLERY / READS (placeholder) ======== */
+/* ======== §6 EXTRAS ======== */
 #extras{position:relative;padding:clamp(60px,10vh,120px) clamp(24px,5vw,80px);max-width:var(--max);margin:0 auto}
 .extras-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 @media(max-width:700px){.extras-grid{grid-template-columns:1fr}}
 .extras-grid .placeholder-block{height:200px}
 
+/* ======== §7 AGENT Q&A ======== */
+#agent-qa{position:relative;padding:clamp(60px,10vh,120px) clamp(24px,5vw,80px);max-width:var(--max);margin:0 auto}
+.qa-box{border:1px solid var(--line);border-radius:16px;padding:40px;background:var(--bg2);
+  display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.qa-box h3{font-size:20px;font-weight:600}
+.qa-box p{font-size:13px;color:var(--tx2);max-width:400px}
+.qa-input-mock{width:100%;max-width:400px;height:40px;border:1px solid var(--line);border-radius:8px;background:var(--ui);
+  display:flex;align-items:center;padding:0 14px;color:var(--tx3);font-size:12px}
+
 /* ======== STICKY FOOTER ======== */
-#footer-wrap{position:relative;height:auto}
+#footer-wrap{position:relative}
 #main-content{position:relative;z-index:2;background:var(--bg)}
 #footer{position:sticky;bottom:0;z-index:1;min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:clamp(60px,10vh,120px) clamp(24px,5vw,80px);gap:32px;overflow:hidden}
@@ -128,67 +163,106 @@ body{background:var(--bg);color:var(--tx);
 <div id="footer-wrap">
 <div id="main-content">
 
-<!-- §0 HERO: 250vh, staged elements by scroll -->
+<!-- §0 HERO: 光影背景 + staged元素 + bubbles + 引导 -->
 <section id="hero">
-  <span class="section-label">§0 Hero · 250vh</span>
-  <div class="note"><b>Hero — Staged 入场</b>滚动驱动元素逐个出现：名字→介绍→标签→装饰球。无"我是xxx"文案。<code>scroll-driven</code></div>
+  <span class="section-label">§0 Hero · 200vh · 光影首屏</span>
+  <div class="note"><b>Hero — 光影背景 + Staged + Bubbles</b>DappledLight 作为首屏背景。元素分两种入场：部分<code>自动弹出</code>（名字、引导），部分<code>滚动驱动</code>（介绍、标签）。Bubble 填充视觉。</div>
   <div class="pin">
+    <div class="light-bg"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+    <div class="bubbles">
+      <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+      <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    </div>
     <div class="staged">
-      <span class="name" data-stage="0">扉川</span>
-      <span class="intro" data-stage="1">Creative Frontend · 交互设计<br>网站本身就是作品。</span>
-      <div class="tags" data-stage="2">
+      <span class="name" data-auto>扉川</span>
+      <span class="intro" data-scroll>Creative Frontend · 交互设计<br>网站本身就是作品。</span>
+      <div class="tags" data-scroll>
         <span>Vue / React</span><span>GSAP</span><span>WebGL</span><span>Agent UI</span><span>Tauri</span>
       </div>
-      <div class="deco" data-stage="3"></div>
     </div>
+    <div class="scroll-hint" data-auto>scroll</div>
   </div>
 </section>
 
-<!-- §1 SECOND SCREEN: 200vh, word-by-word reveal -->
+<!-- §1 SECOND SCREEN: word-by-word reveal -->
 <section id="second">
   <span class="section-label">§1 文字揭示 · 200vh</span>
-  <div class="note"><b>Second Screen — 文字逐词点亮</b>滚动进度驱动，不是时间动画。重点词高亮橙色。<code>scroll-driven staged text</code></div>
+  <div class="note"><b>Second Screen</b>滚动驱动逐词点亮。重点词橙色。<code>scroll-driven</code></div>
   <div class="pin">
     <div class="words" id="wordsContainer"></div>
   </div>
 </section>
 
-<!-- §2 DAPPLED LIGHT + ZOOM-OUT -->
-<section id="dappled">
-  <span class="section-label">§2 光影 + Zoom-out · 300vh</span>
-  <div class="note"><b>斑驳光影 → Zoom-out</b>前半段：光斑全屏沉浸。后半段：整体缩小 + Gradual Blur 清晰化，揭示下方内容。<code>scale + blur transition</code></div>
-  <div class="pin">
-    <div class="light-box" id="lightBox">
-      <div class="orb"></div><div class="orb"></div><div class="orb"></div>
-    </div>
-    <div class="zoom-content" id="zoomContent">
-      <h2>我做过的真东西</h2>
-      <p>不只是能跑的代码，是有设计意图的交互体验。</p>
+<!-- §2 SCROLL STACKED CARDS (项目 demo) -->
+<section id="stacked">
+  <span class="section-label">§2 Scroll Stack · 卡片逐张入栈</span>
+  <div class="note"><b>Scroll Stack</b>sticky wrapper 固定视口。卡片逐张滚入着陆，已入栈卡片缩小+下移+模糊制造纵深。最新在最上。<code>sticky + absolute + scroll-driven</code><br>参考：reactbits.dev/components/scroll-stack</div>
+
+  <div class="stack-wrap">
+    <div class="stack-inner" id="stackInner">
+      <div class="project-card" data-card="0">
+        <div class="card-info">
+          <div class="k">语音 · Tauri · WebGL</div>
+          <h3>VoiceStream</h3>
+          <p>Mac 上用语音输入文字、润色内容、后台执行 Agent 任务。ShaderOrb 声波球随语音波动。</p>
+        </div>
+        <div class="card-demo" style="border-color:var(--orange)">
+          <span class="demo-icon">◉</span>
+          <span>ShaderOrb 声波球 demo</span>
+          <span style="font-size:9px;color:var(--tx3)">滚动驱动：静默→说话→响应</span>
+        </div>
+      </div>
+
+      <div class="project-card" data-card="1">
+        <div class="card-info">
+          <div class="k">系统设计 · Agent UI · 流式</div>
+          <h3>Eyrie Session UI</h3>
+          <p>桌面端 Agent 会话：message parts、ToolGroup、ApprovalTicket、流式+工具渲染。</p>
+        </div>
+        <div class="card-demo" style="border-color:var(--blue)">
+          <span class="demo-icon">▤</span>
+          <span>流式对话 + 工具调用 demo</span>
+          <span style="font-size:9px;color:var(--tx3)">滚动驱动：消息流入→工具展开→审批</span>
+        </div>
+      </div>
+
+      <div class="project-card" data-card="2">
+        <div class="card-info">
+          <div class="k">实习 · 求职平台 · AI</div>
+          <h3>CareerTime 小程序</h3>
+          <p>pdf.js+Canvas 双层标注、rAF 分页渲染、容器/展示解耦简历编辑器、LangGraph AI 三链路。</p>
+        </div>
+        <div class="card-demo" style="border-color:var(--green)">
+          <span class="demo-icon">▧</span>
+          <span>PDF 标注 + 简历编辑器 demo</span>
+          <span style="font-size:9px;color:var(--tx3)">滚动驱动：标注→编辑→AI生成</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- §3 WORKS -->
+<!-- §3 WORKS + 项目 Demo 嵌入 -->
 <section id="works">
-  <span class="section-label">§3 Works · Image Trail</span>
-  <div class="note"><b>Works 区</b>项目卡片网格。鼠标移动时触发 <code>Image Trail</code> 拖尾预览截图。卡片入场用 Staged Bubble。</div>
+  <span class="section-label">§3 Works + Demo 嵌入</span>
+  <div class="note"><b>Works 区</b>Staged Bubble 入场 + Image Trail 鼠标拖尾。下方嵌入项目实机 demo（后续搬入）。<code>bubble + image-trail</code></div>
   <p class="eyebrow">craft</p>
   <div class="works-grid">
     <div class="work-item" data-stagger><div class="k">实习 · 求职平台</div><h3>CareerTime 小程序</h3><p>PDF标注 · 简历编辑器 · AI三链路 · 微信支付</p></div>
     <div class="work-item" data-stagger><div class="k">系统设计 · Agent UI</div><h3>Eyrie Session UI</h3><p>流式渲染 · ToolGroup · ApprovalTicket · store-driven</p></div>
     <div class="work-item" data-stagger><div class="k">语音 · Tauri</div><h3>VoiceStream</h3><p>ShaderOrb · 实时ASR · 后台Agent通知</p></div>
-    <div class="work-item" data-stagger><div class="k">产品设计</div><h3>Hawk / Recap</h3><p>跨Agent注意力恢复层 · 认知线程管理</p></div>
   </div>
-  <div class="placeholder-block" style="height:120px;margin-top:32px;border-color:var(--orange)">
-    <span class="icon">◐</span>
-    <span>Image Trail 效果区域 — 鼠标拖尾出现项目截图</span>
+  <div class="demo-strip">
+    <div class="demo-embed" style="border-color:var(--orange)"><span class="demo-label">实机 demo</span><span class="demo-name">VoiceStream</span><span style="font-size:10px;color:var(--tx3)">ShaderOrb 声波球交互</span></div>
+    <div class="demo-embed" style="border-color:var(--blue)"><span class="demo-label">实机 demo</span><span class="demo-name">Eyrie</span><span style="font-size:10px;color:var(--tx3)">Agent Session 流式对话</span></div>
+    <div class="demo-embed" style="border-color:var(--green)"><span class="demo-label">实机 demo</span><span class="demo-name">CommentMarkdownRender</span><span style="font-size:10px;color:var(--tx3)">评论区 Markdown 渲染</span></div>
   </div>
 </section>
 
-<!-- §4 INFINITE GALLERY (300vh pinned) -->
+<!-- §4 INFINITE GALLERY -->
 <section id="gallery">
   <span class="section-label">§4 Infinite Gallery · 300vh pinned</span>
-  <div class="note"><b>Infinite Gallery</b>300vh pinned 滚动驱动画廊。展示喜欢的图片/设计截图。<code>ReactBits Pro</code></div>
+  <div class="note"><b>Infinite Gallery</b>300vh pinned 滚动驱动画廊。<code>ReactBits Pro</code></div>
   <div class="pin">
     <div class="placeholder-block" style="border-color:var(--purple)">
       <span class="icon">▦</span>
@@ -198,20 +272,20 @@ body{background:var(--bg);color:var(--tx);
   </div>
 </section>
 
-<!-- §5 WRITING (Flowing Menu) -->
+<!-- §5 WRITING -->
 <section id="writing">
   <span class="section-label">§5 Writing · Flowing Menu</span>
-  <div class="note"><b>文章列表</b>Flowing Menu 基础 + Magnetic Button 吸附 + 3D Flip hover。<code>magnetic + perspective</code></div>
+  <div class="note"><b>文章列表</b>Flowing Menu + Magnetic + 3D Flip hover。<code>magnetic + perspective</code></div>
   <p class="eyebrow">writing</p>
   <div class="post-item"><div><div class="t">被 AI 逼疯的前端</div><div class="d">SSE · Unicode截断 · Markdown流式渲染</div></div><span class="arrow">↗</span></div>
   <div class="post-item"><div><div class="t">OpenClaw 架构解析</div><div class="d">五层服务 · Claude tool use · 横向对比</div></div><span class="arrow">↗</span></div>
   <div class="post-item"><div><div class="t">Lenis 与 GSAP ScrollTrigger</div><div class="d">虚拟滚动原理 · scrollerProxy</div></div><span class="arrow">↗</span></div>
 </section>
 
-<!-- §6 EXTRAS (books/gallery/reads) -->
+<!-- §6 EXTRAS -->
 <section id="extras">
   <span class="section-label">§6 Books / Gallery / Reads</span>
-  <div class="note"><b>额外内容集合</b>看过的书 · 喜欢的图片 · 喜欢的文章。具体展示形式待定。</div>
+  <div class="note"><b>额外内容</b>看过的书 · 喜欢的图片 · 喜欢的文章。展示形式待定。</div>
   <div class="extras-grid">
     <div class="placeholder-block" style="border-color:var(--green)"><span class="icon">◇</span><span>Books</span></div>
     <div class="placeholder-block" style="border-color:var(--blue)"><span class="icon">□</span><span>Gallery</span></div>
@@ -219,11 +293,22 @@ body{background:var(--bg);color:var(--tx);
   </div>
 </section>
 
+<!-- §7 AGENT Q&A -->
+<section id="agent-qa">
+  <span class="section-label">§7 Agent 个人问答</span>
+  <div class="note"><b>Agent Q&A</b>接入 Agent，访客可直接提问了解你。实现方式待定。</div>
+  <div class="qa-box">
+    <h3>有什么想问的？</h3>
+    <p>接入 Agent，关于我的项目、技术栈、经历，直接问。</p>
+    <div class="qa-input-mock">输入你的问题…</div>
+  </div>
+</section>
+
 </div><!-- /#main-content -->
 
 <!-- STICKY FOOTER -->
 <footer id="footer">
-  <div class="note"><b>Sticky Footer</b>主内容滚过后自然露出。子元素以不同速率视差入场。<code>position:sticky;bottom:0</code></div>
+  <div class="note"><b>Sticky Footer</b>主内容滚过后露出。子组件视差入场。<code>sticky + parallax</code></div>
   <span class="f-name">扉川</span>
   <div class="f-links">
     <a href="#">GitHub</a><a href="#">邮箱</a><a href="#">下载简历</a>
@@ -236,89 +321,126 @@ body{background:var(--bg);color:var(--tx);
 </div><!-- /#footer-wrap -->
 
 <script>
-// ponytail: single rAF loop, no libraries, placeholder-grade animations
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
-
 function sectionProgress(el){
-  const r = el.getBoundingClientRect();
-  return Math.min(1, Math.max(0, -r.top / (el.offsetHeight - window.innerHeight)));
+  const r=el.getBoundingClientRect();
+  return Math.min(1,Math.max(0,-r.top/(el.offsetHeight-window.innerHeight)));
 }
 function progress(el){
-  const r = el.getBoundingClientRect();
-  return Math.min(1, Math.max(0, (window.innerHeight - r.top) / (window.innerHeight + el.offsetHeight)));
+  const r=el.getBoundingClientRect();
+  return Math.min(1,Math.max(0,(window.innerHeight-r.top)/(window.innerHeight+el.offsetHeight)));
 }
 
 // §1 words
-const mText = "做 有设计意图 的交互。 不写第一百遍的组件， 写 没人见过 的体验。 代码是手艺， 网站是作品。";
-const container = $('#wordsContainer');
-mText.split(' ').forEach(w => {
-  const s = document.createElement('span');
-  s.className = ["有设计意图","没人见过","手艺，","作品。"].includes(w) ? 'em' : '';
-  s.textContent = w + ' ';
-  container.appendChild(s);
+const mText="做 有设计意图 的交互。 不写第一百遍的组件， 写 没人见过 的体验。 代码是手艺， 网站是作品。 我关心的不是「能不能跑」， 而是「为什么这么设计」。 每一个像素、 每一帧动画、 每一次滚动反馈， 都应该有它存在的理由。 大三在读， AI + 前端。 比起复制粘贴， 我更想 从零理解 然后 重新发明。";
+const wc=$('#wordsContainer');
+mText.split(' ').forEach(w=>{
+  const s=document.createElement('span');
+  s.className=["有设计意图","没人见过","手艺，","作品。","为什么这么设计","从零理解","重新发明。"].includes(w)?'em':'';
+  s.textContent=w+' ';wc.appendChild(s);
 });
-const wordSpans = $$('#wordsContainer span');
+const wordSpans=$$('#wordsContainer span');
+
+// Hero auto-appear elements (name + scroll hint appear on load)
+setTimeout(()=>{
+  document.querySelectorAll('[data-auto]').forEach(el=>{
+    el.style.transition='opacity .8s cubic-bezier(.22,.61,.36,1),transform .9s cubic-bezier(.22,.61,.36,1)';
+    el.style.opacity='1';el.style.transform='translateY(0)';
+  });
+},300);
+
+// Bubbles staged auto-appear
+document.querySelectorAll('.bubble').forEach((b,i)=>{
+  setTimeout(()=>{
+    b.style.transition=`opacity .6s ${i*.08}s, transform .7s ${i*.08}s cubic-bezier(.175,.885,.32,1.275)`;
+    b.style.opacity='.3';b.style.transform='scale(1)';
+  },600+i*120);
+});
 
 // scroll engine
-const heroEl = $('#hero');
-const secondEl = $('#second');
-const dappledEl = $('#dappled');
-const lightBox = $('#lightBox');
-const zoomContent = $('#zoomContent');
-const staged = $$('#hero .staged > *');
-const workItems = $$('.work-item');
-const progressBar = $('#progress');
-const footerEls = $$('#footer > *:not(.note)');
+const heroEl=$('#hero'),secondEl=$('#second');
+const workItems=$$('.work-item'),progressBar=$('#progress');
+const footerEls=$$('#footer > *:not(.note)');
 
 function tick(){
-  const scrollY = window.scrollY;
-  const vh = window.innerHeight;
-  const docH = document.documentElement.scrollHeight - vh;
-  progressBar.style.width = (scrollY/docH*100)+'%';
+  const scrollY=window.scrollY,vh=window.innerHeight;
+  const docH=document.documentElement.scrollHeight-vh;
+  progressBar.style.width=(scrollY/docH*100)+'%';
 
-  // §0 Hero staged
-  const hp = sectionProgress(heroEl);
-  staged.forEach((el, i) => {
-    const threshold = i * 0.12;
-    const visible = hp > threshold;
-    el.style.opacity = visible ? 1 : 0;
-    el.style.transform = visible ? 'translateY(0)' : 'translateY(30px)';
-    el.style.transition = 'opacity .6s,transform .7s cubic-bezier(.22,.61,.36,1)';
+  // §0 Hero scroll-driven elements
+  const hp=sectionProgress(heroEl);
+  document.querySelectorAll('#hero [data-scroll]').forEach((el,i)=>{
+    const t=0.1+i*0.15;
+    const visible=hp>t;
+    el.style.transition='opacity .6s,transform .7s cubic-bezier(.22,.61,.36,1)';
+    el.style.opacity=visible?'1':'0';
+    el.style.transform=visible?'translateY(0)':'translateY(24px)';
   });
+  // fade scroll hint
+  const hint=$('.scroll-hint');
+  if(hint)hint.style.opacity=hp<0.08?'1':'0';
 
-  // §1 Second screen words
-  const sp = sectionProgress(secondEl);
-  const litCount = Math.floor(sp * wordSpans.length * 1.4);
-  wordSpans.forEach((w, i) => w.classList.toggle('lit', i < litCount));
+  // §1 words
+  const sp=sectionProgress(secondEl);
+  const litCount=Math.floor(sp*wordSpans.length*1.4);
+  wordSpans.forEach((w,i)=>w.classList.toggle('lit',i<litCount));
 
-  // §2 Dappled + Zoom-out
-  const dp = sectionProgress(dappledEl);
-  // first half: light orbs visible, scale 1
-  // second half: zoom out (scale down), content appears
-  const zoomPhase = Math.max(0, (dp - 0.4) / 0.6);
-  const lightScale = 1 - zoomPhase * 0.35;
-  const lightBlur = zoomPhase * 12;
-  lightBox.style.transform = `scale(${lightScale})`;
-  lightBox.style.filter = `blur(${lightBlur}px)`;
-  lightBox.style.opacity = 1 - zoomPhase * 0.6;
-  zoomContent.style.opacity = Math.min(1, zoomPhase * 2);
-  zoomContent.style.transform = `scale(${0.85 + zoomPhase * 0.15})`;
+  // §2 Scroll Stack — cards land on stack as you scroll
+  const stackedEl=document.getElementById('stacked');
+  const stackCards=document.querySelectorAll('#stackInner .project-card');
+  if(stackedEl&&stackCards.length){
+    const rect=stackedEl.getBoundingClientRect();
+    const scrollInSection=Math.max(0,-rect.top);
+    const totalScroll=stackedEl.offsetHeight-window.innerHeight;
+    const progressPerCard=totalScroll/stackCards.length;
+
+    stackCards.forEach((card,i)=>{
+      const cardProgress=Math.min(1,Math.max(0,(scrollInSection-i*progressPerCard)/progressPerCard));
+      const stackIndex=stackCards.length-1-i;
+      const isActive=cardProgress>0;
+      const depthFromTop=isActive?Math.max(0,(stackCards.length-1-i)-(scrollInSection/progressPerCard-(i))):stackIndex;
+
+      if(cardProgress>=1){
+        // fully stacked — shrink and push back
+        const behind=Math.max(0,Math.floor(scrollInSection/progressPerCard)-1-i);
+        const s=0.88-behind*0.04;
+        const ty=behind*25;
+        const blur=behind*2;
+        card.style.transform=`scale(${s}) translateY(${ty}px)`;
+        card.style.filter=`blur(${blur}px)`;
+        card.style.opacity='1';
+        card.style.zIndex=stackCards.length-behind;
+      } else if(cardProgress>0){
+        // arriving — slide up from bottom
+        const ty=(1-cardProgress)*100;
+        card.style.transform=`translateY(${ty}vh) scale(1)`;
+        card.style.filter='blur(0)';
+        card.style.opacity='1';
+        card.style.zIndex=stackCards.length+1;
+      } else {
+        // not yet visible
+        card.style.transform='translateY(100vh) scale(1)';
+        card.style.opacity='0';
+        card.style.zIndex=0;
+      }
+    });
+  }
 
   // §3 Works stagger
-  workItems.forEach((c, i) => {
-    const p = progress(c);
-    c.classList.toggle('in', p > 0.15 + i * 0.05);
+  workItems.forEach((c,i)=>{
+    const p=progress(c);
+    c.classList.toggle('in',p>0.15+i*0.05);
   });
 
-  // Footer parallax (simple stagger by visibility)
-  const fp = progress($('#footer'));
-  footerEls.forEach((el, i) => {
-    const t = 0.1 + i * 0.08;
-    const visible = fp > t;
-    el.style.opacity = visible ? 1 : 0;
-    el.style.transform = visible ? 'translateY(0)' : 'translateY(20px)';
-    el.style.transition = `opacity .7s ${i*0.1}s, transform .8s ${i*0.1}s cubic-bezier(.22,.61,.36,1)`;
+  // Footer parallax
+  const fp=progress($('#footer'));
+  footerEls.forEach((el,i)=>{
+    const t=0.1+i*0.08;
+    const visible=fp>t;
+    el.style.opacity=visible?'1':'0';
+    el.style.transform=visible?'translateY(0)':'translateY(20px)';
+    el.style.transition=`opacity .7s ${i*0.1}s,transform .8s ${i*0.1}s cubic-bezier(.22,.61,.36,1)`;
   });
 
   requestAnimationFrame(tick);
