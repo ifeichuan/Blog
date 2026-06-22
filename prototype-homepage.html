@@ -150,15 +150,67 @@ h1 .dim{color:var(--tx3);font-weight:400}
 #foot .links a:hover{border-color:var(--orange);color:var(--orange)}
 #foot .links a.primary{background:var(--orange);color:var(--bg);border-color:var(--orange)}
 @media(max-width:600px){.cards{flex-direction:column}.card{flex:none;width:100%}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ======== CURSOR (blend-mode difference) ======== */
+.cursor{position:fixed;width:24px;height:24px;border-radius:50%;background:#fff;
+  mix-blend-mode:difference;pointer-events:none;z-index:999;
+  transform:translate(-50%,-50%) scale(1);transition:transform .15s var(--ease);will-change:transform,left,top}
+.cursor.grow{transform:translate(-50%,-50%) scale(2.5)}
+@media(pointer:coarse){.cursor{display:none}}
+
+/* ======== NOISE OVERLAY ======== */
+.noise{position:fixed;inset:0;z-index:90;pointer-events:none;opacity:.035;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ======== BORDER GLOW on cards ======== */
+.card{--glow-x:50%;--glow-y:50%;--glow-angle:0deg}
+.card::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;
+  background:conic-gradient(from var(--glow-angle) at var(--glow-x) var(--glow-y),
+    oklch(.7 .15 30) 0%,transparent 12%,transparent 88%,oklch(.7 .15 30) 100%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .4s}
+.card:hover::after{opacity:1}
+
+/* ======== 3D TILT ======== */
+.card{transform-style:preserve-3d;perspective:800px}
+
+/* ======== MAGNETIC BUTTONS ======== */
+.mag{transition:transform .35s var(--ease)}
+
+/* ======== TEXT SCRAMBLE on eyebrows ======== */
+[data-scramble]{cursor:default}
+
+/* ======== LIQUID DISTORTION demo ======== */
+.distort-wrap{width:140px;height:100px;position:relative;overflow:hidden;border-radius:12px}
+.distort-wrap img,.distort-wrap .placeholder{width:100%;height:100%;object-fit:cover;transition:filter .4s}
+.distort-wrap .placeholder{background:linear-gradient(135deg,var(--orange),var(--blue));display:block}
+.distort-wrap:hover .placeholder{filter:url(#distort)}
+
+/* ======== MASK REVEAL demo ======== */
+.mask-box{position:relative;width:160px;height:80px;overflow:hidden;border-radius:12px}
+.mask-box .layer-a{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:700;color:var(--tx);background:var(--bg2)}
+.mask-box .layer-b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:700;color:var(--bg);background:var(--orange);
+  clip-path:circle(0px at var(--mx,50%) var(--my,50%));transition:clip-path .08s ease-out}
+.mask-box:hover .layer-b{clip-path:circle(60px at var(--mx,50%) var(--my,50%))}
+
+/* ======== SCRAMBLE demo ======== */
+.scramble-demo{font-size:22px;font-weight:700;letter-spacing:.05em;font-family:ui-monospace,monospace;color:var(--green);min-height:1.5em}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.cursor{display:none}}
 </style>
 </head>
 <body class="notes">
 <div id="progress"></div>
+<div class="cursor" id="cursor"></div>
+<div class="noise"></div>
 <button id="noteToggle">标注</button>
 <svg width="0" height="0" style="position:absolute"><defs>
 <filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/>
 <feColorMatrix in="b" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"/></filter>
+<filter id="distort"><feTurbulence type="turbulence" baseFrequency="0.015" numOctaves="3" result="noise" seed="2"/>
+<feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G">
+<animate attributeName="scale" values="0;25;0" dur="0.6s" begin="indefinite" fill="freeze" id="distortAnim"/></feDisplacementMap></filter>
 </defs></svg>
 
 <!-- §0 HERO: 200vh tall, content pinned, parallax on scroll -->
@@ -266,6 +318,9 @@ h1 .dim{color:var(--tx3);font-weight:400}
     <div class="demo" data-scale><div class="gooey"><i></i><i></i><i></i></div><div class="label">Gooey · SVG 滤镜融合</div></div>
     <div class="demo" data-scale><div class="blurtext"><span>B</span><span>L</span><span>U</span><span>R</span></div><div class="label">方向性模糊 · 文字呼吸</div></div>
     <div class="demo" data-scale><div class="braille" id="braille">⠋<small>⠿ Agent thinking…</small></div><div class="label">Braille Loading</div></div>
+    <div class="demo" data-scale><div class="distort-wrap" id="distortBox"><span class="placeholder"></span></div><div class="label">Liquid Distortion · hover 试试</div></div>
+    <div class="demo" data-scale><div class="mask-box" id="maskBox"><div class="layer-a">HIDDEN</div><div class="layer-b">REVEAL</div></div><div class="label">Mask Cursor Reveal</div></div>
+    <div class="demo" data-scale><div class="scramble-demo" id="scrambleDemo">HOVER ME</div><div class="label">Text Scramble · Matrix 风</div></div>
   </div>
 </section>
 
@@ -505,6 +560,88 @@ function tick(){
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
+
+// ======== CUSTOM CURSOR (blend-mode) ========
+const cursor=$('#cursor');
+let cx=0,cy=0,tx=0,ty=0;
+document.addEventListener('mousemove',e=>{tx=e.clientX;ty=e.clientY;});
+(function cursorLoop(){cx+=(tx-cx)*.12;cy+=(ty-cy)*.12;
+  cursor.style.left=cx+'px';cursor.style.top=cy+'px';requestAnimationFrame(cursorLoop);})();
+// grow on interactive
+document.querySelectorAll('a,button,.card,.demo,.post,.mask-box,.distort-wrap,.scramble-demo').forEach(el=>{
+  el.addEventListener('pointerenter',()=>cursor.classList.add('grow'));
+  el.addEventListener('pointerleave',()=>cursor.classList.remove('grow'));});
+
+// ======== BORDER GLOW + 3D TILT on cards ========
+document.querySelectorAll('.card').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+    card.style.setProperty('--glow-x',(x*100)+'%');
+    card.style.setProperty('--glow-y',(y*100)+'%');
+    card.style.setProperty('--glow-angle',Math.round(Math.atan2(y-.5,x-.5)*180/Math.PI)+'deg');
+    // 3D tilt
+    card.style.transform=`perspective(800px) rotateX(${-(y-.5)*8}deg) rotateY(${(x-.5)*8}deg) translateZ(8px)`;
+  });
+  card.addEventListener('mouseleave',()=>{
+    card.style.transform='';
+  });
+});
+
+// ======== MAGNETIC BUTTONS ========
+document.querySelectorAll('#foot .links a').forEach(btn=>{
+  btn.classList.add('mag');
+  btn.addEventListener('mousemove',e=>{
+    const r=btn.getBoundingClientRect();
+    const x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2;
+    btn.style.transform=`translate(${x*.25}px,${y*.25}px)`;});
+  btn.addEventListener('mouseleave',()=>{btn.style.transform='';});
+});
+
+// ======== MASK REVEAL ========
+const maskBox=$('#maskBox');
+if(maskBox){maskBox.addEventListener('mousemove',e=>{
+  const r=maskBox.getBoundingClientRect();
+  maskBox.style.setProperty('--mx',(e.clientX-r.left)+'px');
+  maskBox.style.setProperty('--my',(e.clientY-r.top)+'px');});}
+
+// ======== LIQUID DISTORTION ========
+const distortBox=$('#distortBox');
+if(distortBox){
+  distortBox.addEventListener('pointerenter',()=>{
+    distortBox.querySelector('.placeholder').style.filter='url(#distort)';
+    document.getElementById('distortAnim').beginElement();});
+  distortBox.addEventListener('pointerleave',()=>{
+    distortBox.querySelector('.placeholder').style.filter='';});}
+
+// ======== TEXT SCRAMBLE ========
+const scrambleEl=$('#scrambleDemo');
+const scrambleTarget="CREATIVE";
+const scrambleChars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%";
+let scrambleInterval=null;
+scrambleEl.addEventListener('pointerenter',()=>{
+  let iter=0;
+  scrambleInterval=setInterval(()=>{
+    scrambleEl.textContent=scrambleTarget.split('').map((c,i)=>
+      i<iter?scrambleTarget[i]:scrambleChars[Math.floor(Math.random()*scrambleChars.length)]
+    ).join('');
+    iter+=1/2;
+    if(iter>=scrambleTarget.length){clearInterval(scrambleInterval);scrambleEl.textContent=scrambleTarget;}
+  },35);
+});
+scrambleEl.addEventListener('pointerleave',()=>{
+  clearInterval(scrambleInterval);scrambleEl.textContent="HOVER ME";});
+
+// ======== MOUSE PARALLAX in hero (layered depth) ========
+document.addEventListener('mousemove',e=>{
+  const x=(e.clientX/window.innerWidth-.5)*2;
+  const y=(e.clientY/window.innerHeight-.5)*2;
+  const dapples=heroEl.querySelectorAll('.dapple span');
+  dapples.forEach((d,i)=>{
+    const depth=(i+1)*12;
+    d.style.marginLeft=(x*depth)+'px';
+    d.style.marginTop=(y*depth)+'px';});
+});
 </script>
 </body>
 </html>
