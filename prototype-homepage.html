@@ -55,13 +55,16 @@ h1 .dim{color:var(--tx3);font-weight:400}
 #manifesto .small{font-size:clamp(15px,1.8vw,18px);color:var(--tx2);font-weight:400;margin-top:28px;max-width:620px}
 #manifesto .em{color:var(--orange)}
 
-/* ---- signature spotlight ---- */
-#sig .stage{position:relative;border:1px solid var(--line);border-radius:20px;padding:72px 40px;
-  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(218,112,44,.16),transparent 60%),var(--bg2);
-  overflow:hidden;text-align:center;transition:background .1s}
-#sig .stage h3{font-size:clamp(20px,2.6vw,30px);font-weight:600}
-#sig .stage p{color:var(--tx2);margin-top:14px;max-width:480px;margin-inline:auto}
-#sig .tag{display:inline-block;margin-top:24px;font-size:12px;letter-spacing:.1em;color:var(--orange);border:1px solid var(--orange);padding:5px 12px;border-radius:999px}
+/* ---- signature orb ---- */
+#sig .orb-wrap{display:flex;flex-direction:column;align-items:center;gap:28px;padding:48px 0}
+#orbCanvas{width:192px;height:192px;border-radius:50%;cursor:pointer;transition:transform .4s var(--ease)}
+#orbCanvas:hover{transform:scale(1.06)}
+.orb-text{text-align:center;max-width:480px}
+.orb-transcript{font-size:clamp(16px,2vw,20px);color:var(--tx);min-height:1.8em;font-weight:500}
+.orb-transcript::after{content:"";display:inline-block;width:2px;height:1em;background:var(--orange);margin-left:4px;vertical-align:-.1em;animation:blink 1s step-end infinite}
+.orb-label{display:inline-block;margin-top:16px;font-size:12px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase}
+
+/* ---- signature spotlight (removed, kept for card spots) ---- */
 
 /* ---- works ---- */
 #works .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:40px}
@@ -110,6 +113,29 @@ h1 .dim{color:var(--tx3);font-weight:400}
 #foot .links a.primary{background:var(--orange);color:var(--bg);border-color:var(--orange)}
 #foot .links a.primary:hover{background:var(--orange2);color:var(--bg)}
 @media(max-width:600px){section{padding:10vh 20px}}
+
+/* ---- writing ---- */
+#writing .list{margin-top:36px;border-top:1px solid var(--line)}
+.post{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:24px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:padding .35s var(--ease),border-color .35s}
+.post:hover{padding-left:14px;border-color:var(--orange)}
+.post .t{font-size:clamp(17px,2vw,21px);font-weight:600}
+.post .d{font-size:13.5px;color:var(--tx2);margin-top:8px;max-width:680px}
+.post .tags{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.post .tags b{font-weight:400;font-size:11px;color:var(--tx2);background:var(--ui);border:1px solid var(--line);padding:2px 8px;border-radius:6px}
+.post .arrow{flex:none;color:var(--tx3);font-size:20px;transition:transform .35s,color .35s}
+.post:hover .arrow{color:var(--orange);transform:translateX(4px)}
+
+/* ---- about / reading ---- */
+#about .wrap{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:40px}
+@media(max-width:760px){#about .wrap{grid-template-columns:1fr;gap:36px}}
+#about h3{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:22px}
+.bar{display:grid;grid-template-columns:130px 1fr;align-items:center;gap:14px;padding:8px 0;font-size:13.5px;color:var(--tx2)}
+.bar .track{height:8px;background:var(--ui);border-radius:4px;overflow:hidden}
+.bar .fill{height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:4px;transition:width 1.1s var(--ease)}
+.bars.in .fill{width:var(--v)}
+.beliefs li{list-style:none;padding:16px 0;border-bottom:1px solid var(--line);font-size:16px}
+.beliefs li:first-child{padding-top:0}
+.beliefs .s{display:block;font-size:13px;color:var(--tx3);margin-top:6px}
 </style>
 </head>
 <body class="notes">
@@ -138,12 +164,14 @@ h1 .dim{color:var(--tx3);font-weight:400}
 </section>
 
 <section id="sig">
-  <div class="note">§2 招牌交互 — 玻璃已砍，这里先放「光斑跟随」占位。鼠标在框里移动试试。正式版换成你定的新招牌件。</div>
+  <div class="note">§2 招牌交互 — VoiceStream ShaderOrb（WebGL2 声波球）。Autoplay + 鼠标接管：滚到自动呼吸，移入磁吸跟手，点击迸发。下方 canned replay 模拟语音转文字。</div>
   <p class="eyebrow reveal">能摸得到的那种</p>
-  <div class="stage reveal" id="stage">
-    <h3>把鼠标移到这块区域里</h3>
-    <p>光跟着你走。这是首页唯一一个「深度可玩」的件——具体换成什么交互，等你定。</p>
-    <span class="tag">SIGNATURE · TBD</span>
+  <div class="orb-wrap reveal" id="orbWrap">
+    <canvas id="orbCanvas" width="384" height="384"></canvas>
+    <div class="orb-text">
+      <p class="orb-transcript" id="orbTranscript"></p>
+      <span class="orb-label">VoiceStream · 语音驱动一切</span>
+    </div>
   </div>
 </section>
 
@@ -164,16 +192,47 @@ h1 .dim{color:var(--tx3);font-weight:400}
       <div class="meta"><span>React</span><span>Electron</span><span>streaming</span></div>
     </article>
     <article class="card reveal" data-spot>
-      <div class="k">写作 · 有声音</div>
-      <h3>被 AI 逼疯的前端</h3>
-      <p>从手搓流式打字机，到浏览器端跑 React。SSE、Unicode 截断、Markdown 流式防抖——踩坑日志，叙事强、有梗。</p>
-      <div class="meta"><span>SSE</span><span>流式渲染</span><span>长文</span></div>
+      <div class="k">产品设计 · PRD</div>
+      <h3>Hawk / Recap</h3>
+      <p>跨 Claude Code、Codex、Pi 的多 Agent 注意力恢复层。不管 Agent，管「人」的上下文——切走前写一句「回来第一步」，Agent 完成后告诉你「现在最该看哪个」。</p>
+      <div class="meta"><span>Agent</span><span>产品</span><span>认知线程</span></div>
     </article>
   </div>
 </section>
 
+<section id="writing">
+  <div class="note">§4 写作 — wiki 里已发布的长文。列表式，悬停左移 + 箭头。点进去是文章页（这次不做）。</div>
+  <p class="eyebrow reveal">我写下来的一些东西</p>
+  <div class="list">
+    <div class="post reveal">
+      <div>
+        <div class="t">被 AI 逼疯的前端：从手搓流式打字机，到浏览器端跑 React</div>
+        <div class="d">SSE 替代伪流式、Unicode 多字节截断、Markdown 流式渲染的「防抖」算法。一篇有梗的踩坑航海日志。</div>
+        <div class="tags"><b>流式渲染</b><b>SSE</b><b>React</b></div>
+      </div>
+      <span class="arrow">↗</span>
+    </div>
+    <div class="post reveal">
+      <div>
+        <div class="t">OpenClaw 架构解析：一个生产级 AI Agent 是如何设计的</div>
+        <div class="d">渠道适配 / 网关 / Runner / Agentic Loop 五层服务，Claude tool use、三方 SDK 横向对比、git worktree 多 Agent 并行隔离。</div>
+        <div class="tags"><b>Agent 架构</b><b>Anthropic SDK</b><b>worktree</b></div>
+      </div>
+      <span class="arrow">↗</span>
+    </div>
+    <div class="post reveal">
+      <div>
+        <div class="t">Lenis 与 GSAP ScrollTrigger 深度解析</div>
+        <div class="d">从浏览器原生滚动到虚拟滚动：内容靠 transform 移动而非真滚动，scrollerProxy 配置，丝滑滚动动画的底层机制。</div>
+        <div class="tags"><b>动效</b><b>Lenis</b><b>GSAP</b></div>
+      </div>
+      <span class="arrow">↗</span>
+    </div>
+  </div>
+</section>
+
 <section id="play">
-  <div class="note">§4 交互墙 — 手艺广度，即战力（现博客已实现）。全部 transform/opacity 上 GPU，正式版配 client:visible 懒激活。</div>
+  <div class="note">§5 交互墙 — 手艺广度，即战力（现博客已实现）。全部 transform/opacity 上 GPU，正式版配 client:visible 懒激活。</div>
   <p class="eyebrow reveal">顺手做的一些小东西</p>
   <div class="grid">
     <div class="demo reveal">
@@ -191,8 +250,34 @@ h1 .dim{color:var(--tx3);font-weight:400}
   </div>
 </section>
 
+<section id="about">
+  <div class="note">§6 关于/我在读 — 多数作品集没有的「人」的一层。料来自 阅读画像 + file-over-app + Viewpoint。左边条形滚到才长出来。</div>
+  <p class="eyebrow reveal">代码之外</p>
+  <div class="wrap">
+    <div class="reveal">
+      <h3>我读什么</h3>
+      <div class="bars">
+        <div class="bar"><span>技术底层原理</span><div class="track"><div class="fill" style="--v:100%"></div></div></div>
+        <div class="bar"><span>社会运作逻辑</span><div class="track"><div class="fill" style="--v:90%"></div></div></div>
+        <div class="bar"><span>跨界破圈视角</span><div class="track"><div class="fill" style="--v:90%"></div></div></div>
+        <div class="bar"><span>硬科幻</span><div class="track"><div class="fill" style="--v:80%"></div></div></div>
+        <div class="bar"><span>认知/思维方法</span><div class="track"><div class="fill" style="--v:70%"></div></div></div>
+      </div>
+      <p class="d" style="font-size:13.5px;color:var(--tx2);margin-top:18px">不是为读而读——每本书背后都有一个「我想搞懂什么」。要知道为什么这样设计，而不是知识点堆砌。反鸡汤免疫。</p>
+    </div>
+    <div class="reveal">
+      <h3>我信什么</h3>
+      <ul class="beliefs">
+        <li>工程师视角<span class="s">不只问「是什么」，更问「为什么这样设计、底层是什么」。</span></li>
+        <li>File over app<span class="s">文件比工具更长久。所以这个 vault 里的每篇笔记，都能在 30 年后被读取。</span></li>
+        <li>写作与思考是唯一重要的事<span class="s">停止刷手机，多思考。能克制欲望、坚持自律的人。</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <section id="foot">
-  <div class="note">§5 落地 — 技术栈 + 开源 + 社交 + 简历下载。</div>
+  <div class="note">§7 落地 — 技术栈 + 开源 + 社交 + 简历下载。</div>
   <div class="inner">
     <h2 class="reveal">想聊聊？<br>或者直接看我的代码。</h2>
     <div class="stack reveal">
@@ -209,6 +294,7 @@ h1 .dim{color:var(--tx3);font-weight:400}
 </section>
 
 <script>
+// ---- Hero typing ----
 const wordsBank=["创意前端","交互设计","能玩的界面","Agent UI"];
 const el=document.getElementById('type');
 let wi=0,ci=0,del=false;
@@ -220,21 +306,117 @@ let wi=0,ci=0,del=false;
   setTimeout(type,del?55:110);
 })();
 
+// ---- Scroll reveal ----
 const io=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add('in')),{threshold:.18});
-document.querySelectorAll('.reveal').forEach(n=>io.observe(n));
+document.querySelectorAll('.reveal,.bars').forEach(n=>io.observe(n));
 
+// ---- Card spotlight ----
 function spot(node){node.addEventListener('mousemove',e=>{const r=node.getBoundingClientRect();
   node.style.setProperty('--mx',(e.clientX-r.left)+'px');node.style.setProperty('--my',(e.clientY-r.top)+'px');});}
-spot(document.getElementById('stage'));
 document.querySelectorAll('[data-spot]').forEach(spot);
 
+// ---- Braille loader ----
 const frames=['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];let bi=0;
 const br=document.getElementById('braille');
 setInterval(()=>{br.firstChild.textContent=frames[bi=(bi+1)%frames.length];},90);
 
+// ---- Note toggle ----
 const tog=document.getElementById('noteToggle');
 tog.onclick=()=>{document.body.classList.toggle('notes');
   tog.textContent=document.body.classList.contains('notes')?'隐藏标注':'显示标注';};
+
+// ---- ShaderOrb (WebGL2) ----
+(function initOrb(){
+const canvas=document.getElementById('orbCanvas');
+const gl=canvas.getContext('webgl2',{antialias:true,alpha:false});
+if(!gl){canvas.style.background='conic-gradient(from 0deg,oklch(.75 .15 350),oklch(.8 .12 200),oklch(.78 .14 280),oklch(.75 .15 350))';return;}
+
+const VS=`#version 300 es
+in vec2 a_position;
+void main(){gl_Position=vec4(a_position,0,1);}`;
+
+const FS=`#version 300 es
+precision highp float;
+out vec4 fragColor;
+uniform vec2 iResolution;
+uniform float iTime;
+uniform float u_audio;
+const vec3 c1=vec3(.4,.6,1.),c2=vec3(0.,.8,.8);
+const float TAU=6.28318;
+float rand(vec2 n){return fract(sin(dot(n,vec2(12.9898,4.1414)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),u=fract(p);u=u*u*(3.-2.*u);
+  return mix(mix(rand(i),rand(i+vec2(1,0)),u.x),mix(rand(i+vec2(0,1)),rand(i+vec2(1,1)),u.x),u.y);}
+float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<4;i++){s+=a*noise(p);a*=.5;p*=2.;}return s;}
+vec3 pal(float t,vec3 a,vec3 b,vec3 c,vec3 d){return a+b*cos(TAU*(c*t+d));}
+void main(){
+  float mr=min(iResolution.x,iResolution.y);
+  vec2 uv=(gl_FragCoord.xy*2.-iResolution.xy)/mr*1.5;
+  float ni=mix(1.,2.,u_audio);
+  float l=dot(uv,uv);
+  float sm=smoothstep(1.04,.96,l);
+  vec3 bg=vec3(.063,.055,.055);
+  if(sm<=0.){fragColor=vec4(bg,1.);return;}
+  float d=sm*l*l*l*2.;
+  float nx=fbm(uv*2.*ni+iTime*.4+25.69);
+  float ny=fbm(uv*2.*ni+iTime*.4+86.31);
+  float n=fbm(uv*3.+2.*vec2(nx,ny));
+  vec3 col=vec3(n*.5+.25);
+  float angle=atan(uv.y,uv.x)/TAU+iTime*.1;
+  angle+=u_audio*sin(iTime*6.)*.1;
+  col*=pal(angle,c1*.5,vec3(.5),vec3(1.),c2*.7)*2.;
+  col=col*d+(col*.5+vec3(1.)-dot(col,vec3(.299,.587,.114)))*vec3(max(0.,pow(dot(normalize(vec3(uv,.7-d)),vec3(0,0,-1)),5.)*3.));
+  col*=1.+u_audio*.4;
+  fragColor=vec4(mix(bg,col,sm),1.);
+}`;
+
+function compile(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s;}
+const vs=compile(gl.VERTEX_SHADER,VS),fs=compile(gl.FRAGMENT_SHADER,FS);
+const prog=gl.createProgram();gl.attachShader(prog,vs);gl.attachShader(prog,fs);gl.linkProgram(prog);gl.useProgram(prog);
+const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+const pos=gl.getAttribLocation(prog,'a_position');gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+const uRes=gl.getUniformLocation(prog,'iResolution'),uTime=gl.getUniformLocation(prog,'iTime'),uAudio=gl.getUniformLocation(prog,'u_audio');
+const dpr=devicePixelRatio||1;canvas.width=192*dpr;canvas.height=192*dpr;
+gl.viewport(0,0,canvas.width,canvas.height);gl.uniform2f(uRes,canvas.width,canvas.height);
+
+// ponytail: autoplay via scripted audio envelope, no real mic. Add getUserMedia on click if needed.
+let audio=0,targetAudio=0,active=false,raf=0;
+const orbIO=new IntersectionObserver(([e])=>{active=e.isIntersecting;if(active&&!raf)loop();},{threshold:.2});
+orbIO.observe(canvas);
+
+function loop(){
+  if(!active){raf=0;return;}
+  // scripted breathing envelope
+  targetAudio=.15+.12*Math.sin(performance.now()*.001*.8)+.08*Math.sin(performance.now()*.001*2.1);
+  audio+=(targetAudio-audio)*.08;
+  gl.uniform1f(uTime,performance.now()*.001);
+  gl.uniform1f(uAudio,audio);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  raf=requestAnimationFrame(loop);
+}
+
+// click → burst
+canvas.addEventListener('click',()=>{targetAudio=1;setTimeout(()=>{targetAudio=.15;},600);});
+// hover → slight boost
+canvas.addEventListener('pointerenter',()=>{targetAudio=.4;});
+canvas.addEventListener('pointerleave',()=>{targetAudio=.15;});
+})();
+
+// ---- Canned replay (VoiceStream transcript) ----
+(function cannedReplay(){
+const lines=["帮我查一下上周的销售数据","把这段文字润色一下，语气专业一点","总结今天所有未读消息"];
+const out=document.getElementById('orbTranscript');
+let li=0,ci2=0;
+function tick(){
+  const w=lines[li];
+  out.textContent=w.slice(0,++ci2);
+  if(ci2>=w.length){ci2=0;li=(li+1)%lines.length;return setTimeout(tick,2200);}
+  setTimeout(tick,80+Math.random()*40);
+}
+// ponytail: start replay when orb section scrolls in
+const rIO=new IntersectionObserver(([e])=>{if(e.isIntersecting){tick();rIO.disconnect();}},{threshold:.3});
+rIO.observe(out);
+})();
 </script>
 </body>
 </html>
