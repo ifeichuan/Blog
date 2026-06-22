@@ -129,6 +129,17 @@ body{background:var(--bg);color:var(--tx);
 .demo-embed .demo-label{font-size:11px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase}
 .demo-embed .demo-name{font-size:16px;font-weight:600}
 
+/* ======== PARALLAX FLOATERS (点缀装饰) ======== */
+.px{position:absolute;pointer-events:none;will-change:transform}
+.px-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);opacity:.25}
+.px-ring{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);opacity:.2}
+.px-cross{width:12px;height:12px;opacity:.15}
+.px-cross::before,.px-cross::after{content:"";position:absolute;background:var(--tx3)}
+.px-cross::before{width:12px;height:1px;top:5.5px;left:0}
+.px-cross::after{width:1px;height:12px;top:0;left:5.5px}
+.px-line{width:1px;height:60px;background:linear-gradient(var(--line),transparent);opacity:.2}
+.px-square{width:20px;height:20px;border:1px solid var(--line);opacity:.15;transform:rotate(45deg)}
+
 /* ======== §4 INFINITE GALLERY ======== */
 #gallery{height:300vh;position:relative}
 #gallery .pin{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center}
@@ -179,6 +190,22 @@ body{background:var(--bg);color:var(--tx);
 
 <div id="footer-wrap">
 <div id="main-content">
+
+<!-- Parallax 装饰层 -->
+<div id="parallaxLayer" style="position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden">
+  <div class="px px-dot" style="left:8%;top:20%" data-speed="0.3"></div>
+  <div class="px px-ring" style="right:12%;top:15%" data-speed="0.5"></div>
+  <div class="px px-cross" style="left:15%;top:45%" data-speed="0.2"></div>
+  <div class="px px-dot" style="right:20%;top:55%" data-speed="0.6"></div>
+  <div class="px px-line" style="left:5%;top:60%" data-speed="0.4"></div>
+  <div class="px px-square" style="right:8%;top:70%" data-speed="0.35"></div>
+  <div class="px px-dot" style="left:80%;top:30%" data-speed="0.55"></div>
+  <div class="px px-ring" style="left:25%;top:80%" data-speed="0.25"></div>
+  <div class="px px-cross" style="right:30%;top:35%" data-speed="0.45"></div>
+  <div class="px px-line" style="right:5%;top:50%" data-speed="0.3"></div>
+  <div class="px px-square" style="left:40%;top:10%" data-speed="0.5"></div>
+  <div class="px px-dot" style="left:60%;top:75%" data-speed="0.2"></div>
+</div>
 
 <!-- §0 HERO: 光影背景 + staged元素 + bubbles + 引导 -->
 <section id="hero">
@@ -459,6 +486,13 @@ function tick(){
   const hint=$('.scroll-hint');
   if(hint)hint.style.opacity=hp<0.08?'1':'0';
 
+  // Hero light orbs parallax
+  const orbs=document.querySelectorAll('#hero .light-bg .orb');
+  orbs.forEach((o,i)=>{
+    const speed=0.15+i*0.1;
+    o.style.transform=`translateY(${scrollY*speed}px)`;
+  });
+
   // §1 Text animations — each section driven by its own scroll progress
   // Split Text
   const splitP=progress($('#tsplit'));
@@ -538,6 +572,13 @@ function tick(){
   workItems.forEach((c,i)=>{
     const p=progress(c);
     c.classList.toggle('in',p>0.15+i*0.05);
+  });
+
+  // Parallax floaters
+  const floaters=document.querySelectorAll('#parallaxLayer .px');
+  floaters.forEach(f=>{
+    const speed=parseFloat(f.dataset.speed)||0.3;
+    f.style.transform=`translateY(${-scrollY*speed}px)`;
   });
 
   // Footer parallax
