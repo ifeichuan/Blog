@@ -9,7 +9,7 @@
   --bg:#100F0F;--bg2:#1C1B1A;--ui:#282726;--line:#403E3C;
   --tx:#CECDC3;--tx2:#878580;--tx3:#575653;
   --orange:#DA702C;--orange2:#BC5215;--blue:#4385BE;--green:#879A39;
-  --max:1080px;--ease:cubic-bezier(.22,.61,.36,1);
+  --max:1080px;--ease:cubic-bezier(.22,.61,.36,1);--spring:cubic-bezier(.175,.885,.32,1.275);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:auto}
@@ -52,6 +52,13 @@ h1 .dim{color:var(--tx3);font-weight:400}
 .scrollhint{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.25em;color:var(--tx3);text-transform:uppercase;z-index:2;opacity:1;transition:opacity .6s}
 .scrollhint::before{content:"";display:block;width:1px;height:48px;background:linear-gradient(var(--tx3),transparent);margin:0 auto 10px}
 
+/* ======== SVG PATH DRAW ======== */
+#svgDraw{position:relative;height:80vh;display:flex;align-items:center;justify-content:center;max-width:none;overflow:visible}
+#svgDraw svg{position:absolute;left:50%;top:0;transform:translateX(-50%);width:2px;height:100%;overflow:visible}
+#svgDraw .draw-path{stroke:var(--orange);stroke-width:2;fill:none;
+  stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:none}
+#svgDraw .draw-label{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--tx3);text-align:center}
+
 /* ======== §1 MANIFESTO (scroll-reveal words) ======== */
 #manifesto{min-height:160vh;position:relative}
 #manifesto .pin{position:sticky;top:0;height:100vh;display:flex;align-items:center;padding:0 24px}
@@ -80,7 +87,7 @@ h1 .dim{color:var(--tx3);font-weight:400}
 .cards{display:flex;gap:20px;overflow:visible}
 .card{flex:0 0 340px;border:1px solid var(--line);border-radius:16px;padding:28px;background:var(--bg2);
   will-change:transform,opacity;opacity:0;transform:translateX(80px)}
-.card.in{opacity:1;transform:none;transition:opacity .7s var(--ease),transform .8s var(--ease)}
+.card.in{opacity:1;transform:none;transition:opacity .7s var(--ease),transform .8s var(--spring)}
 .card .k{font-size:11px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase}
 .card h3{font-size:20px;font-weight:600;margin:10px 0 10px}
 .card p{font-size:14px;color:var(--tx2);line-height:1.6}
@@ -101,15 +108,20 @@ h1 .dim{color:var(--tx3);font-weight:400}
 .post .arrow{flex:none;color:var(--tx3);font-size:20px;transition:transform .3s,color .3s}
 .post:hover .arrow{color:var(--orange);transform:translateX(4px)}
 
-/* ======== §5 PLAYGROUND (scale up on scroll) ======== */
-#play{padding:16vh 24px;max-width:var(--max);margin:0 auto}
-#play .eyebrow{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--tx3);margin-bottom:36px}
-#play .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
-.demo{border:1px solid var(--line);border-radius:16px;background:var(--bg2);padding:24px;min-height:200px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;
-  opacity:0;transform:scale(.85);transition:opacity .6s var(--ease),transform .7s var(--ease)}
-.demo.in{opacity:1;transform:none}
-.demo .label{font-size:11px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase}
+/* ======== §5 DEMOS (individual sections) ======== */
+.demo-section{padding:12vh 24px;max-width:var(--max);margin:0 auto;display:flex;align-items:center;gap:48px;min-height:70vh}
+.demo-section:nth-child(even){flex-direction:row-reverse}
+@media(max-width:760px){.demo-section{flex-direction:column!important;gap:32px;min-height:auto}}
+.demo-section .visual{flex:0 0 320px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);border-radius:20px;background:var(--bg2);padding:40px;min-height:260px;
+  opacity:0;transform:translateY(40px) scale(.92)}
+.demo-section .visual.in{opacity:1;transform:none;transition:opacity .6s,transform .8s cubic-bezier(.175,.885,.32,1.275)}
+.demo-section .text{flex:1;opacity:0;transform:translateX(30px)}
+.demo-section:nth-child(even) .text{transform:translateX(-30px)}
+.demo-section .text.in{opacity:1;transform:none;transition:opacity .5s .15s,transform .7s .15s cubic-bezier(.175,.885,.32,1.275)}
+.demo-section .text h3{font-size:clamp(22px,3vw,32px);font-weight:700;margin-bottom:14px}
+.demo-section .text p{font-size:15px;color:var(--tx2);line-height:1.7;max-width:420px}
+.demo-section .text .tag{display:inline-block;margin-top:16px;font-size:11px;letter-spacing:.1em;color:var(--orange);border:1px solid var(--orange);padding:4px 10px;border-radius:999px}
 .gooey{filter:url(#goo);width:120px;height:70px;position:relative}
 .gooey i{position:absolute;width:34px;height:34px;border-radius:50%;background:var(--orange);top:18px}
 .gooey i:nth-child(1){left:10px;animation:g1 3s ease-in-out infinite}
@@ -227,6 +239,15 @@ h1 .dim{color:var(--tx3);font-weight:400}
   </div>
 </div>
 
+<!-- SVG PATH DRAW: scroll-driven stroke延伸 -->
+<div id="svgDraw">
+  <div class="note">SVG 路径延伸 — stroke-dashoffset 由滚动进度驱动，从 hero 过渡到 manifesto。</div>
+  <svg viewBox="0 0 2 800" preserveAspectRatio="none" style="width:2px;height:100%">
+    <path id="drawPath" d="M1,0 C1,200 1,300 1,400 C1,500 1,600 1,800" stroke-linecap="round"/>
+  </svg>
+  <p class="draw-label">继续滚动</p>
+</div>
+
 <!-- §1 MANIFESTO: 160vh, words light up one by one as you scroll -->
 <div id="manifesto" class="full">
   <div class="note">§1 Manifesto — 160vh runway。文字逐词点亮，由滚动进度驱动，不是时间动画。</div>
@@ -310,19 +331,60 @@ h1 .dim{color:var(--tx3);font-weight:400}
   </div>
 </section>
 
-<!-- §5 PLAYGROUND: scale up on scroll -->
-<section id="play">
-  <div class="note">§5 交互墙 — scale(.85)→1 由滚动驱动。</div>
-  <p class="eyebrow">顺手做的一些小东西</p>
-  <div class="grid">
-    <div class="demo" data-scale><div class="gooey"><i></i><i></i><i></i></div><div class="label">Gooey · SVG 滤镜融合</div></div>
-    <div class="demo" data-scale><div class="blurtext"><span>B</span><span>L</span><span>U</span><span>R</span></div><div class="label">方向性模糊 · 文字呼吸</div></div>
-    <div class="demo" data-scale><div class="braille" id="braille">⠋<small>⠿ Agent thinking…</small></div><div class="label">Braille Loading</div></div>
-    <div class="demo" data-scale><div class="distort-wrap" id="distortBox"><span class="placeholder"></span></div><div class="label">Liquid Distortion · hover 试试</div></div>
-    <div class="demo" data-scale><div class="mask-box" id="maskBox"><div class="layer-a">HIDDEN</div><div class="layer-b">REVEAL</div></div><div class="label">Mask Cursor Reveal</div></div>
-    <div class="demo" data-scale><div class="scramble-demo" id="scrambleDemo">HOVER ME</div><div class="label">Text Scramble · Matrix 风</div></div>
+<!-- §5 DEMOS: each effect is its own section with description -->
+<div class="demo-section">
+  <div class="visual" data-spring><div class="gooey"><i></i><i></i><i></i></div></div>
+  <div class="text" data-spring>
+    <h3>Gooey 融合</h3>
+    <p>SVG feGaussianBlur + feColorMatrix 矩阵运算。模糊后重新锐化 alpha 通道，让独立圆形"融"成一团有机体。零 Canvas、纯 filter 管线。</p>
+    <span class="tag">SVG Filter</span>
   </div>
-</section>
+</div>
+
+<div class="demo-section">
+  <div class="visual" data-spring><div class="blurtext"><span>B</span><span>L</span><span>U</span><span>R</span></div></div>
+  <div class="text" data-spring>
+    <h3>方向性模糊</h3>
+    <p>feGaussianBlur stdDeviation X/Y 分离实现水平运动模糊。三种实现对比：GSAP timeline、Motion (Framer)、原生 WAAPI。同一效果，三条技术路线。</p>
+    <span class="tag">CSS · GSAP · WAAPI</span>
+  </div>
+</div>
+
+<div class="demo-section">
+  <div class="visual" data-spring><div class="braille" id="braille">⠋<small>⠿ Agent thinking…</small></div></div>
+  <div class="text" data-spring>
+    <h3>Braille Loading</h3>
+    <p>Unicode Braille 字符帧动画。为 Eyrie Agent Session 设计的加载态：assistant thinking、tool running、session restoring 各有对应。80ms/帧，纯文本零资源。</p>
+    <span class="tag">Unicode · Agent UI</span>
+  </div>
+</div>
+
+<div class="demo-section">
+  <div class="visual" data-spring><div class="distort-wrap" id="distortBox"><span class="placeholder"></span></div></div>
+  <div class="text" data-spring>
+    <h3>Liquid Distortion</h3>
+    <p>feTurbulence 生成 Perlin 噪声贴图，feDisplacementMap 按通道位移源像素。hover 时 scale 从 0→25→0 做一次液态震荡。纯 SVG，无 WebGL 开销。</p>
+    <span class="tag">SVG Filter · hover</span>
+  </div>
+</div>
+
+<div class="demo-section">
+  <div class="visual" data-spring><div class="mask-box" id="maskBox"><div class="layer-a">HIDDEN</div><div class="layer-b">REVEAL</div></div></div>
+  <div class="text" data-spring>
+    <h3>Mask Cursor Reveal</h3>
+    <p>clip-path: circle() 跟随鼠标坐标，揭示下方隐藏层。两层内容、一行 CSS 切换。常见于创意 Agency 和作品集 hero 区。</p>
+    <span class="tag">clip-path · 光标感知</span>
+  </div>
+</div>
+
+<div class="demo-section">
+  <div class="visual" data-spring><div class="scramble-demo" id="scrambleDemo">HOVER ME</div></div>
+  <div class="text" data-spring>
+    <h3>Text Scramble</h3>
+    <p>逐字随机替换，以 1/2 字符/帧的速度收敛到目标文本。Matrix 风，适合导航菜单或标题 hover。30ms 间隔 × 字符池 65 字。</p>
+    <span class="tag">JS · hover</span>
+  </div>
+</div>
 
 <!-- §6 ABOUT: bars fill driven by scroll -->
 <section id="about">
@@ -486,11 +548,23 @@ const manifestoEl=$('#manifesto');
 const orbRunway=$('#orb-runway'),orbCanvas=$('#orbCanvas'),orbEyebrow=$('#orbEyebrow'),orbLabel=$('#orbLabel');
 const cardsEl=$$('#cards .card');
 const postsEl=$$('#writing .post');
-const demosEl=$$('#play .demo');
+const springEls=$$('[data-spring]');
 const barsEl=$('#bars');
 const beliefsEl=$$('#beliefs li');
 const footH2=$('#footH2');
 const progressBar=$('#progress');
+
+// SVG path draw setup
+const drawPath=$('#drawPath');
+const pathLen=drawPath.getTotalLength();
+drawPath.style.strokeDasharray=pathLen;
+drawPath.style.strokeDashoffset=pathLen;
+drawPath.classList.add('draw-path');
+const svgDrawEl=$('#svgDraw');
+
+// Spring physics helper: overdamp → overshoot then settle
+// ponytail: simple spring approximation via CSS cubic-bezier(.175,.885,.32,1.275) on the elements themselves
+// JS just toggles .in class, CSS transition does the spring curve
 
 function tick(){
   const scrollY=window.scrollY;
@@ -505,9 +579,13 @@ function tick(){
   heroContent.style.transform=`translateY(${-hp*120}px)`;
   heroContent.style.opacity=1-hp*1.8;
   scrollhint.style.opacity=hp<.05?1:0;
-  // dapple parallax (opposite direction)
   const dapples=heroEl.querySelectorAll('.dapple span');
   dapples.forEach((d,i)=>{d.style.transform=`translate(${Math.sin(i+scrollY*.001)*40}px, ${hp*60*(i+1)}px)`;});
+
+  // SVG path draw (between hero and manifesto)
+  const sp=progress(svgDrawEl);
+  const drawOffset=pathLen*(1-Math.min(1,Math.max(0,(sp-.1)/.7)));
+  drawPath.style.strokeDashoffset=drawOffset;
 
   // §1 Manifesto word reveal
   const mp=sectionProgress(manifestoEl);
@@ -517,7 +595,7 @@ function tick(){
 
   // §2 Orb scale by scroll
   const op=sectionProgress(orbRunway);
-  const orbScale=.3+op*(.7); // 0.3 → 1.0
+  const orbScale=.3+op*(.7);
   orbCanvas.style.transform=`scale(${Math.min(1,orbScale)})`;
   orbEyebrow.classList.toggle('show',op>.05);
   orbLabel.classList.toggle('show',op>.5);
@@ -526,8 +604,7 @@ function tick(){
   // §3 Cards stagger
   cardsEl.forEach((c,i)=>{
     const p=progress(c);
-    const threshold=.15+i*.06;
-    c.classList.toggle('in',p>threshold);
+    c.classList.toggle('in',p>.15+i*.06);
   });
 
   // §4 Posts stagger from left
@@ -536,10 +613,10 @@ function tick(){
     p.classList.toggle('in',pr>.2+i*.05);
   });
 
-  // §5 Demos scale
-  demosEl.forEach((d)=>{
-    const p=progress(d);
-    d.classList.toggle('in',p>.2);
+  // §5 Demo sections (spring via CSS transition on .in)
+  springEls.forEach(el=>{
+    const p=progress(el);
+    el.classList.toggle('in',p>.18);
   });
 
   // §6 Bars fill by scroll
