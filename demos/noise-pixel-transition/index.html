@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Page One</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-barba="wrapper">
+
+<canvas id="noise-overlay" aria-hidden="true"></canvas>
+
+<main data-barba="container" data-barba-namespace="home">
+  <nav><a href="index.html" class="active">Home</a> <a href="page2.html">Works</a></nav>
+  <section class="hero">
+    <h1>Page One</h1>
+    <p>点击导航触发像素噪声溶解转场</p>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@barba/core@2.10.3/dist/barba.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
