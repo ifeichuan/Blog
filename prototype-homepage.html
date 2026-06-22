@@ -233,6 +233,39 @@ h1 .dim{color:var(--tx3);font-weight:400}
 /* ======== SCRAMBLE demo ======== */
 .scramble-demo{font-size:22px;font-weight:700;letter-spacing:.05em;font-family:ui-monospace,monospace;color:var(--green);min-height:1.5em}
 
+/* ======== AURORA BACKGROUND ======== */
+#aurora{position:relative;overflow:hidden;padding:12vh 24px;max-width:none}
+#aurora::before{content:"";position:absolute;inset:-50%;width:200%;height:200%;
+  background:conic-gradient(from 210deg,var(--orange),var(--blue),var(--green),var(--orange));
+  opacity:.08;filter:blur(80px);animation:auroraRotate 20s linear infinite}
+@keyframes auroraRotate{to{transform:rotate(360deg)}}
+#aurora .inner{position:relative;z-index:2;max-width:var(--max);margin:0 auto;text-align:center}
+#aurora h2{font-size:clamp(32px,5vw,56px);font-weight:800;letter-spacing:-.03em}
+#aurora .rotating-wrap{margin-top:20px;height:1.4em;overflow:hidden;position:relative}
+.rotating-text{position:absolute;width:100%;text-align:center;font-size:clamp(20px,3vw,32px);font-weight:500;color:var(--orange);
+  animation:rotateWords 8s infinite}
+.rotating-text:nth-child(2){animation-delay:-2s}
+.rotating-text:nth-child(3){animation-delay:-4s}
+.rotating-text:nth-child(4){animation-delay:-6s}
+@keyframes rotateWords{0%,20%{transform:translateY(100%) rotateX(-80deg);opacity:0}
+  25%,45%{transform:none;opacity:1}50%,100%{transform:translateY(-100%) rotateX(80deg);opacity:0}}
+
+/* ======== PIXEL TRAIL ======== */
+.pixel{position:fixed;width:8px;height:8px;pointer-events:none;z-index:198;opacity:.7;
+  animation:pixelFade .5s forwards}
+@keyframes pixelFade{to{opacity:0;transform:scale(0)}}
+
+/* ======== DOT FIELD ======== */
+#dotField{position:relative;height:40vh;max-width:none;overflow:hidden}
+#dotCanvas{width:100%;height:100%}
+
+/* ======== STICKER PEEL ======== */
+.peel-card{position:relative;overflow:visible;cursor:pointer}
+.peel-card::after{content:"";position:absolute;bottom:0;right:0;width:48px;height:48px;
+  background:linear-gradient(135deg,transparent 50%,var(--orange) 50%);border-radius:0 0 16px 0;
+  transform-origin:bottom right;transition:transform .4s var(--spring);opacity:.8}
+.peel-card:hover::after{transform:scale(1.8) rotate(-10deg)}
+
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.cursor{display:none}}
 </style>
 </head>
@@ -298,7 +331,7 @@ h1 .dim{color:var(--tx3);font-weight:400}
   <div class="note">§3 成果 — 卡片从右侧滑入，由滚动进度驱动 stagger。</div>
   <p class="eyebrow">我做过的真东西</p>
   <div class="cards" id="cards">
-    <article class="card">
+    <article class="card peel-card">
       <div class="k">实习 · 求职平台</div>
       <h3>CareerTime 小程序</h3>
       <p>pdf.js+Canvas 双层标注、rAF 分页渲染、豆包多模态 90%+、容器/展示解耦简历编辑器、LangGraph 编排 AI 三链路、微信支付。</p>
@@ -438,6 +471,26 @@ h1 .dim{color:var(--tx3);font-weight:400}
 </section>
 
 <!-- §7 FOOTER -->
+<!-- AURORA + ROTATING TEXT -->
+<div id="aurora">
+  <div class="note">Aurora — 旋转 conic-gradient 背景 + 3D 翻转循环文字（ReactBits Rotating Text 风格）。</div>
+  <div class="inner">
+    <h2>我能帮你做</h2>
+    <div class="rotating-wrap">
+      <span class="rotating-text">滚动驱动的长叙事页</span>
+      <span class="rotating-text">WebGL Shader 视觉</span>
+      <span class="rotating-text">Agent UI 流式渲染</span>
+      <span class="rotating-text">有生命感的交互原型</span>
+    </div>
+  </div>
+</div>
+
+<!-- DOT FIELD: interactive dot grid -->
+<div id="dotField">
+  <div class="note">Dot Field — 交互点阵，鼠标靠近点变亮变大（ReactBits Dot Field 风格）。</div>
+  <canvas id="dotCanvas"></canvas>
+</div>
+
 <!-- STRANDS: glowing canvas ribbons -->
 <div id="strands">
   <div class="note">Strands — ReactBits 风格的 canvas 光丝，鼠标影响丝线方向。</div>
@@ -883,6 +936,47 @@ document.addEventListener('mousemove',e=>{
     s.style.filter=`blur(${(1-t)*2}px)`;
   });
 });
+})();
+
+// ======== PIXEL TRAIL ========
+let lastPixelTime=0;
+document.addEventListener('mousemove',e=>{
+  const now=performance.now();
+  if(now-lastPixelTime<40)return;lastPixelTime=now;
+  const px=document.createElement('div');px.className='pixel';
+  px.style.left=e.clientX+'px';px.style.top=e.clientY+'px';
+  px.style.background=`hsl(${20+Math.random()*20},70%,55%)`;
+  document.body.appendChild(px);
+  setTimeout(()=>px.remove(),500);
+});
+
+// ======== DOT FIELD ========
+(function(){
+const c=document.getElementById('dotCanvas');
+const ctx=c.getContext('2d');
+let w,h,cols,rows,dots=[];const gap=28;
+let dmx=-1,dmy=-1;
+function resize(){w=c.width=c.offsetWidth*devicePixelRatio;h=c.height=c.offsetHeight*devicePixelRatio;
+  cols=Math.ceil(w/devicePixelRatio/gap);rows=Math.ceil(h/devicePixelRatio/gap);dots=[];
+  for(let r=0;r<rows;r++)for(let cl=0;cl<cols;cl++)dots.push({x:cl*gap+gap/2,y:r*gap+gap/2});}
+resize();window.addEventListener('resize',resize);
+c.addEventListener('mousemove',e=>{const r=c.getBoundingClientRect();dmx=e.clientX-r.left;dmy=e.clientY-r.top;});
+c.addEventListener('mouseleave',()=>{dmx=-1;dmy=-1;});
+let active=false;
+const dIO=new IntersectionObserver(([e])=>{active=e.isIntersecting;if(active)drawDots();},{threshold:.1});
+dIO.observe(c);
+function drawDots(){if(!active)return;
+  const W=w/devicePixelRatio,H=h/devicePixelRatio;
+  ctx.clearRect(0,0,W,H);
+  dots.forEach(d=>{
+    const dist=dmx<0?999:Math.sqrt((dmx-d.x)**2+(dmy-d.y)**2);
+    const t=Math.max(0,1-dist/120);
+    const radius=1.5+t*4;
+    const alpha=.15+t*.7;
+    ctx.beginPath();ctx.arc(d.x,d.y,radius,0,Math.PI*2);
+    ctx.fillStyle=`rgba(218,112,44,${alpha})`;ctx.fill();
+  });
+  requestAnimationFrame(drawDots);}
 })();
 
 // ======== GRADUAL BLUR (scroll-driven) ========
