@@ -52,12 +52,11 @@ h1 .dim{color:var(--tx3);font-weight:400}
 .scrollhint{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.25em;color:var(--tx3);text-transform:uppercase;z-index:2;opacity:1;transition:opacity .6s}
 .scrollhint::before{content:"";display:block;width:1px;height:48px;background:linear-gradient(var(--tx3),transparent);margin:0 auto 10px}
 
-/* ======== SVG PATH DRAW ======== */
-#svgDraw{position:relative;height:80vh;display:flex;align-items:center;justify-content:center;max-width:none;overflow:visible}
-#svgDraw svg{position:absolute;left:50%;top:0;transform:translateX(-50%);width:2px;height:100%;overflow:visible}
-#svgDraw .draw-path{stroke:var(--orange);stroke-width:2;fill:none;
-  stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:none}
-#svgDraw .draw-label{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--tx3);text-align:center}
+/* ======== SVG BLOB STRETCH ======== */
+#blobStretch{position:relative;height:120vh;display:flex;align-items:center;justify-content:center;max-width:none;overflow:visible}
+#blobStretch svg{width:220px;height:100%;position:absolute;left:50%;transform:translateX(-50%)}
+#blobStretch .blob-path{fill:var(--orange);opacity:.18;transition:none}
+#blobStretch .blob-label{position:relative;z-index:2;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--tx3);text-align:center}
 
 /* ======== §1 MANIFESTO (scroll-reveal words) ======== */
 #manifesto{min-height:160vh;position:relative}
@@ -239,13 +238,13 @@ h1 .dim{color:var(--tx3);font-weight:400}
   </div>
 </div>
 
-<!-- SVG PATH DRAW: scroll-driven stroke延伸 -->
-<div id="svgDraw">
-  <div class="note">SVG 路径延伸 — stroke-dashoffset 由滚动进度驱动，从 hero 过渡到 manifesto。</div>
-  <svg viewBox="0 0 2 800" preserveAspectRatio="none" style="width:2px;height:100%">
-    <path id="drawPath" d="M1,0 C1,200 1,300 1,400 C1,500 1,600 1,800" stroke-linecap="round"/>
+<!-- SVG BLOB STRETCH: 不规则形状随滚动中部拉伸 -->
+<div id="blobStretch">
+  <div class="note">SVG 拉伸 — 不规则 blob 中部控制点随滚动 Y 坐标增大，形状被平滑拉长。</div>
+  <svg viewBox="0 0 200 800" preserveAspectRatio="xMidYMid meet">
+    <path id="blobPath" class="blob-path" d=""/>
   </svg>
-  <p class="draw-label">继续滚动</p>
+  <p class="blob-label">↓</p>
 </div>
 
 <!-- §1 MANIFESTO: 160vh, words light up one by one as you scroll -->
@@ -554,13 +553,25 @@ const beliefsEl=$$('#beliefs li');
 const footH2=$('#footH2');
 const progressBar=$('#progress');
 
-// SVG path draw setup
-const drawPath=$('#drawPath');
-const pathLen=drawPath.getTotalLength();
-drawPath.style.strokeDasharray=pathLen;
-drawPath.style.strokeDashoffset=pathLen;
-drawPath.classList.add('draw-path');
-const svgDrawEl=$('#svgDraw');
+// SVG blob stretch setup
+const blobPath=$('#blobPath');
+const blobStretchEl=$('#blobStretch');
+function buildBlob(stretch){
+  // 不规则 blob：顶部和底部是固定圆润端，中部 control points 随 stretch 拉开
+  const cx=100, topY=80, botY=720-stretch*0;
+  const midTopY=200+stretch*0.3, midBotY=600-stretch*0.3;
+  const bulge=70+stretch*0.08; // 中部宽度微微收窄
+  // stretch 值 0→400，中部两个锚点被拉开
+  const yA=280+stretch*0.5, yB=520-stretch*0.5+stretch;
+  return `M${cx},${topY}
+    C${cx+75},${topY+30} ${cx+bulge},${midTopY} ${cx+bulge-10},${yA}
+    C${cx+bulge-20},${yA+60} ${cx+bulge-15},${yB-60} ${cx+bulge-10},${yB}
+    C${cx+bulge},${midBotY+stretch*0.7} ${cx+75},${botY+stretch-30} ${cx},${botY+stretch}
+    C${cx-75},${botY+stretch-30} ${cx-bulge},${midBotY+stretch*0.7} ${cx-bulge+10},${yB}
+    C${cx-bulge+20},${yB-60} ${cx-bulge+15},${yA+60} ${cx-bulge+10},${yA}
+    C${cx-bulge},${midTopY} ${cx-75},${topY+30} ${cx},${topY} Z`;
+}
+blobPath.setAttribute('d',buildBlob(0));
 
 // Spring physics helper: overdamp → overshoot then settle
 // ponytail: simple spring approximation via CSS cubic-bezier(.175,.885,.32,1.275) on the elements themselves
@@ -582,10 +593,12 @@ function tick(){
   const dapples=heroEl.querySelectorAll('.dapple span');
   dapples.forEach((d,i)=>{d.style.transform=`translate(${Math.sin(i+scrollY*.001)*40}px, ${hp*60*(i+1)}px)`;});
 
-  // SVG path draw (between hero and manifesto)
-  const sp=progress(svgDrawEl);
-  const drawOffset=pathLen*(1-Math.min(1,Math.max(0,(sp-.1)/.7)));
-  drawPath.style.strokeDashoffset=drawOffset;
+  // SVG blob stretch (中部拉伸由滚动驱动)
+  const bsp=progress(blobStretchEl);
+  const stretch=Math.max(0,Math.min(1,(bsp-.05)/.8))*400;
+  blobPath.setAttribute('d',buildBlob(stretch));
+  // 动态更新 viewBox 高度以适应拉伸
+  blobStretchEl.querySelector('svg').setAttribute('viewBox',`0 0 200 ${800+stretch}`);
 
   // §1 Manifesto word reveal
   const mp=sectionProgress(manifestoEl);
