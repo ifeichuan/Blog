@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feichuan · 首页原型 v3 — 布局标注</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#100F0F;--bg2:#1C1B1A;--ui:#282726;--line:#403E3C;
+  --tx:#CECDC3;--tx2:#878580;--tx3:#575653;
+  --orange:#DA702C;--blue:#4385BE;--green:#879A39;--purple:#8B7EC8;
+  --max:1100px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:auto}
+body{background:var(--bg);color:var(--tx);
+  font:15px/1.7 'Geist Mono','Source Han Sans SC','Noto Sans CJK SC',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ---- NOTE SYSTEM ---- */
+.note{position:absolute;right:20px;top:12px;z-index:50;
+  background:rgba(218,112,44,.1);border:1px dashed var(--orange);color:var(--orange);
+  font-size:11px;line-height:1.5;padding:6px 12px;border-radius:6px;max-width:320px;
+  pointer-events:none}
+.note b{font-weight:700;display:block;margin-bottom:2px}
+.note code{background:rgba(218,112,44,.15);padding:1px 4px;border-radius:3px;font-size:10px}
+
+/* ---- PLACEHOLDER BLOCKS ---- */
+.placeholder-block{border:2px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;color:var(--tx3);font-size:12px;letter-spacing:.05em;text-transform:uppercase}
+.placeholder-block .icon{font-size:28px;opacity:.4}
+
+/* ---- PROGRESS BAR ---- */
+#progress{position:fixed;top:0;left:0;height:2px;background:var(--orange);width:0;z-index:100}
+
+/* ---- SECTION LABEL ---- */
+.section-label{position:sticky;top:8px;z-index:40;display:inline-block;
+  background:var(--ui);border:1px solid var(--line);color:var(--tx2);
+  font-size:10px;letter-spacing:.15em;text-transform:uppercase;padding:4px 10px;border-radius:4px;margin:12px 0 0 20px}
+
+/* ======== §0 HERO ======== */
+#hero{height:250vh;position:relative}
+#hero .pin{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#hero .staged{position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;padding:0 clamp(24px,5vw,80px);max-width:var(--max);width:100%}
+#hero .staged>*{opacity:0;transform:translateY(30px);transition:none}
+#hero .staged .name{font-size:clamp(48px,8vw,88px);font-weight:700;letter-spacing:-.04em;line-height:1}
+#hero .staged .intro{font-size:clamp(14px,1.8vw,18px);color:var(--tx2);margin-top:16px;max-width:420px}
+#hero .staged .tags{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+#hero .staged .tags span{font-size:11px;color:var(--tx3);border:1px solid var(--line);padding:4px 10px;border-radius:4px}
+#hero .staged .deco{position:absolute;right:clamp(24px,8vw,120px);top:50%;transform:translateY(-50%);
+  width:160px;height:160px;border-radius:50%;background:conic-gradient(from 45deg,var(--orange),var(--purple),var(--blue),var(--orange));
+  opacity:0;filter:blur(40px)}
+
+/* ======== §1 SECOND SCREEN (text staged) ======== */
+#second{height:200vh;position:relative}
+#second .pin{position:sticky;top:0;height:100vh;display:flex;align-items:center;padding:0 clamp(24px,5vw,80px);max-width:var(--max);margin:0 auto}
+#second .words{font-size:clamp(24px,3.5vw,42px);font-weight:500;line-height:1.5;letter-spacing:-.02em}
+#second .words span{display:inline;opacity:.1;transition:opacity .05s}
+#second .words span.lit{opacity:1}
+#second .words .em{color:var(--orange)}
+
+/* ======== §2 DAPPLED LIGHT → ZOOM-OUT ======== */
+#dappled{height:300vh;position:relative}
+#dappled .pin{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#dappled .light-box{width:100%;height:100%;position:absolute;inset:0;transition:none}
+#dappled .light-box .orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;mix-blend-mode:screen}
+#dappled .light-box .orb:nth-child(1){width:400px;height:400px;background:var(--orange);left:10%;top:20%}
+#dappled .light-box .orb:nth-child(2){width:350px;height:350px;background:var(--blue);right:15%;top:30%}
+#dappled .light-box .orb:nth-child(3){width:300px;height:300px;background:var(--green);left:35%;bottom:15%}
+#dappled .zoom-content{position:relative;z-index:2;opacity:0;transform:scale(.85);
+  max-width:var(--max);width:100%;padding:0 24px;text-align:center}
+#dappled .zoom-content h2{font-size:clamp(28px,4vw,48px);font-weight:700;letter-spacing:-.03em}
+#dappled .zoom-content p{margin-top:16px;color:var(--tx2);font-size:15px;max-width:500px;margin-inline:auto}
+
+/* ======== §3 WORKS (Image Trail placeholder) ======== */
+#works{position:relative;padding:clamp(80px,12vh,160px) clamp(24px,5vw,80px);max-width:var(--max);margin:0 auto}
+#works .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--tx3);margin-bottom:32px}
+.works-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.work-item{border:1px solid var(--line);border-radius:12px;padding:24px;background:var(--bg2);
+  opacity:0;transform:translateY(24px)}
+.work-item.in{opacity:1;transform:none;transition:opacity .6s,transform .7s cubic-bezier(.22,.61,.36,1)}
+.work-item .k{font-size:10px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase}
+.work-item h3{font-size:17px;font-weight:600;margin:8px 0}
+.work-item p{font-size:13px;color:var(--tx2);line-height:1.6}
+
+/* ======== §4 INFINITE GALLERY (300vh pinned placeholder) ======== */
+#gallery{height:300vh;position:relative}
+#gallery .pin{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center}
+#gallery .placeholder-block{width:90%;max-width:900px;height:70vh}
+
+/* ======== §5 WRITING (Flowing Menu style) ======== */
+#writing{position:relative;padding:clamp(80px,12vh,160px) clamp(24px,5vw,80px);max-width:var(--max);margin:0 auto}
+#writing .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--tx3);margin-bottom:32px}
+.post-item{padding:24px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:16px;
+  cursor:pointer;transition:transform .3s cubic-bezier(.22,.61,.36,1)}
+.post-item:hover{transform:translateX(8px)}
+.post-item .t{font-size:clamp(16px,2vw,20px);font-weight:600}
+.post-item .d{font-size:13px;color:var(--tx2);margin-top:6px}
+.post-item .arrow{color:var(--tx3);font-size:18px;transition:color .3s,transform .3s}
+.post-item:hover .arrow{color:var(--orange);transform:translateX(4px)}
+
+/* ======== §6 BOOKS / GALLERY / READS (placeholder) ======== */
+#extras{position:relative;padding:clamp(60px,10vh,120px) clamp(24px,5vw,80px);max-width:var(--max);margin:0 auto}
+.extras-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:700px){.extras-grid{grid-template-columns:1fr}}
+.extras-grid .placeholder-block{height:200px}
+
+/* ======== STICKY FOOTER ======== */
+#footer-wrap{position:relative;height:auto}
+#main-content{position:relative;z-index:2;background:var(--bg)}
+#footer{position:sticky;bottom:0;z-index:1;min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:clamp(60px,10vh,120px) clamp(24px,5vw,80px);gap:32px;overflow:hidden}
+#footer .f-name{font-size:clamp(32px,5vw,56px);font-weight:700;letter-spacing:-.03em;opacity:0;transform:translateY(20px)}
+#footer .f-links{display:flex;gap:12px;flex-wrap:wrap;opacity:0;transform:translateY(20px)}
+#footer .f-links a{font-size:13px;color:var(--tx2);border:1px solid var(--line);padding:8px 16px;border-radius:6px;text-decoration:none;transition:.3s}
+#footer .f-links a:hover{border-color:var(--orange);color:var(--orange)}
+#footer .f-tags{display:flex;gap:6px;flex-wrap:wrap;opacity:0;transform:translateY(20px)}
+#footer .f-tags span{font-size:11px;color:var(--tx3);border:1px solid var(--line);padding:3px 8px;border-radius:4px}
+#footer .f-copy{font-size:11px;color:var(--tx3);opacity:0;transform:translateY(10px)}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<div id="footer-wrap">
+<div id="main-content">
+
+<!-- §0 HERO: 250vh, staged elements by scroll -->
+<section id="hero">
+  <span class="section-label">§0 Hero · 250vh</span>
+  <div class="note"><b>Hero — Staged 入场</b>滚动驱动元素逐个出现：名字→介绍→标签→装饰球。无"我是xxx"文案。<code>scroll-driven</code></div>
+  <div class="pin">
+    <div class="staged">
+      <span class="name" data-stage="0">扉川</span>
+      <span class="intro" data-stage="1">Creative Frontend · 交互设计<br>网站本身就是作品。</span>
+      <div class="tags" data-stage="2">
+        <span>Vue / React</span><span>GSAP</span><span>WebGL</span><span>Agent UI</span><span>Tauri</span>
+      </div>
+      <div class="deco" data-stage="3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- §1 SECOND SCREEN: 200vh, word-by-word reveal -->
+<section id="second">
+  <span class="section-label">§1 文字揭示 · 200vh</span>
+  <div class="note"><b>Second Screen — 文字逐词点亮</b>滚动进度驱动，不是时间动画。重点词高亮橙色。<code>scroll-driven staged text</code></div>
+  <div class="pin">
+    <div class="words" id="wordsContainer"></div>
+  </div>
+</section>
+
+<!-- §2 DAPPLED LIGHT + ZOOM-OUT -->
+<section id="dappled">
+  <span class="section-label">§2 光影 + Zoom-out · 300vh</span>
+  <div class="note"><b>斑驳光影 → Zoom-out</b>前半段：光斑全屏沉浸。后半段：整体缩小 + Gradual Blur 清晰化，揭示下方内容。<code>scale + blur transition</code></div>
+  <div class="pin">
+    <div class="light-box" id="lightBox">
+      <div class="orb"></div><div class="orb"></div><div class="orb"></div>
+    </div>
+    <div class="zoom-content" id="zoomContent">
+      <h2>我做过的真东西</h2>
+      <p>不只是能跑的代码，是有设计意图的交互体验。</p>
+    </div>
+  </div>
+</section>
+
+<!-- §3 WORKS -->
+<section id="works">
+  <span class="section-label">§3 Works · Image Trail</span>
+  <div class="note"><b>Works 区</b>项目卡片网格。鼠标移动时触发 <code>Image Trail</code> 拖尾预览截图。卡片入场用 Staged Bubble。</div>
+  <p class="eyebrow">craft</p>
+  <div class="works-grid">
+    <div class="work-item" data-stagger><div class="k">实习 · 求职平台</div><h3>CareerTime 小程序</h3><p>PDF标注 · 简历编辑器 · AI三链路 · 微信支付</p></div>
+    <div class="work-item" data-stagger><div class="k">系统设计 · Agent UI</div><h3>Eyrie Session UI</h3><p>流式渲染 · ToolGroup · ApprovalTicket · store-driven</p></div>
+    <div class="work-item" data-stagger><div class="k">语音 · Tauri</div><h3>VoiceStream</h3><p>ShaderOrb · 实时ASR · 后台Agent通知</p></div>
+    <div class="work-item" data-stagger><div class="k">产品设计</div><h3>Hawk / Recap</h3><p>跨Agent注意力恢复层 · 认知线程管理</p></div>
+  </div>
+  <div class="placeholder-block" style="height:120px;margin-top:32px;border-color:var(--orange)">
+    <span class="icon">◐</span>
+    <span>Image Trail 效果区域 — 鼠标拖尾出现项目截图</span>
+  </div>
+</section>
+
+<!-- §4 INFINITE GALLERY (300vh pinned) -->
+<section id="gallery">
+  <span class="section-label">§4 Infinite Gallery · 300vh pinned</span>
+  <div class="note"><b>Infinite Gallery</b>300vh pinned 滚动驱动画廊。展示喜欢的图片/设计截图。<code>ReactBits Pro</code></div>
+  <div class="pin">
+    <div class="placeholder-block" style="border-color:var(--purple)">
+      <span class="icon">▦</span>
+      <span>Infinite Gallery — 300vh pinned scroll-driven</span>
+      <span style="font-size:10px;color:var(--tx3)">reactbits.dev/docs/components/infinite-gallery</span>
+    </div>
+  </div>
+</section>
+
+<!-- §5 WRITING (Flowing Menu) -->
+<section id="writing">
+  <span class="section-label">§5 Writing · Flowing Menu</span>
+  <div class="note"><b>文章列表</b>Flowing Menu 基础 + Magnetic Button 吸附 + 3D Flip hover。<code>magnetic + perspective</code></div>
+  <p class="eyebrow">writing</p>
+  <div class="post-item"><div><div class="t">被 AI 逼疯的前端</div><div class="d">SSE · Unicode截断 · Markdown流式渲染</div></div><span class="arrow">↗</span></div>
+  <div class="post-item"><div><div class="t">OpenClaw 架构解析</div><div class="d">五层服务 · Claude tool use · 横向对比</div></div><span class="arrow">↗</span></div>
+  <div class="post-item"><div><div class="t">Lenis 与 GSAP ScrollTrigger</div><div class="d">虚拟滚动原理 · scrollerProxy</div></div><span class="arrow">↗</span></div>
+</section>
+
+<!-- §6 EXTRAS (books/gallery/reads) -->
+<section id="extras">
+  <span class="section-label">§6 Books / Gallery / Reads</span>
+  <div class="note"><b>额外内容集合</b>看过的书 · 喜欢的图片 · 喜欢的文章。具体展示形式待定。</div>
+  <div class="extras-grid">
+    <div class="placeholder-block" style="border-color:var(--green)"><span class="icon">◇</span><span>Books</span></div>
+    <div class="placeholder-block" style="border-color:var(--blue)"><span class="icon">□</span><span>Gallery</span></div>
+    <div class="placeholder-block" style="border-color:var(--purple)"><span class="icon">△</span><span>Reads</span></div>
+  </div>
+</section>
+
+</div><!-- /#main-content -->
+
+<!-- STICKY FOOTER -->
+<footer id="footer">
+  <div class="note"><b>Sticky Footer</b>主内容滚过后自然露出。子元素以不同速率视差入场。<code>position:sticky;bottom:0</code></div>
+  <span class="f-name">扉川</span>
+  <div class="f-links">
+    <a href="#">GitHub</a><a href="#">邮箱</a><a href="#">下载简历</a>
+  </div>
+  <div class="f-tags">
+    <span>Vue 3</span><span>React</span><span>TypeScript</span><span>GSAP</span><span>Three.js</span><span>Tauri</span><span>Rust</span><span>AI SDK</span>
+  </div>
+  <span class="f-copy">© 2026 Feichuan</span>
+</footer>
+</div><!-- /#footer-wrap -->
+
+<script>
+// ponytail: single rAF loop, no libraries, placeholder-grade animations
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function sectionProgress(el){
+  const r = el.getBoundingClientRect();
+  return Math.min(1, Math.max(0, -r.top / (el.offsetHeight - window.innerHeight)));
+}
+function progress(el){
+  const r = el.getBoundingClientRect();
+  return Math.min(1, Math.max(0, (window.innerHeight - r.top) / (window.innerHeight + el.offsetHeight)));
+}
+
+// §1 words
+const mText = "做 有设计意图 的交互。 不写第一百遍的组件， 写 没人见过 的体验。 代码是手艺， 网站是作品。";
+const container = $('#wordsContainer');
+mText.split(' ').forEach(w => {
+  const s = document.createElement('span');
+  s.className = ["有设计意图","没人见过","手艺，","作品。"].includes(w) ? 'em' : '';
+  s.textContent = w + ' ';
+  container.appendChild(s);
+});
+const wordSpans = $$('#wordsContainer span');
+
+// scroll engine
+const heroEl = $('#hero');
+const secondEl = $('#second');
+const dappledEl = $('#dappled');
+const lightBox = $('#lightBox');
+const zoomContent = $('#zoomContent');
+const staged = $$('#hero .staged > *');
+const workItems = $$('.work-item');
+const progressBar = $('#progress');
+const footerEls = $$('#footer > *:not(.note)');
+
+function tick(){
+  const scrollY = window.scrollY;
+  const vh = window.innerHeight;
+  const docH = document.documentElement.scrollHeight - vh;
+  progressBar.style.width = (scrollY/docH*100)+'%';
+
+  // §0 Hero staged
+  const hp = sectionProgress(heroEl);
+  staged.forEach((el, i) => {
+    const threshold = i * 0.12;
+    const visible = hp > threshold;
+    el.style.opacity = visible ? 1 : 0;
+    el.style.transform = visible ? 'translateY(0)' : 'translateY(30px)';
+    el.style.transition = 'opacity .6s,transform .7s cubic-bezier(.22,.61,.36,1)';
+  });
+
+  // §1 Second screen words
+  const sp = sectionProgress(secondEl);
+  const litCount = Math.floor(sp * wordSpans.length * 1.4);
+  wordSpans.forEach((w, i) => w.classList.toggle('lit', i < litCount));
+
+  // §2 Dappled + Zoom-out
+  const dp = sectionProgress(dappledEl);
+  // first half: light orbs visible, scale 1
+  // second half: zoom out (scale down), content appears
+  const zoomPhase = Math.max(0, (dp - 0.4) / 0.6);
+  const lightScale = 1 - zoomPhase * 0.35;
+  const lightBlur = zoomPhase * 12;
+  lightBox.style.transform = `scale(${lightScale})`;
+  lightBox.style.filter = `blur(${lightBlur}px)`;
+  lightBox.style.opacity = 1 - zoomPhase * 0.6;
+  zoomContent.style.opacity = Math.min(1, zoomPhase * 2);
+  zoomContent.style.transform = `scale(${0.85 + zoomPhase * 0.15})`;
+
+  // §3 Works stagger
+  workItems.forEach((c, i) => {
+    const p = progress(c);
+    c.classList.toggle('in', p > 0.15 + i * 0.05);
+  });
+
+  // Footer parallax (simple stagger by visibility)
+  const fp = progress($('#footer'));
+  footerEls.forEach((el, i) => {
+    const t = 0.1 + i * 0.08;
+    const visible = fp > t;
+    el.style.opacity = visible ? 1 : 0;
+    el.style.transform = visible ? 'translateY(0)' : 'translateY(20px)';
+    el.style.transition = `opacity .7s ${i*0.1}s, transform .8s ${i*0.1}s cubic-bezier(.22,.61,.36,1)`;
+  });
+
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
