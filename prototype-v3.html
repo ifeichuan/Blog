@@ -53,8 +53,14 @@ body{background:var(--bg);color:var(--tx);
 #hero .staged>*{opacity:0;transform:translateY(24px)}
 #hero .staged .name{font-size:clamp(52px,9vw,96px);font-weight:700;letter-spacing:-.04em;line-height:1}
 #hero .staged .intro{font-size:clamp(14px,1.8vw,18px);color:var(--tx2);margin-top:16px;max-width:420px}
-#hero .staged .tags{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
-#hero .staged .tags span{font-size:11px;color:var(--tx3);border:1px solid var(--line);padding:4px 10px;border-radius:4px}
+#hero .staged .tags{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;position:relative}
+#hero .staged .tags span{font-size:11px;color:var(--tx2);background:var(--bg2);border:1px solid var(--line);
+  padding:8px 14px;border-radius:12px;display:inline-flex;align-items:center;gap:6px;
+  transform:perspective(600px) rotateX(0deg) translateZ(0);transition:transform .4s cubic-bezier(.22,.61,.36,1);
+  box-shadow:0 4px 12px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05)}
+#hero .staged .tags span:hover{transform:perspective(600px) rotateX(-8deg) translateZ(12px);
+  border-color:var(--orange);box-shadow:0 8px 24px rgba(218,112,44,.15),inset 0 1px 0 rgba(255,255,255,.08)}
+#hero .staged .tags .badge-icon{width:16px;height:16px;border-radius:4px;display:inline-block}
 /* bubbles */
 .bubbles{position:absolute;inset:0;pointer-events:none;z-index:1}
 .bubble{position:absolute;border-radius:50%;border:1px solid var(--line);opacity:0}
@@ -70,8 +76,10 @@ body{background:var(--bg);color:var(--tx);
 .scroll-hint::before{content:"";display:block;width:1px;height:40px;background:linear-gradient(var(--tx3),transparent);margin:0 auto 8px}
 
 /* ======== §1 SECOND SCREEN (多种文字动画) ======== */
-#second{min-height:350vh;position:relative}
-#second .text-section{height:100vh;position:sticky;top:0;display:flex;align-items:center;padding:0 clamp(24px,5vw,80px);max-width:var(--max);margin:0 auto}
+#second{position:relative}
+.text-runway{height:150vh;position:relative}
+.text-runway:last-child{height:100vh}
+.text-runway .text-section{height:100vh;position:sticky;top:0;display:flex;align-items:center;padding:0 clamp(24px,5vw,80px);max-width:var(--max);margin:0 auto}
 #second .text-section .anim-label{position:absolute;left:20px;top:20px;font-size:9px;letter-spacing:.15em;
   color:var(--purple);text-transform:uppercase;border:1px solid var(--purple);padding:2px 8px;border-radius:3px}
 /* Split Text */
@@ -221,7 +229,12 @@ body{background:var(--bg);color:var(--tx);
       <span class="name" data-auto>扉川</span>
       <span class="intro" data-scroll>Creative Frontend · 交互设计<br>网站本身就是作品。</span>
       <div class="tags" data-scroll>
-        <span>Vue / React</span><span>GSAP</span><span>WebGL</span><span>Agent UI</span><span>Tauri</span>
+        <span data-speed="0.15"><i class="badge-icon" style="background:#41b883"></i>Vue</span>
+        <span data-speed="0.25"><i class="badge-icon" style="background:#61dafb"></i>React</span>
+        <span data-speed="0.1"><i class="badge-icon" style="background:#88ce02"></i>GSAP</span>
+        <span data-speed="0.3"><i class="badge-icon" style="background:#f7df1e"></i>WebGL</span>
+        <span data-speed="0.2"><i class="badge-icon" style="background:#8b7ec8"></i>Agent UI</span>
+        <span data-speed="0.35"><i class="badge-icon" style="background:#ffc131"></i>Tauri</span>
       </div>
     </div>
     <div class="scroll-hint" data-auto>scroll</div>
@@ -234,33 +247,43 @@ body{background:var(--bg);color:var(--tx);
   <div class="note"><b>多种 ReactBits 文字动画</b>每段用不同效果：Split Text / Blur Text / Scroll Reveal / True Focus / Decrypted Text。全部滚动驱动。</div>
 
   <!-- Split Text -->
-  <div class="text-section" id="tsplit" style="z-index:5">
+  <div class="text-runway">
+  <div class="text-section" id="tsplit">
     <span class="anim-label">Split Text</span>
     <p class="split-text" id="splitText">做有设计意图的交互</p>
   </div>
+  </div>
 
   <!-- Blur Text -->
-  <div class="text-section" id="tblur" style="z-index:4">
+  <div class="text-runway">
+  <div class="text-section" id="tblur">
     <span class="anim-label">Blur Text</span>
     <p class="blur-text" id="blurText">不写第一百遍的组件，写没人见过的体验</p>
   </div>
+  </div>
 
   <!-- Scroll Reveal (word by word) -->
-  <div class="text-section" id="treveal" style="z-index:3">
+  <div class="text-runway">
+  <div class="text-section" id="treveal">
     <span class="anim-label">Scroll Reveal</span>
     <p class="reveal-text" id="revealText"></p>
   </div>
+  </div>
 
   <!-- True Focus -->
-  <div class="text-section" id="tfocus" style="z-index:2">
+  <div class="text-runway">
+  <div class="text-section" id="tfocus">
     <span class="anim-label">True Focus</span>
     <p class="focus-text" id="focusText">每一个像素 每一帧动画 每一次滚动反馈 都有存在的理由</p>
   </div>
+  </div>
 
   <!-- Decrypted Text -->
-  <div class="text-section" id="tdecrypt" style="z-index:1">
+  <div class="text-runway">
+  <div class="text-section" id="tdecrypt">
     <span class="anim-label">Decrypted Text</span>
     <p class="decrypt-text" id="decryptText"></p>
+  </div>
   </div>
 </section>
 
@@ -491,6 +514,12 @@ function tick(){
   orbs.forEach((o,i)=>{
     const speed=0.15+i*0.1;
     o.style.transform=`translateY(${scrollY*speed}px)`;
+  });
+
+  // Hero tech badges parallax
+  document.querySelectorAll('#hero .tags span').forEach(badge=>{
+    const speed=parseFloat(badge.dataset.speed)||0.2;
+    badge.style.transform=`perspective(600px) rotateX(${scrollY*speed*0.05}deg) translateY(${-scrollY*speed}px)`;
   });
 
   // §1 Text animations — each section driven by its own scroll progress
