@@ -53,14 +53,19 @@ body{background:var(--bg);color:var(--tx);
 #hero .staged>*{opacity:0;transform:translateY(24px)}
 #hero .staged .name{font-size:clamp(52px,9vw,96px);font-weight:700;letter-spacing:-.04em;line-height:1}
 #hero .staged .intro{font-size:clamp(14px,1.8vw,18px);color:var(--tx2);margin-top:16px;max-width:420px}
-#hero .staged .tags{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;position:relative}
-#hero .staged .tags span{font-size:11px;color:var(--tx2);background:var(--bg2);border:1px solid var(--line);
-  padding:8px 14px;border-radius:12px;display:inline-flex;align-items:center;gap:6px;
-  transform:perspective(600px) rotateX(0deg) translateZ(0);transition:transform .4s cubic-bezier(.22,.61,.36,1);
-  box-shadow:0 4px 12px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05)}
-#hero .staged .tags span:hover{transform:perspective(600px) rotateX(-8deg) translateZ(12px);
-  border-color:var(--orange);box-shadow:0 8px 24px rgba(218,112,44,.15),inset 0 1px 0 rgba(255,255,255,.08)}
-#hero .staged .tags .badge-icon{width:16px;height:16px;border-radius:4px;display:inline-block}
+#hero .staged .tags{display:flex;gap:16px;margin-top:24px;flex-wrap:wrap;position:relative;perspective:800px}
+.badge-3d{display:inline-block;width:52px;height:52px;position:relative;transform-style:preserve-3d;transition:transform .1s linear}
+.badge-3d .face{position:absolute;width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  border-radius:12px;backface-visibility:hidden}
+.badge-3d .front{background:var(--bg2);border:1px solid var(--line);transform:translateZ(8px)}
+.badge-3d .back{background:var(--ui);border:1px solid var(--line);transform:rotateY(180deg) translateZ(8px)}
+.badge-3d .edge{position:absolute;background:var(--line);border-radius:2px}
+.badge-3d .edge-t{width:100%;height:16px;top:-8px;left:0;transform:rotateX(90deg) translateZ(8px);border-radius:12px 12px 0 0}
+.badge-3d .edge-b{width:100%;height:16px;bottom:-8px;left:0;transform:rotateX(-90deg) translateZ(8px);border-radius:0 0 12px 12px}
+.badge-3d .edge-l{width:16px;height:100%;left:-8px;top:0;transform:rotateY(-90deg) translateZ(8px);border-radius:12px 0 0 12px}
+.badge-3d .edge-r{width:16px;height:100%;right:-8px;top:0;transform:rotateY(90deg) translateZ(8px);border-radius:0 12px 12px 0}
+.badge-3d img{width:24px;height:24px}
+.badge-3d .label{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--tx3);white-space:nowrap}
 /* bubbles */
 .bubbles{position:absolute;inset:0;pointer-events:none;z-index:1}
 .bubble{position:absolute;border-radius:50%;border:1px solid var(--line);opacity:0}
@@ -229,12 +234,12 @@ body{background:var(--bg);color:var(--tx);
       <span class="name" data-auto>扉川</span>
       <span class="intro" data-scroll>Creative Frontend · 交互设计<br>网站本身就是作品。</span>
       <div class="tags" data-scroll>
-        <span data-speed="0.15"><img src="https://cdn.simpleicons.org/vuedotjs/4FC08D" width="16" height="16" alt="Vue">Vue</span>
-        <span data-speed="0.25"><img src="https://cdn.simpleicons.org/react/61DAFB" width="16" height="16" alt="React">React</span>
-        <span data-speed="0.1"><img src="https://cdn.simpleicons.org/greensock/88CE02" width="16" height="16" alt="GSAP">GSAP</span>
-        <span data-speed="0.3"><img src="https://cdn.simpleicons.org/threedotjs/FFFFFF" width="16" height="16" alt="Three.js">WebGL</span>
-        <span data-speed="0.2"><img src="https://cdn.simpleicons.org/anthropic/D4A27F" width="16" height="16" alt="Agent">Agent UI</span>
-        <span data-speed="0.35"><img src="https://cdn.simpleicons.org/tauri/FFC131" width="16" height="16" alt="Tauri">Tauri</span>
+        <div class="badge-3d" data-speed="0.8"><div class="face front"><img src="https://cdn.simpleicons.org/vuedotjs/4FC08D" alt="Vue"></div><div class="face back"><img src="https://cdn.simpleicons.org/vuedotjs/4FC08D" alt="Vue"></div><div class="edge edge-l"></div><div class="edge edge-r"></div><span class="label">Vue</span></div>
+        <div class="badge-3d" data-speed="1.2"><div class="face front"><img src="https://cdn.simpleicons.org/react/61DAFB" alt="React"></div><div class="face back"><img src="https://cdn.simpleicons.org/react/61DAFB" alt="React"></div><div class="edge edge-l"></div><div class="edge edge-r"></div><span class="label">React</span></div>
+        <div class="badge-3d" data-speed="0.6"><div class="face front"><img src="https://cdn.simpleicons.org/greensock/88CE02" alt="GSAP"></div><div class="face back"><img src="https://cdn.simpleicons.org/greensock/88CE02" alt="GSAP"></div><div class="edge edge-l"></div><div class="edge edge-r"></div><span class="label">GSAP</span></div>
+        <div class="badge-3d" data-speed="1.0"><div class="face front"><img src="https://cdn.simpleicons.org/threedotjs/FFFFFF" alt="WebGL"></div><div class="face back"><img src="https://cdn.simpleicons.org/threedotjs/FFFFFF" alt="WebGL"></div><div class="edge edge-l"></div><div class="edge edge-r"></div><span class="label">WebGL</span></div>
+        <div class="badge-3d" data-speed="0.9"><div class="face front"><img src="https://cdn.simpleicons.org/anthropic/D4A27F" alt="Agent"></div><div class="face back"><img src="https://cdn.simpleicons.org/anthropic/D4A27F" alt="Agent"></div><div class="edge edge-l"></div><div class="edge edge-r"></div><span class="label">Agent UI</span></div>
+        <div class="badge-3d" data-speed="1.4"><div class="face front"><img src="https://cdn.simpleicons.org/tauri/FFC131" alt="Tauri"></div><div class="face back"><img src="https://cdn.simpleicons.org/tauri/FFC131" alt="Tauri"></div><div class="edge edge-l"></div><div class="edge edge-r"></div><span class="label">Tauri</span></div>
       </div>
     </div>
     <div class="scroll-hint" data-auto>scroll</div>
@@ -516,10 +521,12 @@ function tick(){
     o.style.transform=`translateY(${scrollY*speed}px)`;
   });
 
-  // Hero tech badges parallax
-  document.querySelectorAll('#hero .tags span').forEach(badge=>{
-    const speed=parseFloat(badge.dataset.speed)||0.2;
-    badge.style.transform=`perspective(600px) rotateX(${scrollY*speed*0.05}deg) translateY(${-scrollY*speed}px)`;
+  // Hero 3D badges — full 360° rotation driven by scroll
+  document.querySelectorAll('#hero .badge-3d').forEach(badge=>{
+    const speed=parseFloat(badge.dataset.speed)||1;
+    const rotY=scrollY*speed%360;
+    const rotX=Math.sin(scrollY*0.003*speed)*15;
+    badge.style.transform=`rotateY(${rotY}deg) rotateX(${rotX}deg)`;
   });
 
   // §1 Text animations — each section driven by its own scroll progress
