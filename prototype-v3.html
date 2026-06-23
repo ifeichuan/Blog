@@ -51,7 +51,12 @@ body{background:var(--bg);color:var(--tx);
 #hero .light-bg .orb:nth-child(3){width:280px;height:280px;background:var(--green);left:30%;bottom:10%}
 #hero .staged{position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;padding:0 clamp(24px,5vw,80px);max-width:var(--max);width:100%}
 #hero .staged>*{opacity:0;transform:translateY(24px)}
-#hero .staged .name{font-size:clamp(52px,9vw,96px);font-weight:700;letter-spacing:-.04em;line-height:1}
+#hero .staged .name{position:relative;width:clamp(280px,50vw,500px);height:auto}
+#hero .staged .name svg{width:100%;height:auto;display:block}
+#hero .staged .name svg .sig-path{clip-path:url(#sig-mask-0);transition:none}
+#hero .staged .name svg .sig-mask-stroke{fill:none;stroke:#fff;stroke-linecap:round;stroke-linejoin:round;stroke-dashoffset:var(--len);stroke-dasharray:var(--len)}
+#hero .staged .name svg .sig-mask-stroke.drawing{stroke-dashoffset:0;transition:stroke-dashoffset var(--dur) cubic-bezier(.4,0,.2,1)}
+@media(prefers-reduced-motion:reduce){#hero .staged .name svg .sig-path{clip-path:none}}
 #hero .staged .intro{font-size:clamp(14px,1.8vw,18px);color:var(--tx2);margin-top:16px;max-width:420px}
 #hero .staged .tags{margin-top:24px;position:relative}
 #badgeCanvas{width:clamp(400px,70vw,700px);height:200px;display:block}
@@ -220,7 +225,12 @@ body{background:var(--bg);color:var(--tx);
       <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
     </div>
     <div class="staged">
-      <span class="name" data-auto>扉川</span>
+      <span class="name" data-auto>
+        <svg xmlns="http://www.w3.org/2000/svg" id="sigSvg" viewBox="309.940 236.719 850.021 333.500">
+          <defs id="sigDefs"></defs>
+          <g id="sigPaths"></g>
+        </svg>
+      </span>
       <span class="intro" data-scroll>Creative Frontend · 交互设计<br>网站本身就是作品。</span>
       <div class="tags" data-scroll>
         <canvas id="badgeCanvas"></canvas>

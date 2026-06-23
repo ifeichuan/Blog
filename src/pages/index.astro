@@ -1,52 +1,30 @@
 ---
-import Base from "../layouts/Base.astro";
-import Intro from "@/components/Intro.astro";
-
-import IndexTypeSequence from "@/components/IndexTypeSequence";
-import DownArrow from "@/assets/svg/downArrow.svg";
-import Noise from "@/components/Noise";
-import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
+import "@/styles/tailwind.css";
+import { DappledLight } from "@/components/DappledLight";
+import { HeroContent } from "@/components/HeroContent";
 ---
 
-<Base enableIntro={true}>
-  <Intro slot="intro" />
-  <Noise client:visible />
-  <main class="index">
-    <div
-      class="banner h-screen w-screen relative left-0 p-10 flex flex-col mix-blend-overlay"
-    >
-      <div class="arrow -translate-x-10">
-        <DownArrow class={"mix-blend-overlay"} />
-      </div>
-      <IndexTypeSequence
-        client:visible
-        title={Banner_Title}
-        description={Banner_Desc}
-        siteDescription={SITE_DESCRIPTION}
-      />
-    </div>
-  </main>
-</Base>
-
-<script></script>
-
-<style>
-  .arrow {
-    animation: down 1s infinite alternate;
-    position: absolute;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100dvw;
-    bottom: 3vh;
-    mix-blend-mode: difference;
-  }
-  @keyframes down {
-    from {
-      transform: translateY(0);
-    }
-    to {
-      transform: translateY(20px);
-    }
-  }
-</style>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Feichuan</title>
+  </head>
+  <body>
+    <main class="relative min-h-screen flex items-center justify-center p-4">
+      <section
+        class="relative z-1 w-[99vw] h-[99vh] rounded-2xl overflow-hidden"
+      >
+        <div class="absolute inset-0 z-0">
+          <DappledLight client:only="react" />
+        </div>
+        <div
+          class="relative z-10 h-full flex items-center justify-center text-near-black"
+        >
+          <HeroContent client:only="react" />
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

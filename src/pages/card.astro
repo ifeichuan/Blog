@@ -1,0 +1,44 @@
+---
+import Base from "../layouts/Base.astro";
+
+const allPages = import.meta.glob("./**/*.astro", { eager: false });
+const pages = Object.keys(allPages)
+  .filter((p) => !p.includes("[") && p !== "./card.astro" && p !== "./index.astro")
+  .map((p) => {
+    const route = p
+      .replace(/^\./, "")
+      .replace(/\/index\.astro$/, "")
+      .replace(/\.astro$/, "");
+    return { title: route || "/", href: route || "/" };
+  })
+  .sort((a, b) => a.href.localeCompare(b.href));
+---
+
+<Base>
+  <main class="min-h-screen p-8 max-w-5xl mx-auto">
+    <h1 class="text-2xl font-mono mb-8">All Pages</h1>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {pages.map((page) => (
+        <a href={page.href} class="card">
+          <span class="font-mono text-sm">{page.title}</span>
+        </a>
+      ))}
+    </div>
+  </main>
+</Base>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    border-radius: 0.5rem;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .card:hover {
+    border-color: rgba(128, 128, 128, 0.5);
+    background: rgba(128, 128, 128, 0.05);
+  }
+</style>

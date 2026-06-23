@@ -22,8 +22,7 @@ import { SignatureGlassDemo } from '@/components/GlassSignature'
   body {
     margin: 0;
     min-height: 100%;
-    overflow: hidden;
-    background: #ede9df;
+    background: #efe9dd;
   }
 
   body {
@@ -33,32 +32,30 @@ import { SignatureGlassDemo } from '@/components/GlassSignature'
   .signature-scene {
     position: relative;
     width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    color: #27251f;
+    min-height: 300vh;
+    color: #332d25;
     isolation: isolate;
     background:
-      linear-gradient(115deg, rgb(246 242 229 / 0.9), rgb(221 232 221 / 0.74) 44%, rgb(232 221 196 / 0.86)),
-      #ede9df;
+      radial-gradient(ellipse at 24% 18%, rgb(255 248 218 / 0.46), transparent 34%),
+      linear-gradient(180deg, rgb(239 233 221), rgb(217 200 168));
   }
 
   .signature-scene::before {
-    position: absolute;
-    inset: -18%;
+    position: fixed;
+    inset: -12%;
     content: "";
     background:
-      radial-gradient(ellipse 34% 18% at 20% 24%, rgb(255 239 168 / 0.44), transparent 68%),
-      radial-gradient(ellipse 28% 16% at 76% 18%, rgb(156 191 173 / 0.3), transparent 72%),
-      radial-gradient(ellipse 30% 16% at 62% 76%, rgb(255 221 151 / 0.35), transparent 72%),
-      linear-gradient(126deg, transparent 0 28%, rgb(65 88 61 / 0.12) 29% 31%, transparent 32% 100%);
-    filter: blur(10px);
+      radial-gradient(ellipse 34% 18% at 20% 24%, rgb(255 236 166 / 0.32), transparent 68%),
+      radial-gradient(ellipse 28% 16% at 76% 18%, rgb(91 111 61 / 0.18), transparent 72%),
+      linear-gradient(126deg, transparent 0 28%, rgb(65 88 61 / 0.13) 29% 31%, transparent 32% 100%);
+    filter: blur(14px);
     transform: rotate(-7deg);
     animation: dapple-drift 16s ease-in-out infinite alternate;
     z-index: 0;
   }
 
   .signature-scene::after {
-    position: absolute;
+    position: fixed;
     inset: 0;
     content: "";
     background-image:
@@ -66,7 +63,7 @@ import { SignatureGlassDemo } from '@/components/GlassSignature'
       linear-gradient(90deg, rgb(48 71 58 / 0.045) 1px, transparent 1px);
     background-size: 38px 38px;
     mask-image: radial-gradient(circle at 50% 48%, black 0 46%, transparent 74%);
-    opacity: 0.55;
+    opacity: 0.28;
     z-index: 1;
   }
 
@@ -77,18 +74,21 @@ import { SignatureGlassDemo } from '@/components/GlassSignature'
   }
 
   .dappled-canvas {
-    position: absolute !important;
+    position: fixed !important;
     inset: -8% !important;
     width: 116% !important;
     height: 116% !important;
-    opacity: 0.92;
-    filter: blur(0.6px) saturate(1.04);
-    mix-blend-mode: soft-light;
+    opacity: 0.9;
+    filter: saturate(1.08) contrast(1.03);
+    mix-blend-mode: multiply;
     z-index: 1;
   }
 
   .bubble-layer {
-    position: absolute;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    margin-bottom: -100vh;
     inset: 0;
     pointer-events: none;
     z-index: 2;
@@ -148,11 +148,14 @@ import { SignatureGlassDemo } from '@/components/GlassSignature'
   }
 
   .signature-shell {
-    position: absolute;
-    inset: clamp(42px, 8vw, 112px);
+    position: sticky;
+    top: 0;
+    height: 100vh;
     display: grid;
     place-items: center;
-    pointer-events: none;
+    margin-bottom: -100vh;
+    padding: clamp(42px, 8vw, 112px);
+    pointer-events: auto;
     z-index: 3;
   }
 
@@ -160,26 +163,38 @@ import { SignatureGlassDemo } from '@/components/GlassSignature'
     width: min(86vw, 1120px);
     height: auto;
     overflow: visible;
+    pointer-events: auto;
     filter:
       drop-shadow(0 22px 44px rgb(73 88 70 / 0.16))
       drop-shadow(0 0 18px rgb(255 255 255 / 0.34));
   }
 
+  .glass-signature__ripples {
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  .glass-signature__ripple-fill,
+  .glass-signature__ripple-ring {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .glass-signature__ripple-ring {
+    fill: none;
+    stroke: rgb(250 255 255 / 0.72);
+    stroke-width: 3.4;
+    filter:
+      drop-shadow(1.1px 0 0 rgb(255 82 62 / 0.22))
+      drop-shadow(-1.1px 0 0 rgb(45 166 255 / 0.24));
+  }
+
   .glass-signature__backdrop {
-    width: 100%;
-    height: 100%;
-    border-radius: 999px;
-    background:
-      radial-gradient(ellipse at 18% 22%, rgb(255 255 255 / 0.88), transparent 34%),
-      radial-gradient(ellipse at 78% 72%, rgb(86 166 216 / 0.35), transparent 42%),
-      linear-gradient(135deg, rgb(255 255 255 / 0.56), rgb(236 249 245 / 0.2) 46%, rgb(255 219 143 / 0.2));
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.88),
-      inset 0 -16px 28px rgb(82 121 123 / 0.12),
-      inset 18px 18px 38px rgb(255 255 255 / 0.22),
-      0 0 0 1px rgb(255 255 255 / 0.55);
-    opacity: 0.9;
-    backdrop-filter: blur(22px) saturate(1.75) contrast(1.08);
+    fill: rgb(255 255 255 / 0.28);
+    stroke: rgb(255 255 255 / 0.36);
+    stroke-width: 10;
+    opacity: 0.72;
+    filter: blur(0.2px);
   }
 
   .glass-signature__path {
@@ -189,14 +204,14 @@ import { SignatureGlassDemo } from '@/components/GlassSignature'
   }
 
   .glass-signature__path--red {
-    stroke: rgb(255 71 48 / 0.52);
-    stroke-width: 13;
+    stroke: rgb(255 76 54 / 0.26);
+    stroke-width: 8.8;
     mix-blend-mode: screen;
   }
 
   .glass-signature__path--blue {
-    stroke: rgb(31 146 255 / 0.56);
-    stroke-width: 13;
+    stroke: rgb(35 148 255 / 0.28);
+    stroke-width: 8.8;
     mix-blend-mode: screen;
   }
 
@@ -205,6 +220,36 @@ import { SignatureGlassDemo } from '@/components/GlassSignature'
     stroke-width: 3.2;
     stroke-dasharray: 24 72;
     mix-blend-mode: screen;
+  }
+
+  .signature-scroll-copy {
+    position: relative;
+    z-index: 4;
+    display: grid;
+    gap: 0.55rem;
+    width: min(420px, calc(100vw - 48px));
+    margin-left: clamp(24px, 9vw, 120px);
+    color: rgb(51 45 37 / 0.78);
+    font-family: ui-serif, Georgia, serif;
+    font-size: clamp(1.05rem, 2.2vw, 1.85rem);
+    line-height: 1.18;
+    text-shadow: 0 1px 22px rgb(255 247 224 / 0.7);
+  }
+
+  .signature-scroll-copy p {
+    margin: 0;
+  }
+
+  .signature-scroll-copy--middle {
+    padding-top: 132vh;
+  }
+
+  .signature-scroll-copy--end {
+    margin-left: auto;
+    margin-right: clamp(24px, 9vw, 120px);
+    padding-top: 58vh;
+    padding-bottom: 32vh;
+    text-align: right;
   }
 
   @keyframes dapple-drift {
@@ -219,7 +264,7 @@ import { SignatureGlassDemo } from '@/components/GlassSignature'
 
   @media (max-width: 720px) {
     .signature-shell {
-      inset: 9vw 4vw;
+      padding: 9vw 4vw;
     }
 
     .glass-signature {

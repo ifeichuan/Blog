@@ -1,6 +1,6 @@
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { motion, useReducedMotion } from 'motion/react'
-import { Suspense, useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { Suspense, useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import * as THREE from 'three'
 
 const VIEW_BOX = '309.940 236.719 850.021 333.500'
@@ -12,12 +12,22 @@ type GlassSignatureProps = {
   className?: string
 }
 
+type Ripple = {
+  id: number
+  x: number
+  y: number
+}
+
 export function GlassSignature({ className = '' }: GlassSignatureProps) {
   const reduced = useReducedMotion()
   const rawId = useId().replaceAll(':', '')
   const filterId = `signature-glass-${rawId}`
   const maskId = `signature-mask-${rawId}`
+  const rippleGradientId = `signature-ripple-${rawId}`
+  const rippleFilterId = `signature-ripple-filter-${rawId}`
+  const rippleIdRef = useRef(0)
   const [paths, setPaths] = useState<string[]>([])
+  const [ripples, setRipples] = useState<Ripple[]>([])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -31,6 +41,20 @@ export function GlassSignature({ className = '' }: GlassSignatureProps) {
     return () => controller.abort()
   }, [])
 
+  const createRipple = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (reduced) return
+
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = VIEW_BOX_RECT.x + ((event.clientX - rect.left) / rect.width) * VIEW_BOX_RECT.width
+    const y = VIEW_BOX_RECT.y + ((event.clientY - rect.top) / rect.height) * VIEW_BOX_RECT.height
+    const id = rippleIdRef.current++
+
+    setRipples((current) => [...current, { id, x, y }].slice(-4))
+    window.setTimeout(() => {
+      setRipples((current) => current.filter((ripple) => ripple.id !== id))
+    }, 980)
+  }
+
   return (
     <motion.svg
       className={`glass-signature ${className}`.trim()}
@@ -38,9 +62,20 @@ export function GlassSignature({ className = '' }: GlassSignatureProps) {
       preserveAspectRatio="xMidYMid meet"
       initial={{ opacity: 0.92 }}
       animate={{ opacity: reduced ? 0.8 : 1 }}
+      onPointerEnter={createRipple}
       aria-label="Feichuan signature"
     >
       <defs>
+        <radialGradient id={rippleGradientId}>
+          <stop offset="0%" stopColor="white" stopOpacity="0.34" />
+          <stop offset="52%" stopColor="#dff6ff" stopOpacity="0.14" />
+          <stop offset="100%" stopColor="white" stopOpacity="0" />
+        </radialGradient>
+        <filter id={rippleFilterId} x="-20%" y="-40%" width="140%" height="180%" colorInterpolationFilters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.018 0.07" numOctaves="2" seed="17" result="rippleNoise" />
+          <feDisplacementMap in="SourceGraphic" in2="rippleNoise" scale="4.4" xChannelSelector="R" yChannelSelector="B" />
+          <feGaussianBlur stdDeviation="0.18" />
+        </filter>
         <filter id={filterId} x="-8%" y="-18%" width="116%" height="136%" colorInterpolationFilters="sRGB">
           <feTurbulence type="fractalNoise" baseFrequency="0.018 0.055" numOctaves="2" seed="7" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="7.5" xChannelSelector="R" yChannelSelector="B" />
@@ -57,9 +92,32 @@ export function GlassSignature({ className = '' }: GlassSignatureProps) {
           ))}
         </mask>
       </defs>
-      <foreignObject {...VIEW_BOX_RECT} mask={`url(#${maskId})`}>
-        <div className="glass-signature__backdrop" />
-      </foreignObject>
+      <g className="glass-signature__ripples" mask={`url(#${maskId})`} filter={`url(#${rippleFilterId})`}>
+        {ripples.map((ripple) => (
+          <g key={ripple.id}>
+            <motion.circle
+              className="glass-signature__ripple-fill"
+              cx={ripple.x}
+              cy={ripple.y}
+              r="12"
+              fill={`url(#${rippleGradientId})`}
+              initial={{ scale: 0.24, opacity: 0.58 }}
+              animate={{ scale: 8.4, opacity: 0 }}
+              transition={{ duration: 0.92, ease: [0.16, 1, 0.3, 1] }}
+            />
+            <motion.circle
+              className="glass-signature__ripple-ring"
+              cx={ripple.x}
+              cy={ripple.y}
+              r="12"
+              initial={{ scale: 0.35, opacity: 0.68 }}
+              animate={{ scale: 7.6, opacity: 0 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            />
+          </g>
+        ))}
+      </g>
+      <rect className="glass-signature__backdrop" {...VIEW_BOX_RECT} mask={`url(#${maskId})`} />
       <g filter={`url(#${filterId})`}>
         {paths.length === 0 ? (
           <image href="/feichuan-signature-glass-source.svg" x="309.94" y="236.719" width="850.021" height="333.5" />
@@ -116,7 +174,7 @@ function SignaturePath({
 }) {
   const className = ['glass-signature__path', tone && `glass-signature__path--${tone}`].filter(Boolean).join(' ')
   const transform =
-    tone === 'red' ? 'translate(3.2 0.7)' : tone === 'blue' ? 'translate(-3.2 -0.7)' : undefined
+    tone === 'red' ? 'translate(1.05 0.25)' : tone === 'blue' ? 'translate(-1.05 -0.25)' : undefined
 
   return (
     <motion.path
@@ -127,8 +185,8 @@ function SignaturePath({
       strokeLinejoin="round"
       vectorEffect="non-scaling-stroke"
       transform={transform}
-      initial={reduced ? { pathLength: 1, opacity: tone ? 0.32 : 0.86 } : { pathLength: 0, opacity: 0 }}
-      animate={{ pathLength: 1, opacity: tone === 'spark' ? 0.42 : tone ? 0.48 : 0.9 }}
+      initial={reduced ? { pathLength: 1, opacity: tone ? 0.18 : 0.86 } : { pathLength: 0, opacity: 0 }}
+      animate={{ pathLength: 1, opacity: tone === 'spark' ? 0.38 : tone ? 0.2 : 0.9 }}
       transition={{
         duration: reduced ? 0 : DRAW_DURATION,
         delay: reduced ? 0 : index * DRAW_STAGGER,
@@ -181,6 +239,13 @@ export function SignatureGlassDemo() {
       <div className="signature-shell">
         <GlassSignature />
       </div>
+      <section className="signature-scroll-copy signature-scroll-copy--middle" aria-label="Glass signature notes">
+        <p>Refraction follows the ink path.</p>
+        <p>Dappled light keeps moving underneath.</p>
+      </section>
+      <section className="signature-scroll-copy signature-scroll-copy--end" aria-label="Glass signature ending">
+        <p>The mark stays glassy while the page keeps breathing.</p>
+      </section>
     </main>
   )
 }
@@ -190,7 +255,7 @@ function DappledLight({ reduced }: { reduced: boolean }) {
     <Canvas
       className="dappled-canvas"
       orthographic
-      camera={{ position: [0, 0, 10], zoom: 78 }}
+      camera={{ position: [0, 0, 10], zoom: 100 }}
       dpr={[1, 1.5]}
       gl={{ alpha: true, antialias: true }}
     >
@@ -201,54 +266,108 @@ function DappledLight({ reduced }: { reduced: boolean }) {
   )
 }
 
+const dappledVertex = `
+  varying vec2 vUv;
+
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`
+
+const dappledFragment = `
+  precision highp float;
+
+  uniform vec2 uResolution;
+  uniform float uTime;
+  uniform float uWind;
+  varying vec2 vUv;
+
+  float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 345.45));
+    p += dot(p, p + 34.345);
+    return fract(p.x * p.y);
+  }
+
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+  }
+
+  float fbm(vec2 p) {
+    float value = 0.0;
+    float amp = 0.52;
+    mat2 rot = mat2(0.82, -0.57, 0.57, 0.82);
+    for (int i = 0; i < 5; i++) {
+      value += amp * noise(p);
+      p = rot * p * 2.05 + 11.7;
+      amp *= 0.5;
+    }
+    return value;
+  }
+
+  void main() {
+    vec2 uv = vUv;
+    vec2 p = uv;
+    p.x *= uResolution.x / uResolution.y;
+
+    float t = uTime * uWind;
+    vec2 driftA = vec2(t * 0.045, sin(t * 0.35) * 0.08);
+    vec2 driftB = vec2(-t * 0.028, cos(t * 0.22) * 0.06);
+
+    float canopyA = fbm(p * 3.2 + driftA);
+    float canopyB = fbm(p * 6.0 + driftB);
+    float leafMask = canopyA * 0.72 + canopyB * 0.38;
+    float sunPatches = pow(smoothstep(0.62, 0.78, leafMask), 1.7);
+
+    float vignette = smoothstep(0.92, 0.18, distance(uv, vec2(0.58, 0.44)));
+    float caustic = fbm(p * 13.0 + vec2(t * 0.09, -t * 0.04));
+    sunPatches *= mix(0.86, 1.16, caustic) * vignette;
+
+    vec3 ground = mix(vec3(0.67, 0.55, 0.35), vec3(0.86, 0.78, 0.58), uv.y);
+    vec3 shade = vec3(0.30, 0.36, 0.22);
+    vec3 sun = vec3(1.0, 0.86, 0.50);
+
+    vec3 color = mix(ground * shade, ground, 0.56);
+    color = mix(color, sun, clamp(sunPatches, 0.0, 1.0));
+    color += vec3(1.0, 0.65, 0.22) * sunPatches * 0.22;
+    color *= 0.9 + 0.1 * noise(uv * uResolution.xy * 0.55);
+
+    gl_FragColor = vec4(color, 1.0);
+  }
+`
+
 function DappledScene({ reduced }: { reduced: boolean }) {
-  const groupRef = useRef<THREE.Group>(null)
-  const patches = useMemo(
-    () =>
-      Array.from({ length: 34 }, (_, index) => {
-        const a = index * 2.399
-        const light = index % 3 !== 0
-        return {
-          x: Math.cos(a) * (1.3 + (index % 7) * 0.42),
-          y: Math.sin(a * 0.82) * (0.8 + (index % 6) * 0.34),
-          sx: light ? 0.72 + (index % 5) * 0.16 : 0.5 + (index % 4) * 0.12,
-          sy: light ? 0.22 + (index % 4) * 0.08 : 0.12 + (index % 3) * 0.05,
-          r: a,
-          opacity: light ? 0.16 + (index % 5) * 0.018 : 0.07,
-          color: light ? '#f3d883' : '#3f674d',
-          light,
-        }
-      }),
-    [],
-  )
+  const materialRef = useRef<THREE.ShaderMaterial>(null)
+  const { size, viewport } = useThree()
 
   useFrame(({ clock }) => {
-    if (!groupRef.current || reduced) return
-    const time = clock.elapsedTime
-    groupRef.current.rotation.z = Math.sin(time * 0.09) * 0.055
-    groupRef.current.position.x = Math.sin(time * 0.13) * 0.18
-    groupRef.current.position.y = Math.cos(time * 0.1) * 0.12
+    if (!materialRef.current) return
+    materialRef.current.uniforms.uTime.value = reduced ? 0 : clock.elapsedTime
+    materialRef.current.uniforms.uResolution.value.set(size.width, size.height)
   })
 
   return (
-    <group ref={groupRef}>
-      {patches.map((patch, index) => (
-        <mesh
-          key={index}
-          position={[patch.x, patch.y, 0]}
-          rotation={[0, 0, patch.r]}
-          scale={[patch.sx, patch.sy, 1]}
-        >
-          <circleGeometry args={[1, 36]} />
-          <meshBasicMaterial
-            color={patch.color}
-            transparent
-            opacity={patch.opacity}
-            depthWrite={false}
-            blending={patch.light ? THREE.AdditiveBlending : THREE.NormalBlending}
-          />
-        </mesh>
-      ))}
-    </group>
+    <mesh scale={[viewport.width, viewport.height, 1]}>
+      <planeGeometry args={[1, 1]} />
+      <shaderMaterial
+        ref={materialRef}
+        vertexShader={dappledVertex}
+        fragmentShader={dappledFragment}
+        depthWrite={false}
+        transparent
+        uniforms={{
+          uResolution: { value: new THREE.Vector2(size.width, size.height) },
+          uTime: { value: 0 },
+          uWind: { value: 0.25 },
+        }}
+      />
+    </mesh>
   )
 }

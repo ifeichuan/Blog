@@ -1,0 +1,50 @@
+---
+import Base from "../layouts/Base.astro";
+import Intro from "@/components/Intro.astro";
+
+import IndexTypeSequence from "@/components/IndexTypeSequence";
+import DownArrow from "@/assets/svg/downArrow.svg";
+import Noise from "@/components/Noise";
+import { Banner_Title, Banner_Desc, SITE_DESCRIPTION } from "../consts";
+---
+
+<Base enableIntro={true}>
+  <Intro slot="intro" />
+  <Noise client:visible />
+  <main class="index">
+    <div
+      class="banner h-screen w-screen relative left-0 p-10 flex flex-col mix-blend-overlay"
+    >
+      <div class="arrow -translate-x-10">
+        <DownArrow class={"mix-blend-overlay"} />
+      </div>
+      <IndexTypeSequence
+        client:visible
+        title={Banner_Title}
+        description={Banner_Desc}
+        siteDescription={SITE_DESCRIPTION}
+      />
+    </div>
+  </main>
+</Base>
+
+<style>
+  .arrow {
+    animation: down 1s infinite alternate;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100dvw;
+    bottom: 3vh;
+    mix-blend-mode: difference;
+  }
+  @keyframes down {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(20px);
+    }
+  }
+</style>
