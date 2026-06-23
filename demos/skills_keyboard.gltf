@@ -1,0 +1,1384 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "THREE.GLTFExporter"
+  },
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "nodes": [
+    {
+      "children": [
+        38
+      ],
+      "matrix": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "matrix": [
+        0.9971857213012894,
+        3.620766342304904e-8,
+        0.07497090924369225,
+        0,
+        0.051027296994752364,
+        0.7326288966397317,
+        -0.6787128367504615,
+        0,
+        -0.05492587909388967,
+        0.6806283125233977,
+        0.7305670728942795,
+        0,
+        -383.9941613885313,
+        1405.01516462687,
+        1662.368223071377,
+        1
+      ],
+      "name": "Camera 2",
+      "camera": 0
+    },
+    {
+      "matrix": [
+        2.220446049250313e-14,
+        -2.220446049250313e-14,
+        100,
+        0,
+        100,
+        0,
+        -2.220446049250313e-14,
+        0,
+        0,
+        100,
+        2.220446049250313e-14,
+        0,
+        -9.094947017729282e-13,
+        -77.67322794096292,
+        -1.4210854715202004e-14,
+        1
+      ],
+      "name": "platform",
+      "mesh": 0
+    },
+    {
+      "matrix": [
+        0.8497134647031784,
+        2.8451891787018013e-8,
+        0.5272447514220692,
+        0,
+        0.3649753663599663,
+        0.7216755912125188,
+        -0.5881983704486693,
+        0,
+        -0.3804996844315758,
+        0.6922314215983414,
+        0.6132174566166644,
+        0,
+        -554.4172494475087,
+        965.7631915027425,
+        874.3346289629524,
+        1
+      ],
+      "name": "Camera",
+      "camera": 1
+    },
+    {
+      "matrix": [
+        0.009721329092569626,
+        -0.11920419134351674,
+        -0.9928221676246014,
+        0,
+        0.9966911388540551,
+        0.08128206278021323,
+        0,
+        0,
+        0.08069863375845024,
+        -0.9895370569293156,
+        0.11959993090795577,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "name": "Directional Light",
+      "extensions": {
+        "KHR_lights_punctual": {
+          "light": 0
+        }
+      }
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        266.27295258030995,
+        -1.3677947663381929e-13,
+        -335.1161019853454,
+        1
+      ],
+      "name": "texts"
+    },
+    {
+      "matrix": [
+        -0.019184255722840198,
+        -1.2203934449001831e-16,
+        1.0990652742762148,
+        0,
+        1.099065274276215,
+        -2.3809382791070583e-17,
+        0.0191842557228404,
+        0,
+        -2.523527281698079e-17,
+        1.0992326927395726,
+        3.0506118685849255e-16,
+        0,
+        -7.891652811688117e-14,
+        -213.1275712418374,
+        3.614905380938036e-15,
+        1
+      ],
+      "name": "body",
+      "mesh": 1
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        -620,
+        0,
+        0,
+        1
+      ],
+      "name": "js"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        -310,
+        0,
+        0,
+        1
+      ],
+      "name": "ts"
+    },
+    {
+      "name": "html"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        310,
+        0,
+        0,
+        1
+      ],
+      "name": "css"
+    },
+    {
+      "matrix": [
+        1.0038095690273985,
+        0,
+        0,
+        0,
+        0,
+        1.0039697308455091,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        620,
+        -0.4503971778370748,
+        0,
+        1
+      ],
+      "name": "react"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        930,
+        0,
+        0,
+        1
+      ],
+      "name": "vue"
+    },
+    {
+      "matrix": [
+        0.9998476951563913,
+        0,
+        0.01745240643728351,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -0.01745240643728351,
+        0,
+        0.9998476951563913,
+        0,
+        -160.01722026673102,
+        97.01616108184872,
+        -451.86150626110305,
+        1
+      ],
+      "name": "row 0",
+      "children": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        -620,
+        0,
+        0,
+        1
+      ],
+      "name": "nextjs"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        -310,
+        0,
+        0,
+        1
+      ],
+      "name": "tailwind"
+    },
+    {
+      "name": "nodejs"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        310,
+        0,
+        0,
+        1
+      ],
+      "name": "express"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        620,
+        0,
+        0,
+        1
+      ],
+      "name": "postgres"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        930,
+        0,
+        0,
+        1
+      ],
+      "name": "mongodb"
+    },
+    {
+      "matrix": [
+        0.9998476951563913,
+        0,
+        0.01745240643728351,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -0.01745240643728351,
+        0,
+        0.9998476951563913,
+        0,
+        -165.4274662622889,
+        97.01616108184872,
+        -141.90872076262173,
+        1
+      ],
+      "name": "row 1",
+      "children": [
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        -620,
+        0,
+        0,
+        1
+      ],
+      "name": "git"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        -310,
+        0,
+        0,
+        1
+      ],
+      "name": "github"
+    },
+    {
+      "name": "prettier"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        310,
+        0,
+        0,
+        1
+      ],
+      "name": "npm"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        620,
+        0,
+        0,
+        1
+      ],
+      "name": "firebase"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        930,
+        0,
+        0,
+        1
+      ],
+      "name": "wordpress"
+    },
+    {
+      "matrix": [
+        0.9998476951563913,
+        0,
+        0.01745240643728351,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -0.01745240643728351,
+        0,
+        0.9998476951563913,
+        0,
+        -170.8377122578468,
+        97.01616108184872,
+        168.0440647358596,
+        1
+      ],
+      "name": "row 2",
+      "children": [
+        21,
+        22,
+        23,
+        24,
+        25,
+        26
+      ]
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        -620,
+        0,
+        0,
+        1
+      ],
+      "name": "linux"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        -310,
+        0,
+        0,
+        1
+      ],
+      "name": "docker"
+    },
+    {
+      "name": "nginx"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        310,
+        0,
+        0,
+        1
+      ],
+      "name": "aws"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        620,
+        0,
+        0,
+        1
+      ],
+      "name": "vim"
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        930,
+        0,
+        0,
+        1
+      ],
+      "name": "vercel"
+    },
+    {
+      "matrix": [
+        0.9998476951563913,
+        0,
+        0.01745240643728351,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -0.01745240643728351,
+        0,
+        0.9998476951563913,
+        0,
+        -176.24795825340468,
+        97.01616108184872,
+        477.99685023434085,
+        1
+      ],
+      "name": "row 3",
+      "children": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33
+      ]
+    },
+    {
+      "matrix": [
+        0.5,
+        0,
+        0,
+        0,
+        0,
+        0.5,
+        0,
+        0,
+        0,
+        0,
+        0.5,
+        0,
+        0,
+        0,
+        1.8584397909300492,
+        1
+      ],
+      "name": "keyboard",
+      "children": [
+        5,
+        6,
+        13,
+        20,
+        27,
+        34
+      ]
+    },
+    {
+      "matrix": [
+        0.3080069834770284,
+        -5.551115123125783e-17,
+        0.9513840960040174,
+        0,
+        0.7806413765099511,
+        0.5716001675127426,
+        -0.2527296772839577,
+        0,
+        -0.5438113086448555,
+        0.8205322958296063,
+        0.17605684335056404,
+        0,
+        -946.0559322014403,
+        983.5227006119334,
+        -302.90432141249863,
+        1
+      ],
+      "name": "Personal Camera",
+      "camera": 2
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1
+      ],
+      "name": "Default Ambient Light"
+    },
+    {
+      "name": "Scene 1",
+      "children": [
+        1,
+        2,
+        3,
+        4,
+        35,
+        36,
+        37
+      ]
+    }
+  ],
+  "cameras": [
+    {
+      "type": "orthographic",
+      "orthographic": {
+        "xmag": 5.306508218750001,
+        "ymag": 3.5390296562500008,
+        "zfar": 100000,
+        "znear": 0
+      },
+      "name": "Camera"
+    },
+    {
+      "type": "orthographic",
+      "orthographic": {
+        "xmag": 6.515000000000001,
+        "ymag": 4.345,
+        "zfar": 10000,
+        "znear": 0
+      },
+      "name": "Camera"
+    },
+    {
+      "type": "orthographic",
+      "orthographic": {
+        "xmag": 14.80255677293384,
+        "ymag": 9.872157970590566,
+        "zfar": 100000,
+        "znear": 0
+      },
+      "name": "Camera"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 48,
+      "target": 34962,
+      "byteStride": 12
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 48,
+      "byteLength": 48,
+      "target": 34962,
+      "byteStride": 12
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 96,
+      "byteLength": 32,
+      "target": 34962,
+      "byteStride": 8
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 128,
+      "byteLength": 24,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 152,
+      "byteLength": 1488,
+      "target": 34962,
+      "byteStride": 12
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 1640,
+      "byteLength": 1488,
+      "target": 34962,
+      "byteStride": 12
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 3128,
+      "byteLength": 992,
+      "target": 34962,
+      "byteStride": 8
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 4120,
+      "byteLength": 1872,
+      "target": 34963
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 5992,
+      "uri": "data:application/octet-stream;base64,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NQAAADgAAAA1AAAAOQAAADwAAAA4AAAAOQAAADwAAAA5AAAAPQAAAEAAAAA8AAAAPQAAAEAAAAA9AAAAQQAAAEQAAABAAAAAQQAAAEQAAABBAAAARQAAAEgAAABEAAAARQAAAEgAAABFAAAASQAAAEwAAABIAAAASQAAAEwAAABJAAAATQAAAFAAAABMAAAATQAAAFAAAABNAAAAUQAAAFQAAABWAAAAWAAAAFkAAABXAAAAVQAAAFQAAABaAAAAVgAAAFcAAABbAAAAVQAAAFwAAABaAAAAVAAAAFUAAABbAAAAXQAAAFwAAABeAAAAWgAAAFsAAABfAAAAXQAAAFwAAABgAAAAXgAAAF8AAABhAAAAXQAAAGIAAABgAAAAXAAAAF0AAABhAAAAYwAAAGIAAABkAAAAYAAAAGEAAABlAAAAYwAAAGYAAABkAAAAYgAAAGMAAABlAAAAZwAAAGYAAABoAAAAZAAAAGUAAABpAAAAZwAAAGoAAABoAAAAZgAAAGcAAABpAAAAawAAAGoAAABsAAAAaAAAAGkAAABtAAAAawAAAG4AAABsAAAAagAAAGsAAABtAAAAbwAAAHAAAABsAAAAbgAAAG8AAABtAAAAcQAAAHAAAAByAAAAbAAAAG0AAABzAAAAcQAAAHQAAAByAAAAcAAAAHEAAABzAAAAdQAAAHQAAAB2AAAAcgAAAHMAAAB3AAAAdQAAAHgAAAB2AAAAdAAAAHUAAAB3AAAAeQAAAHYAAAB4AAAAegAAAHsAAAB5AAAAdwAAAA=="
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 4,
+      "max": [
+        50,
+        50,
+        0
+      ],
+      "min": [
+        -50,
+        -50,
+        0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 4,
+      "max": [
+        0,
+        0,
+        1
+      ],
+      "min": [
+        0,
+        0,
+        1
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 4,
+      "max": [
+        1,
+        1
+      ],
+      "min": [
+        0,
+        0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5125,
+      "count": 6,
+      "max": [
+        3
+      ],
+      "min": [
+        0
+      ],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 124,
+      "max": [
+        680.4992065429688,
+        981.9559936523438,
+        207.7086181640625
+      ],
+      "min": [
+        -680.4992065429688,
+        -981.9559936523438,
+        0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 124,
+      "max": [
+        1,
+        1,
+        1
+      ],
+      "min": [
+        -1,
+        -1,
+        -1
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 124,
+      "max": [
+        1,
+        1
+      ],
+      "min": [
+        0,
+        0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5125,
+      "count": 468,
+      "max": [
+        123
+      ],
+      "min": [
+        0
+      ],
+      "type": "SCALAR"
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "mode": 4,
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "extras": {
+            "shape": {
+              "points": [
+                -50,
+                50,
+                -50,
+                50,
+                -50,
+                50,
+                0,
+                50,
+                50,
+                50,
+                50,
+                50,
+                50,
+                0,
+                50,
+                -50,
+                50,
+                -50,
+                50,
+                -50,
+                0,
+                -50,
+                -50,
+                -50,
+                -50,
+                -50,
+                -50,
+                0
+              ],
+              "shapeHoles": [],
+              "isClosed": true,
+              "roundness": 0
+            },
+            "parameters": {
+              "width": 100,
+              "depth": 0,
+              "cornerRadius": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "cornerType": 1,
+              "extrudeBevelSize": 0,
+              "extrudeBevelSegments": 1,
+              "height": 100,
+              "type": "RectangleGeometry",
+              "subdivisions": 12,
+              "shape": {
+                "isClosed": true,
+                "points": [
+                  {
+                    "id": "c19977ab-647b-4a0a-ba2b-9d7c44107954",
+                    "fi": 0,
+                    "data": {
+                      "position": [
+                        -50,
+                        50
+                      ],
+                      "controlNext": {
+                        "position": [
+                          -50,
+                          50
+                        ]
+                      },
+                      "controlPrevious": {
+                        "position": [
+                          -50,
+                          50
+                        ]
+                      },
+                      "areControlsDirectionsMirrored": true,
+                      "roundness": 0
+                    }
+                  },
+                  {
+                    "id": "dc91af2b-f4fc-43dc-b072-c08f9ba5cb9e",
+                    "fi": 1,
+                    "data": {
+                      "position": [
+                        50,
+                        50
+                      ],
+                      "controlNext": {
+                        "position": [
+                          50,
+                          50
+                        ]
+                      },
+                      "controlPrevious": {
+                        "position": [
+                          50,
+                          50
+                        ]
+                      },
+                      "areControlsDirectionsMirrored": true,
+                      "roundness": 0
+                    }
+                  },
+                  {
+                    "id": "a1683936-15a9-40e0-9558-9add90f87575",
+                    "fi": 2,
+                    "data": {
+                      "position": [
+                        50,
+                        -50
+                      ],
+                      "controlNext": {
+                        "position": [
+                          50,
+                          -50
+                        ]
+                      },
+                      "controlPrevious": {
+                        "position": [
+                          50,
+                          -50
+                        ]
+                      },
+                      "areControlsDirectionsMirrored": true,
+                      "roundness": 0
+                    }
+                  },
+                  {
+                    "id": "f79da8a5-341c-400a-9bf9-11410b53b0cd",
+                    "fi": 3,
+                    "data": {
+                      "position": [
+                        -50,
+                        -50
+                      ],
+                      "controlNext": {
+                        "position": [
+                          -50,
+                          -50
+                        ]
+                      },
+                      "controlPrevious": {
+                        "position": [
+                          -50,
+                          -50
+                        ]
+                      },
+                      "areControlsDirectionsMirrored": true,
+                      "roundness": 0
+                    }
+                  }
+                ],
+                "roundness": 0,
+                "shapeHoles": []
+              }
+            },
+            "ui": {
+              "enabledIndieCorners": false
+            },
+            "type": "RectangleGeometry"
+          },
+          "indices": 3
+        }
+      ]
+    },
+    {
+      "primitives": [
+        {
+          "mode": 4,
+          "attributes": {
+            "POSITION": 4,
+            "NORMAL": 5,
+            "TEXCOORD_0": 6
+          },
+          "extras": {
+            "parameters": {
+              "width": 1360.9983865014567,
+              "subdivisions": 4,
+              "roundness": 100,
+              "extrudeBevelSize": 28,
+              "extrudeBevelSegments": 1,
+              "windingRule": 0,
+              "depth": 207.708612528073,
+              "cornerRadius": [
+                100,
+                100,
+                100,
+                100
+              ],
+              "cornerType": 1,
+              "height": 1963.912025347466,
+              "type": "VectorGeometry",
+              "shape": {
+                "isClosed": true,
+                "points": [
+                  {
+                    "id": "0d3117a1-8060-4c09-82c6-d9a951996608",
+                    "fi": 0,
+                    "data": {
+                      "position": [
+                        -680.4991932507284,
+                        981.956012673733
+                      ],
+                      "controlNext": {
+                        "position": [
+                          -680.4991932507284,
+                          981.956012673733
+                        ]
+                      },
+                      "controlPrevious": {
+                        "position": [
+                          -680.4991932507284,
+                          981.956012673733
+                        ]
+                      },
+                      "areControlsDirectionsMirrored": true,
+                      "roundness": 100
+                    }
+                  },
+                  {
+                    "id": "3967a0ed-d129-4bb9-a91c-7b20f9e9f065",
+                    "fi": 1,
+                    "data": {
+                      "position": [
+                        680.4991932507284,
+                        981.956012673733
+                      ],
+                      "controlNext": {
+                        "position": [
+                          680.4991932507284,
+                          981.956012673733
+                        ]
+                      },
+                      "controlPrevious": {
+                        "position": [
+                          680.4991932507284,
+                          981.956012673733
+                        ]
+                      },
+                      "areControlsDirectionsMirrored": true,
+                      "roundness": 100
+                    }
+                  },
+                  {
+                    "id": "7db2344e-8cf3-47b1-bbd4-09a115cce11a",
+                    "fi": 2,
+                    "data": {
+                      "position": [
+                        680.4991932507284,
+                        -981.956012673733
+                      ],
+                      "controlNext": {
+                        "position": [
+                          680.4991932507284,
+                          -981.956012673733
+                        ]
+                      },
+                      "controlPrevious": {
+                        "position": [
+                          680.4991932507284,
+                          -981.956012673733
+                        ]
+                      },
+                      "areControlsDirectionsMirrored": true,
+                      "roundness": 100
+                    }
+                  },
+                  {
+                    "id": "597d99bf-5138-4244-8b5b-bd3d6571d9ca",
+                    "fi": 3,
+                    "data": {
+                      "position": [
+                        -680.4991932507284,
+                        -981.956012673733
+                      ],
+                      "controlNext": {
+                        "position": [
+                          -680.4991932507284,
+                          -981.956012673733
+                        ]
+                      },
+                      "controlPrevious": {
+                        "position": [
+                          -680.4991932507284,
+                          -981.956012673733
+                        ]
+                      },
+                      "areControlsDirectionsMirrored": true,
+                      "roundness": 100
+                    }
+                  }
+                ],
+                "roundness": 100,
+                "shapeHoles": []
+              }
+            },
+            "shape": {
+              "points": [
+                -680.4991932507284,
+                981.956012673733,
+                -680.4991932507284,
+                981.956012673733,
+                -680.4991932507284,
+                981.956012673733,
+                100,
+                680.4991932507284,
+                981.956012673733,
+                680.4991932507284,
+                981.956012673733,
+                680.4991932507284,
+                981.956012673733,
+                100,
+                680.4991932507284,
+                -981.956012673733,
+                680.4991932507284,
+                -981.956012673733,
+                680.4991932507284,
+                -981.956012673733,
+                100,
+                -680.4991932507284,
+                -981.956012673733,
+                -680.4991932507284,
+                -981.956012673733,
+                -680.4991932507284,
+                -981.956012673733,
+                100
+              ],
+              "shapeHoles": [],
+              "isClosed": true,
+              "roundness": 100
+            },
+            "type": "VectorGeometry"
+          },
+          "indices": 7
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "KHR_lights_punctual": {
+      "lights": [
+        {
+          "name": "Directional Light",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "intensity": 1,
+          "type": "directional"
+        }
+      ]
+    }
+  },
+  "extensionsUsed": [
+    "KHR_lights_punctual"
+  ]
+}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skills Keyboard</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#08080e;overflow:hidden;height:100vh;font-family:system-ui}
+  canvas{display:block}
+  #tip{
+    position:fixed;pointer-events:none;z-index:10;
+    background:rgba(6,6,10,.92);border:.5px solid rgba(255,255,255,.1);
+    border-radius:8px;padding:10px 16px;color:#fff;font-size:13px;
+    opacity:0;transform:translate(-50%,-130%);transition:opacity .15s;backdrop-filter:blur(10px)
+  }
+  #tip.on{opacity:1}
+  #tip .l{font-size:16px;font-weight:600}
+  #tip .c{font-size:11px;color:#888;margin-top:2px}
+</style>
+</head>
+<body>
+<div id="tip"><span class="l"></span><br><span class="c"></span></div>
+
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.184.0/build/three.module.js"}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+const D = 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/';
+
+const SKILLS = [
+  {id:'js',l:'JavaScript',c:'#f0db4f',i:'javascript/javascript-original.svg'},
+  {id:'ts',l:'TypeScript',c:'#007acc',i:'typescript/typescript-original.svg'},
+  {id:'html',l:'HTML',c:'#e34c26',i:'html5/html5-original.svg'},
+  {id:'css',l:'CSS',c:'#563d7c',i:'css3/css3-original.svg'},
+  {id:'react',l:'React',c:'#61dafb',i:'react/react-original.svg'},
+  {id:'vue',l:'Vue',c:'#41b883',i:'vuejs/vuejs-original.svg'},
+  {id:'nextjs',l:'Next.js',c:'#fff',i:'nextjs/nextjs-original.svg'},
+  {id:'tailwind',l:'Tailwind',c:'#38bdf8',i:'tailwindcss/tailwindcss-original.svg'},
+  {id:'nodejs',l:'Node.js',c:'#6cc24a',i:'nodejs/nodejs-original.svg'},
+  {id:'express',l:'Express',c:'#fff',i:'express/express-original.svg'},
+  {id:'postgres',l:'PostgreSQL',c:'#336791',i:'postgresql/postgresql-original.svg'},
+  {id:'mongodb',l:'MongoDB',c:'#47a248',i:'mongodb/mongodb-original.svg'},
+  {id:'git',l:'Git',c:'#f1502f',i:'git/git-original.svg'},
+  {id:'github',l:'GitHub',c:'#fff',i:'github/github-original.svg'},
+  {id:'prettier',l:'Prettier',c:'#f7b93a',i:'prettier/prettier-original.svg'},
+  {id:'npm',l:'NPM',c:'#cb3837',i:'npm/npm-original-wordmark.svg'},
+  {id:'firebase',l:'Firebase',c:'#ffca28',i:'firebase/firebase-plain.svg'},
+  {id:'wordpress',l:'WordPress',c:'#21759b',i:'wordpress/wordpress-plain.svg'},
+  {id:'linux',l:'Linux',c:'#fff',i:'linux/linux-original.svg'},
+  {id:'docker',l:'Docker',c:'#2496ed',i:'docker/docker-original.svg'},
+  {id:'nginx',l:'Nginx',c:'#009639',i:'nginx/nginx-original.svg'},
+  {id:'aws',l:'AWS',c:'#ff9900',i:'amazonwebservices/amazonwebservices-plain-wordmark.svg'},
+  {id:'vim',l:'Vim',c:'#019733',i:'vim/vim-original.svg'},
+  {id:'vercel',l:'Vercel',c:'#fff',i:'vercel/vercel-original.svg'},
+];
+
+const R=4,C=6, KW=1.05,KD=.95,KH=.22, GAP=.08, S=KW+GAP;
+
+// scene
+const re=new THREE.WebGLRenderer({antialias:true});
+re.setPixelRatio(Math.min(devicePixelRatio,2));
+re.setSize(innerWidth,innerHeight);
+re.shadowMap.enabled=true;re.shadowMap.type=THREE.PCFSoftShadowMap;
+re.toneMapping=THREE.ACESFilmicToneMapping;re.toneMappingExposure=1.2;
+document.body.appendChild(re.domElement);
+
+const sc=new THREE.Scene();
+sc.background=new THREE.Color('#07070d');
+sc.fog=new THREE.Fog('#07070d',6,20);
+
+const cam=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,40);
+cam.position.set(0,3.5,10.5);cam.lookAt(0,.1,0);
+
+// lights
+sc.add(new THREE.AmbientLight('#8899bb',1.6));
+const sun=new THREE.DirectionalLight('#ffffff',4);
+sun.position.set(6,8,4);sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.near=.5;sun.shadow.camera.far=35;
+sun.shadow.camera.left=-8;sun.shadow.camera.right=8;
+sun.shadow.camera.top=5;sun.shadow.camera.bottom=-5;
+sun.shadow.bias=-.0002;sun.shadow.normalBias=.02;
+sc.add(sun);
+
+// keyboard body
+const bW=C*S+.5, bD=R*S+.5;
+const bodyGeo=new THREE.BoxGeometry(bW,.14,bD,1,1,1);
+const bodyMat=new THREE.MeshStandardMaterial({color:'#1e1e2a',roughness:.25,metalness:.7});
+const body=new THREE.Mesh(bodyGeo,bodyMat);
+body.position.y=-.22;body.receiveShadow=true;body.castShadow=true;
+sc.add(body);
+
+// keycap geo with rounded top
+const kGeo=new THREE.BoxGeometry(KW,KH,KD,4,3,4);
+const pos=kGeo.attributes.position;
+for(let i=0;i<pos.count;i++){
+  const y=pos.getY(i);
+  if(y>KH/2-.02){
+    const x=pos.getX(i),z=pos.getZ(i),r=.07;
+    const dx=Math.abs(x)-(KW/2-r),dz=Math.abs(z)-(KD/2-r);
+    if(dx>0&&dz>0)pos.setY(i,KH/2-r+Math.sqrt(Math.max(0,r*r-dx*dx-dz*dz)));
+  }
+}
+kGeo.computeVertexNormals();
+
+const sideMat=new THREE.MeshStandardMaterial({color:'#1c1c28',roughness:.4,metalness:.25});
+
+// keycap texture factory
+function tex(sk){
+  const SZ=256,cv=document.createElement('canvas');
+  cv.width=cv.height=SZ;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#181820';
+  ctx.beginPath();ctx.roundRect(4,4,SZ-8,SZ-8,16);ctx.fill();
+  const g=ctx.createLinearGradient(0,0,0,SZ);
+  g.addColorStop(0,'rgba(255,255,255,.05)');
+  g.addColorStop(.5,'rgba(255,255,255,0)');
+  g.addColorStop(1,'rgba(0,0,0,.1)');
+  ctx.fillStyle=g;
+  ctx.beginPath();ctx.roundRect(4,4,SZ-8,SZ-8,16);ctx.fill();
+  const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;
+  const img=new Image();img.crossOrigin='anonymous';
+  img.onload=()=>{ctx.drawImage(img,52,52,152,152);t.needsUpdate=true};
+  img.src=D+sk.i;
+  return t;
+}
+
+const caps=[];
+SKILLS.forEach((sk,i)=>{
+  const row=Math.floor(i/C),col=i%C;
+  const x=(col-(C-1)/2)*S, z=(row-(R-1)/2)*S;
+  const topMat=new THREE.MeshStandardMaterial({map:tex(sk),roughness:.28,metalness:.15,color:'#fff'});
+  const mats=[sideMat,sideMat,topMat,sideMat,sideMat,sideMat];
+  const cap=new THREE.Mesh(kGeo,mats);
+  cap.position.set(x,KH/2,z);cap.castShadow=true;cap.receiveShadow=true;
+  cap.userData={sk,baseY:KH/2,down:false};
+  sc.add(cap);caps.push(cap);
+});
+
+// mouse
+const m=new THREE.Vector2();
+let tX=0,tY=.35;
+window.addEventListener('mousemove',e=>{
+  m.x=(e.clientX/innerWidth)*2-1;m.y=-(e.clientY/innerHeight)*2+1;
+  tX=(e.clientX/innerWidth-.5)*.35;tY=.35+(e.clientY/innerHeight-.5)*.15;
+});
+
+// raycaster
+const rc=new THREE.Raycaster();
+const tip=document.getElementById('tip'),tL=tip.querySelector('.l'),tC=tip.querySelector('.c');
+let hv=null;
+
+window.addEventListener('click',()=>{
+  rc.setFromCamera(m,cam);
+  const h=rc.intersectObjects(caps);
+  if(!h.length)return;
+  const o=h[0].object;
+  if(o.userData.down)return;o.userData.down=true;
+  const oy=o.userData.baseY,py=oy-.06,t0=performance.now();
+  (function d(ts){
+    const p=Math.min((ts-t0)/80,1);
+    o.position.y=oy+(py-oy)*(p<.5?2*p*p:-1+(4-2*p)*p);
+    if(p<1){requestAnimationFrame(d);return}
+    const t1=performance.now();
+    (function u(ts2){
+      const bp=Math.min((ts2-t1)/300,1);
+      o.position.y=py+(oy-py)*(1-Math.pow(1-bp,3));
+      if(bp<1)requestAnimationFrame(u);else o.userData.down=false;
+    })(performance.now());
+  })(t0);
+});
+
+window.addEventListener('resize',()=>{
+  cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();
+  re.setSize(innerWidth,innerHeight);
+});
+
+(function loop(){
+  requestAnimationFrame(loop);
+  cam.position.x+=(Math.sin(tX)*8-cam.position.x)*.025;
+  cam.position.y+=(3.5+tY*2-cam.position.y)*.025;
+  cam.lookAt(0,.1,0);
+
+  rc.setFromCamera(m,cam);
+  const h=rc.intersectObjects(caps);
+  if(h.length){
+    const o=h[0].object;
+    if(hv!==o){if(hv)hv.material[2].emissive.set('#000');hv=o;o.material[2].emissive.set('#444');o.material[2].emissiveIntensity=1}
+    tL.textContent=o.userData.sk.l;tC.textContent=o.userData.sk.c;tip.classList.add('on');
+    tip.style.left=(m.x*.5+.5)*innerWidth+'px';tip.style.top=(-m.y*.5+.5)*innerHeight+'px';
+  }else{if(hv){hv.material[2].emissive.set('#000');hv=null}tip.classList.remove('on')}
+  re.render(sc,cam);
+})();
+</script>
+</body>
+</html>

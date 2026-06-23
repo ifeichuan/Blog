@@ -16,7 +16,9 @@ uniform vec2 u_resolution;
 varying vec2 vUv;
 
 float hash(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  p = fract(p * vec2(123.34, 345.45));
+  p += dot(p, p + 34.345);
+  return fract(p.x * p.y);
 }
 
 float noise(vec2 p) {
@@ -31,73 +33,68 @@ float noise(vec2 p) {
 }
 
 float fbm(vec2 p) {
-  float v = 0.0;
-  float a = 0.5;
-  mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
+  float value = 0.0;
+  float amp = 0.52;
+  mat2 rot = mat2(0.82, -0.57, 0.57, 0.82);
   for (int i = 0; i < 5; i++) {
-    v += a * noise(p);
-    p = rot * p * 2.0;
-    a *= 0.5;
+    value += amp * noise(p);
+    p = rot * p * 2.05 + 11.7;
+    amp *= 0.5;
   }
-  return v;
-}
-
-float leafMask(vec2 uv, float t) {
-  vec2 p = uv * 3.2;
-  p.x += sin(t * 0.12) * 0.3;
-  p.y += cos(t * 0.08) * 0.2;
-  float leaves = fbm(p + vec2(t * 0.02, t * 0.015));
-  leaves = smoothstep(0.35, 0.65, leaves);
-  return leaves;
-}
-
-float sunPatches(vec2 uv, float mask) {
-  float sun = smoothstep(0.0, 1.0, 1.0 - mask);
-  sun = pow(sun, 1.6);
-  return sun;
+  return value;
 }
 
 void main() {
   vec2 uv = vUv;
-  float aspect = u_resolution.x / u_resolution.y;
-  uv.x *= aspect;
+  vec2 p = uv;
+  p.x *= u_resolution.x / u_resolution.y;
 
-  float t = u_time;
-  float mask = leafMask(uv, t);
-  float sun = sunPatches(uv, mask);
+  float t = u_time * 1.7;
+  vec2 driftA = vec2(t * 0.045, sin(t * 0.35) * 0.08);
+  vec2 driftB = vec2(-t * 0.028, cos(t * 0.22) * 0.06);
 
-  vec3 ground = vec3(0.96, 0.94, 0.90);
-  vec3 warm = vec3(1.0, 0.98, 0.88);
-  vec3 shadow = vec3(0.88, 0.87, 0.83);
+  float canopyA = fbm(p * 3.2 + driftA);
+  float canopyB = fbm(p * 6.0 + driftB);
+  float leafMask = canopyA * 0.72 + canopyB * 0.38;
 
-  vec3 col = mix(shadow, ground, sun);
-  col = mix(col, warm, sun * 0.5);
+  float sunPatches = smoothstep(0.62, 0.78, leafMask);
+  sunPatches = pow(sunPatches, 1.7);
 
-  float caustic = noise(uv * 8.0 + t * 0.05);
-  col += vec3(0.02, 0.015, 0.0) * caustic * sun;
+  float vignette = smoothstep(0.92, 0.18, distance(uv, vec2(0.58, 0.44)));
+  float caustic = fbm(p * 13.0 + vec2(t * 0.09, -t * 0.04));
+  sunPatches *= mix(0.86, 1.16, caustic) * vignette;
 
-  gl_FragColor = vec4(col, 1.0);
+  vec3 ground = mix(vec3(0.67, 0.55, 0.35), vec3(0.86, 0.78, 0.58), uv.y);
+  vec3 shade = vec3(0.30, 0.36, 0.22);
+  vec3 sun = vec3(1.0, 0.86, 0.50);
+
+  vec3 color = mix(ground * shade, ground, 0.56);
+  color = mix(color, sun, clamp(sunPatches, 0.0, 1.0));
+  color += vec3(1.0, 0.65, 0.22) * sunPatches * 0.22;
+  gl_FragColor = vec4(color, 1.0);
 }
 `
 
 function DappledPlane() {
-  const meshRef = useRef<THREE.Mesh>(null)
-  const uniformsRef = useRef({
-    u_time: { value: 0 },
-    u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-  })
+  const matRef = useRef<THREE.ShaderMaterial>(null)
 
-  useFrame((_, delta) => {
-    uniformsRef.current.u_time.value += delta * 3.0
+  useFrame((state) => {
+    if (matRef.current) {
+      matRef.current.uniforms.u_time.value = state.clock.elapsedTime
+    }
   })
 
   return (
-    <mesh ref={meshRef}>
+    <mesh>
       <planeGeometry args={[2, 2]} />
       <shaderMaterial
+        ref={matRef}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniformsRef.current}
+        uniforms={{
+          u_time: { value: 0 },
+          u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+        }}
       />
     </mesh>
   )
@@ -107,7 +104,7 @@ export function DappledLight() {
   return (
     <div className="dappled-bg">
       <Canvas
-        gl={{ antialias: false, alpha: false }}
+        gl={{ antialias: true, alpha: false }}
         camera={{ position: [0, 0, 1] }}
         style={{ width: '100%', height: '100%' }}
       >

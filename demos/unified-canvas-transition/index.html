@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unified Canvas Transition Demo</title>
+<style>
+* { box-sizing: border-box; margin: 0; }
+
+html, body {
+  font-family: "Geist Mono", monospace;
+  overflow-x: hidden;
+}
+
+/* The one canvas — fixed fullscreen background */
+#scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+/* Content floats above */
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+.section-1 {
+  height: 200vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.section-1-inner {
+  position: sticky;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 3rem;
+  color: #141413;
+  will-change: transform;
+}
+
+.section-2 {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 4rem;
+}
+
+.avatar-placeholder {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  background: rgba(200,200,195,0.3);
+  border: 2px solid rgba(128,128,128,0.2);
+}
+
+.section-2 p {
+  font-size: 1.5rem;
+  color: #141413;
+  max-width: 480px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<!-- Gooey SVG filter for section 2 state -->
+<svg style="position:absolute;width:0;height:0;" aria-hidden="true">
+  <defs>
+    <filter id="gooey-filter">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo"/>
+      <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="content">
+  <section class="section-1">
+    <div class="section-1-inner"></div>
+  </section>
+  <section class="section-2">
+    <div class="avatar-placeholder"></div>
+    <p>Creative Frontend Developer who builds interfaces that feel alive.</p>
+  </section>
+</div>
+
+<script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script>
+(function() {
+  gsap.registerPlugin(ScrollTrigger);
+  const lenis = new Lenis({ smoothWheel: true, lerp: 0.08 });
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add((time) => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
+
+  const canvas = document.getElementById('scene');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // --- Load SVG paths for signature drawing ---
+  let sigCanvas = null; // offscreen pre-rendered signature
+  const sigStartTime = performance.now();
+  const SIG_DRAW_DURATION = 4000;
+  const SIG_VIEWBOX = { x: 309.94, y: 236.719, w: 850.021, h: 333.5 };
+
+  fetch('signature.svg')
+    .then(r => r.text())
+    .then(text => {
+      const container = document.createElement('div');
+      container.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;';
+      container.innerHTML = text;
+      document.body.appendChild(container);
+
+      // Pre-render signature to offscreen canvas (once)
+      const offscreen = document.createElement('canvas');
+      offscreen.width = W;
+      offscreen.height = H;
+      const offCtx = offscreen.getContext('2d');
+
+      const scale = Math.min(W * 0.7 / SIG_VIEWBOX.w, H * 0.4 / SIG_VIEWBOX.h);
+      const offsetX = (W - SIG_VIEWBOX.w * scale) / 2 - SIG_VIEWBOX.x * scale;
+      const offsetY = (H - SIG_VIEWBOX.h * scale) / 2 - SIG_VIEWBOX.y * scale;
+
+      offCtx.translate(offsetX, offsetY);
+      offCtx.scale(scale, scale);
+      offCtx.fillStyle = '#141413';
+      container.querySelectorAll('path').forEach(p => {
+        const d = p.getAttribute('d');
+        if (d) offCtx.fill(new Path2D(d));
+      });
+
+      sigCanvas = offscreen;
+      container.remove();
+    });
+
+  function drawSignature() {
+    if (!sigCanvas) return;
+    const elapsed = performance.now() - sigStartTime;
+    const rawP = Math.min(1, elapsed / SIG_DRAW_DURATION);
+    if (rawP <= 0) return;
+    // easeOutCubic
+    const progress = 1 - Math.pow(1 - rawP, 3);
+    // Reveal left-to-right via single drawImage + clip
+    const revealW = progress * W;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, revealW, H);
+    ctx.clip();
+    ctx.drawImage(sigCanvas, 0, 0);
+    ctx.restore();
+  }
+
+  // --- Scroll progress: 0 → 1 over section-1 scroll ---
+  let scrollProgress = 0;
+
+  gsap.to('.section-1-inner', {
+    y: '-20vh',
+    scale: 0.9,
+    opacity: 0,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '.section-1',
+      start: 'top top',
+      end: 'bottom top',
+      scrub: true,
+      onUpdate: (self) => { scrollProgress = self.progress; }
+    }
+  });
+
+  // --- Noise helpers ---
+  function hash(x, y) {
+    return ((Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1 + 1) % 1;
+  }
+
+  // --- State 1: Dappled light (warm, organic blobs) ---
+  function drawDappled(t) {
+    // Warm parchment base
+    ctx.fillStyle = '#F5F4ED';
+    ctx.fillRect(0, 0, W, H);
+
+    // Soft warm light patches
+    for (let i = 0; i < 6; i++) {
+      const x = W * (0.15 + 0.12 * i + Math.sin(t * 0.3 + i) * 0.05);
+      const y = H * (0.2 + 0.1 * i + Math.cos(t * 0.2 + i * 2) * 0.08);
+      const r = Math.min(W, H) * (0.15 + 0.05 * Math.sin(t * 0.4 + i));
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+      grad.addColorStop(0, 'rgba(255, 248, 218, 0.4)');
+      grad.addColorStop(0.6, 'rgba(217, 200, 168, 0.15)');
+      grad.addColorStop(1, 'rgba(245, 244, 237, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // Shadow patches (leaves)
+    for (let i = 0; i < 4; i++) {
+      const x = W * (0.3 + 0.15 * i + Math.sin(t * 0.15 + i * 3) * 0.06);
+      const y = H * (0.15 + 0.2 * i + Math.cos(t * 0.1 + i * 2) * 0.05);
+      const r = Math.min(W, H) * (0.1 + 0.04 * Math.sin(t * 0.25 + i));
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+      grad.addColorStop(0, 'rgba(91, 111, 61, 0.12)');
+      grad.addColorStop(1, 'rgba(91, 111, 61, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+
+  // --- State 2: Dots transition ---
+  function drawDots(progress) {
+    const CELL = 16;
+    const cols = Math.ceil(W / CELL);
+    const rows = Math.ceil(H / CELL);
+    ctx.fillStyle = '#FAF9F5';
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const ny = row / rows;
+        const localP = progress + (1 - ny) * progress * 0.3;
+        const dotP = Math.min(1, Math.max(0, localP));
+        if (dotP <= 0) continue;
+
+        const cx = col * CELL + CELL / 2;
+        const cy = row * CELL + CELL / 2;
+        const radius = dotP * CELL * 0.72;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // --- State 3: Pixel Trail (mouse-driven, gooey) ---
+  const TRAIL_CELL = 16;
+  let trailGrid = [];
+  let trailCols = 0, trailRows = 0;
+
+  function initTrailGrid() {
+    trailCols = Math.ceil(W / TRAIL_CELL);
+    trailRows = Math.ceil(H / TRAIL_CELL);
+    trailGrid = new Float32Array(trailCols * trailRows);
+  }
+  initTrailGrid();
+  window.addEventListener('resize', initTrailGrid);
+
+  document.addEventListener('mousemove', (e) => {
+    const col = Math.floor(e.clientX / TRAIL_CELL);
+    const row = Math.floor(e.clientY / TRAIL_CELL);
+    if (col >= 0 && col < trailCols && row >= 0 && row < trailRows) {
+      trailGrid[row * trailCols + col] = 1.0;
+    }
+  });
+
+  function drawPixelTrail(dt) {
+    ctx.fillStyle = '#FAF9F5';
+    ctx.fillRect(0, 0, W, H);
+
+    // Slow fade for visible trail
+    for (let i = 0; i < trailGrid.length; i++) {
+      if (trailGrid[i] > 0) {
+        trailGrid[i] = Math.max(0, trailGrid[i] - 0.008);
+      }
+    }
+
+    // Draw active pixels with opacity from trail value
+    for (let row = 0; row < trailRows; row++) {
+      for (let col = 0; col < trailCols; col++) {
+        const val = trailGrid[row * trailCols + col];
+        if (val <= 0) continue;
+        ctx.globalAlpha = val;
+        ctx.fillStyle = 'rgba(180, 180, 175, 1)';
+        ctx.fillRect(col * TRAIL_CELL, row * TRAIL_CELL, TRAIL_CELL - 1, TRAIL_CELL - 1);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // --- Render loop ---
+  const startTime = performance.now();
+
+  function render() {
+    const t = (performance.now() - startTime) / 1000;
+
+    if (scrollProgress < 0.01) {
+      // Pure dappled light + signature drawing
+      canvas.style.filter = 'none';
+      drawDappled(t);
+      drawSignature();
+    } else if (scrollProgress >= 1) {
+      // Section 2: pixel trail with gooey filter
+      canvas.style.filter = 'url(#gooey-filter)';
+      drawPixelTrail(t);
+    } else {
+      // Blend: draw dappled first, then signature, then overlay dots
+      canvas.style.filter = 'none';
+      drawDappled(t);
+      drawSignature();
+      const dotsProgress = scrollProgress * scrollProgress;
+      drawDots(dotsProgress);
+    }
+
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>

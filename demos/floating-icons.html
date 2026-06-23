@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Floating Tech Icons</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    overflow: hidden;
+    height: 100vh;
+    font-family: system-ui, sans-serif;
+  }
+  canvas { position: fixed; inset: 0; z-index: 0; }
+  .content {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: center;
+    height: 100vh; color: rgba(255,255,255,0.4);
+    font-size: 1.5rem; font-weight: 300; letter-spacing: 0.2em;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div class="content">DRAG TO EXPLORE</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+let W, H;
+let mouse = { x: 0.5, y: 0.5 };
+let targetMouse = { x: 0.5, y: 0.5 };
+
+function resize() {
+  const dpr = devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  W = window.innerWidth;
+  H = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+window.addEventListener('mousemove', e => {
+  targetMouse.x = e.clientX / W;
+  targetMouse.y = e.clientY / H;
+});
+window.addEventListener('touchmove', e => {
+  targetMouse.x = e.touches[0].clientX / W;
+  targetMouse.y = e.touches[0].clientY / H;
+}, { passive: true });
+
+const iconDefs = [
+  { url: 'https://cdn.simpleicons.org/react/61DAFB',    color: '#61DAFB' },
+  { url: 'https://cdn.simpleicons.org/vuedotjs/4FC08D',  color: '#4FC08D' },
+  { url: 'https://cdn.simpleicons.org/typescript/3178C6', color: '#3178C6' },
+  { url: 'https://cdn.simpleicons.org/nodedotjs/5FA04E',  color: '#5FA04E' },
+  { url: 'https://cdn.simpleicons.org/nextdotjs/ffffff',  color: '#ffffff' },
+  { url: 'https://cdn.simpleicons.org/tailwindcss/06B6D4',color: '#06B6D4' },
+  { url: 'https://cdn.simpleicons.org/python/3776AB',     color: '#3776AB' },
+  { url: 'https://cdn.simpleicons.org/go/00ADD8',         color: '#00ADD8' },
+  { url: 'https://cdn.simpleicons.org/rust/ffffff',       color: '#ffffff' },
+  { url: 'https://cdn.simpleicons.org/docker/2496ED',     color: '#2496ED' },
+  { url: 'https://cdn.simpleicons.org/git/F05032',        color: '#F05032' },
+  { url: 'https://cdn.simpleicons.org/figma/F24E1E',      color: '#F24E1E' },
+  { url: 'https://cdn.simpleicons.org/graphql/E10098',    color: '#E10098' },
+  { url: 'https://cdn.simpleicons.org/postgresql/4169E1', color: '#4169E1' },
+  { url: 'https://cdn.simpleicons.org/redis/DC382D',      color: '#DC382D' },
+  { url: 'https://cdn.simpleicons.org/kubernetes/326CE5', color: '#326CE5' },
+];
+
+const imgs = [];
+Promise.all(iconDefs.map(d =>
+  new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve({ img, color: d.color });
+    img.onerror = () => resolve(null);
+    img.src = d.url;
+  })
+)).then(r => r.filter(Boolean).forEach(d => imgs.push(d)));
+
+const particles = [];
+const COUNT = 28;
+for (let i = 0; i < COUNT; i++) {
+  const z = 0.1 + Math.random() * 0.9;
+  particles.push({
+    baseX: 0.08 + Math.random() * 0.84,
+    baseY: 0.08 + Math.random() * 0.84,
+    z,
+    speed: 0.12 + z * 0.35,
+    amplitude: 8 + z * 50,
+    size: 18 + z * 52,
+    phase: Math.random() * Math.PI * 2,
+    parallax: 0.02 + z * 0.09,
+    rotationSpeed: (Math.random() - 0.5) * (0.1 + z * 0.25),
+    blur: Math.max(0, (1 - z) * 3),
+    shadowAlpha: 0.08 + z * 0.12,
+    shadowSize: 0.25 + z * 0.2,
+    shadowOffset: 4 + z * 16,
+  });
+}
+particles.sort((a, b) => a.z - b.z);
+
+function drawIcon(data, x, y, p, mx, my) {
+  ctx.save();
+  ctx.filter = p.blur > 0.5 ? `blur(${p.blur}px)` : 'none';
+
+  // 光晕（径向渐变，模拟发光）
+  const grd = ctx.createRadialGradient(x, y, p.size * 0.05, x, y, p.size * 0.8);
+  grd.addColorStop(0, data.color + '28');
+  grd.addColorStop(0.5, data.color + '08');
+  grd.addColorStop(1, 'transparent');
+  ctx.fillStyle = grd;
+  ctx.fillRect(x - p.size, y - p.size, p.size * 2, p.size * 2);
+
+  // 地面投影（模拟悬浮高度）
+  const sx = x + (mx - 0.5) * 6;
+  const sy = y + p.shadowOffset;
+  ctx.globalAlpha = p.shadowAlpha;
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.ellipse(sx, sy, p.size * p.shadowSize, p.size * p.shadowSize * 0.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // icon 本体 — 完全不透明
+  ctx.globalAlpha = 1;
+  ctx.translate(x, y);
+  ctx.rotate(Math.sin(performance.now() * 0.00025 + p.phase) * p.rotationSpeed);
+  ctx.drawImage(data.img, -p.size/2, -p.size/2, p.size, p.size);
+
+  // 左上高光（统一光源）
+  const hl = ctx.createLinearGradient(-p.size/2, -p.size/2, p.size/2, p.size/2);
+  hl.addColorStop(0, 'rgba(255,255,255,0.1)');
+  hl.addColorStop(0.5, 'rgba(255,255,255,0)');
+  hl.addColorStop(1, 'rgba(0,0,0,0.04)');
+  ctx.fillStyle = hl;
+  ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+
+  ctx.restore();
+}
+
+function animate(ts) {
+  ctx.clearRect(0, 0, W, H);
+
+  mouse.x += (targetMouse.x - mouse.x) * 0.035;
+  mouse.y += (targetMouse.y - mouse.y) * 0.035;
+
+  const t = ts * 0.001;
+
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    if (imgs.length === 0) continue;
+    const data = imgs[i % imgs.length];
+    if (!data) continue;
+
+    const fx = Math.sin(t * p.speed + p.phase) * p.amplitude;
+    const fy = Math.cos(t * p.speed * 0.65 + p.phase + 1.2) * p.amplitude * 0.7;
+
+    const px = p.baseX * W + fx + (mouse.x - 0.5) * W * p.parallax;
+    const py = p.baseY * H + fy + (mouse.y - 0.5) * H * p.parallax;
+
+    drawIcon(data, px, py, p, mouse.x, mouse.y);
+  }
+
+  requestAnimationFrame(animate);
+}
+
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

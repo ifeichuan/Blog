@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WebGL Unified Canvas Demo</title>
+<style>
+* { box-sizing: border-box; margin: 0; }
+html, body { font-family: "Geist Mono", monospace; overflow-x: hidden; }
+
+#scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.content { position: relative; z-index: 1; }
+
+.section-1 {
+  height: 200vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-1-inner {
+  position: sticky;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 3rem;
+  color: #141413;
+  will-change: transform;
+}
+
+.section-2 {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 4rem;
+}
+
+.avatar-placeholder {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  background: rgba(200,200,195,0.3);
+  border: 2px solid rgba(128,128,128,0.2);
+}
+
+.section-2 p {
+  font-size: 1.5rem;
+  color: #141413;
+  max-width: 480px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<div class="content">
+  <section class="section-1">
+    <div class="section-1-inner">hello, I'm Feichuan</div>
+  </section>
+  <section class="section-2">
+    <div class="avatar-placeholder"></div>
+    <p>Creative Frontend Developer who builds interfaces that feel alive.</p>
+  </section>
+</div>
+
+<script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script>
+(function() {
+  gsap.registerPlugin(ScrollTrigger);
+  const lenis = new Lenis({ smoothWheel: true, lerp: 0.08 });
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add((time) => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
+
+  const canvas = document.getElementById('scene');
+  const gl = canvas.getContext('webgl', { antialias: false, alpha: false });
+
+  // --- Shaders ---
+  const vertSrc = `
+    attribute vec2 a_pos;
+    varying vec2 v_uv;
+    void main() {
+      v_uv = a_pos * 0.5 + 0.5;
+      gl_Position = vec4(a_pos, 0.0, 1.0);
+    }
+  `;
+
+  const fragSrc = `
+    precision highp float;
+    varying vec2 v_uv;
+    uniform float u_time;
+    uniform float u_progress;
+    uniform float u_sigProgress;
+    uniform vec2 u_resolution;
+    uniform sampler2D u_trailTex;
+    uniform sampler2D u_sigTex;
+
+    float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+    float noise(vec2 p) {
+      vec2 i = floor(p), f = fract(p);
+      f = f*f*(3.0-2.0*f);
+      return mix(mix(hash(i),hash(i+vec2(1,0)),f.x), mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x), f.y);
+    }
+    float fbm(vec2 p) {
+      float v=0.0, a=0.5;
+      mat2 rot=mat2(0.87,0.48,-0.48,0.87);
+      for(int i=0;i<4;i++){v+=a*noise(p);p=rot*p*2.0;a*=0.5;}
+      return v;
+    }
+
+    vec3 dappled(vec2 uv, float t, float p) {
+      float sc = 1.0 - p * 0.1;
+      float aspect = u_resolution.x / u_resolution.y;
+      vec2 center = vec2(0.5 * aspect, 0.5);
+      uv = (uv - center) / sc + center + vec2(0.0, p * 0.15);
+
+      vec3 base = vec3(0.96, 0.95, 0.93);
+      float leaves = fbm(uv * 3.0 + vec2(t*0.04, t*0.03));
+      leaves = smoothstep(0.35, 0.65, leaves);
+      float sun = pow(1.0 - leaves, 1.6);
+      vec3 col = mix(vec3(0.90,0.89,0.85), base, sun);
+      col = mix(col, vec3(1.0,0.97,0.88), sun * 0.4);
+      col += noise(uv*8.0+t*0.05) * 0.015 * sun;
+      col = mix(col, vec3(0.94,0.93,0.90), p * 0.6);
+      return col;
+    }
+
+    float dots(vec2 uv, float progress) {
+      float cellPx = 8.0;
+      vec2 cellSize = vec2(cellPx) / u_resolution;
+      vec2 cell = floor(uv / cellSize);
+      vec2 cellUv = fract(uv / cellSize);
+      float ny = 1.0 - cell.y * cellSize.y;
+      float localP = clamp(progress * 1.3 + ny * progress * 0.3 - 0.3, 0.0, 1.0);
+      float dist = length(cellUv - 0.5);
+      return smoothstep(localP * 0.5, localP * 0.5 - 0.04, dist);
+    }
+
+    vec3 pixelTrail(vec2 uv) {
+      vec3 base = vec3(0.98, 0.976, 0.96);
+      float trail = texture2D(u_trailTex, uv).r;
+      return mix(base, vec3(0.75, 0.75, 0.73), trail);
+    }
+
+    void main() {
+      vec2 uv = v_uv;
+      float aspect = u_resolution.x / u_resolution.y;
+      vec2 uvA = vec2(uv.x * aspect, uv.y);
+      float t = u_time;
+      float p = u_progress;
+
+      vec3 col;
+      if (p < 0.01) {
+        col = dappled(uvA, t, 0.0);
+      } else if (p >= 0.99) {
+        col = pixelTrail(uv);
+      } else {
+        vec3 dap = dappled(uvA, t, p);
+        float d = dots(uv, p * p);
+        col = mix(dap, vec3(0.98, 0.976, 0.96), d);
+      }
+
+      // Overlay signature (revealed left-to-right)
+      if (u_sigProgress > 0.0) {
+        vec4 sig = texture2D(u_sigTex, uv);
+        float reveal = step(uv.x, u_sigProgress);
+        float fade = 1.0 - p; // fade out signature during transition
+        col = mix(col, vec3(0.08), sig.a * reveal * fade);
+      }
+
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `;
+
+  function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vertSrc));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fragSrc));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(prog));
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]), gl.STATIC_DRAW);
+
+  const aPos = gl.getAttribLocation(prog, 'a_pos');
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uProgress = gl.getUniformLocation(prog, 'u_progress');
+  const uSigProgress = gl.getUniformLocation(prog, 'u_sigProgress');
+  const uResolution = gl.getUniformLocation(prog, 'u_resolution');
+  const uTrailTex = gl.getUniformLocation(prog, 'u_trailTex');
+  const uSigTex = gl.getUniformLocation(prog, 'u_sigTex');
+
+  // --- Trail texture (16x16, updated every frame) ---
+  const TRAIL_SIZE = 16;
+  const trailData = new Uint8Array(TRAIL_SIZE * TRAIL_SIZE);
+  const trailTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, trailTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  document.addEventListener('mousemove', (e) => {
+    const col = Math.floor((e.clientX / window.innerWidth) * TRAIL_SIZE);
+    const row = Math.floor((e.clientY / window.innerHeight) * TRAIL_SIZE);
+    if (col >= 0 && col < TRAIL_SIZE && row >= 0 && row < TRAIL_SIZE) {
+      trailData[row * TRAIL_SIZE + col] = 255;
+    }
+  });
+
+  // --- Signature texture (render SVG to canvas, upload) ---
+  const sigTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, sigTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  // 1x1 placeholder
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,0]));
+
+  let sigReady = false;
+  fetch('signature.svg')
+    .then(r => r.text())
+    .then(text => {
+      const container = document.createElement('div');
+      container.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+      container.innerHTML = text;
+      document.body.appendChild(container);
+
+      const oc = document.createElement('canvas');
+      oc.width = window.innerWidth;
+      oc.height = window.innerHeight;
+      const octx = oc.getContext('2d');
+
+      const svgW = 850.021, svgH = 333.5, svgX = 309.94, svgY = 236.719;
+      const scale = Math.min(oc.width * 0.6 / svgW, oc.height * 0.35 / svgH);
+      const dx = (oc.width - svgW * scale) / 2;
+      const dy = (oc.height - svgH * scale) / 2;
+
+      octx.translate(dx - svgX * scale, dy - svgY * scale);
+      octx.scale(scale, scale);
+      octx.fillStyle = '#000000';
+      container.querySelectorAll('path').forEach(p => {
+        const d = p.getAttribute('d');
+        if (d) octx.fill(new Path2D(d));
+      });
+      container.remove();
+
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, sigTex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, oc);
+      sigReady = true;
+    });
+
+  // --- Scroll ---
+  let scrollProgress = 0;
+  gsap.to('.section-1-inner', {
+    y: '-20vh', scale: 0.9, opacity: 0, ease: 'none',
+    scrollTrigger: {
+      trigger: '.section-1', start: 'top top', end: 'bottom top',
+      scrub: true,
+      onUpdate: (self) => { scrollProgress = self.progress; }
+    }
+  });
+
+  // --- Resize ---
+  function resize() {
+    const dpr = Math.min(devicePixelRatio, 2);
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // --- Render ---
+  const t0 = performance.now();
+  const SIG_DURATION = 4000;
+
+  function render() {
+    const now = performance.now();
+    const t = (now - t0) * 0.001;
+    const sigP = sigReady ? Math.min(1, (now - t0) / SIG_DURATION) : 0;
+    // easeOutCubic
+    const sigEased = 1 - Math.pow(1 - sigP, 3);
+
+    // Fade trail
+    for (let i = 0; i < trailData.length; i++) {
+      if (trailData[i] > 0) trailData[i] = Math.max(0, trailData[i] - 2);
+    }
+
+    // Upload trail texture
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, trailTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, TRAIL_SIZE, TRAIL_SIZE, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, trailData);
+
+    // Bind sig texture
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, sigTex);
+
+    gl.useProgram(prog);
+    gl.enableVertexAttribArray(aPos);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    gl.uniform1f(uTime, t);
+    gl.uniform1f(uProgress, scrollProgress);
+    gl.uniform1f(uSigProgress, sigEased);
+    gl.uniform2f(uResolution, canvas.width, canvas.height);
+    gl.uniform1i(uTrailTex, 0);
+    gl.uniform1i(uSigTex, 1);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>

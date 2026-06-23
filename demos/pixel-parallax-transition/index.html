@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dots Parallax Transition Demo</title>
+<style>
+* { box-sizing: border-box; margin: 0; }
+
+html, body {
+  font-family: "Geist Mono", monospace;
+  background: #F5F4ED;
+  overflow-x: hidden;
+}
+
+.scroll-container {
+  position: relative;
+  height: 300vh;
+}
+
+.section-1 {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-1-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem;
+  /* background:
+    radial-gradient(ellipse at 30% 20%, rgba(255,248,218,0.5), transparent 40%),
+    linear-gradient(180deg, #efe9dd, #d9c8a8); */
+  z-index: 99;
+}
+
+.section-1-content {
+  position: relative;
+  z-index: 101;
+  font-size: 3rem;
+  color: #141413;
+  will-change: transform;
+}
+
+/* Canvas: globally fixed, above all backgrounds */
+#dots-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.section-2 {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.section-2-bg {
+  position: absolute;
+  inset: 0;
+  background: #FAF9F5;
+  z-index: 99;
+}
+
+.section-2-content {
+  position: relative;
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.avatar-placeholder {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  background: #E8E6DC;
+}
+
+.section-2-content p {
+  font-size: 1.5rem;
+  color: #141413;
+  max-width: 480px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<canvas id="dots-overlay"></canvas>
+
+<div class="scroll-container">
+  <section class="section-1">
+    <div class="section-1-bg"></div>
+    <div class="section-1-content">
+      hello, I'm Feichuan
+    </div>
+  </section>
+
+  <section class="section-2">
+    <div class="section-2-bg"></div>
+    <div class="section-2-content">
+      <div class="avatar-placeholder"></div>
+      <p>Creative Frontend Developer who builds interfaces that feel alive.</p>
+    </div>
+  </section>
+</div>
+
+<script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script>
+(function() {
+  gsap.registerPlugin(ScrollTrigger);
+
+  const lenis = new Lenis({ smoothWheel: true, lerp: 0.08 });
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add((time) => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
+
+  const canvas = document.getElementById('dots-overlay');
+  const ctx = canvas.getContext('2d');
+  const CELL_SIZE = 16;
+  const OVERLAY_COLOR = '#FAF9F5';
+  let cols, rows;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols = Math.ceil(canvas.width / CELL_SIZE);
+    rows = Math.ceil(canvas.height / CELL_SIZE);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let progress = 0;
+
+  // Section 1 content: parallax up + scale down
+  gsap.to('.section-1-content', {
+    y: '-25vh',
+    scale: 0.92,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '.scroll-container',
+      start: 'top top',
+      endTrigger: '.section-2',
+      end: 'top top',
+      scrub: true,
+    }
+  });
+
+  // Dots progress: 0 → 1
+  gsap.to({ p: 0 }, {
+    p: 1,
+    ease: 'power2.in',
+    scrollTrigger: {
+      trigger: '.scroll-container',
+      start: 'top top',
+      endTrigger: '.section-2',
+      end: 'top top',
+      scrub: true,
+      onUpdate: (self) => { progress = self.progress; }
+    }
+  });
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (progress > 0) {
+      ctx.fillStyle = OVERLAY_COLOR;
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const ny = row / rows;
+          const localProgress = progress + (1 - ny) * progress * 0.3;
+          const dotProgress = Math.min(1, localProgress);
+          if (dotProgress <= 0) continue;
+
+          const cx = col * CELL_SIZE + CELL_SIZE / 2;
+          const cy = row * CELL_SIZE + CELL_SIZE / 2;
+          const radius = dotProgress * CELL_SIZE * 0.72;
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
