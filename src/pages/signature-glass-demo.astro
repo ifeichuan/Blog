@@ -1,0 +1,377 @@
+---
+---
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Glass Signature Demo</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: oklch(0.93 0.012 92);
+        --muted: oklch(0.72 0.025 94);
+        --paper: oklch(0.13 0.018 252);
+        --line: oklch(0.86 0.035 86 / 0.18);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--paper);
+        font-family:
+          "Geist Mono", "SFMono-Regular", "Cascadia Code", "Menlo", monospace;
+        overflow: hidden;
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+      }
+
+      .stage {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 18% 16%, oklch(0.82 0.1 86 / 0.2), transparent 28%),
+          radial-gradient(circle at 78% 28%, oklch(0.72 0.13 186 / 0.16), transparent 34%),
+          linear-gradient(135deg, oklch(0.16 0.03 252), oklch(0.1 0.018 250) 58%, oklch(0.18 0.035 82));
+      }
+
+      canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .draw-layer {
+        position: absolute;
+        inset: clamp(18px, 6vw, 86px);
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+        opacity: 0.86;
+        mix-blend-mode: screen;
+        filter: drop-shadow(0 0 14px oklch(0.9 0.08 205 / 0.42));
+        transition: opacity 900ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .draw-layer svg {
+        width: min(86vw, 1180px);
+        height: auto;
+        overflow: visible;
+      }
+
+      .draw-layer path {
+        fill: none !important;
+        stroke: oklch(0.95 0.02 205);
+        stroke-width: 8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .fallback {
+        position: absolute;
+        inset: 0;
+        display: none;
+        place-items: center;
+        padding: 8vw;
+      }
+
+      .fallback img {
+        width: min(72vw, 760px);
+        filter: drop-shadow(0 16px 50px oklch(0.78 0.12 196 / 0.25));
+        opacity: 0.72;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        canvas {
+          display: none;
+        }
+
+        .draw-layer {
+          display: none;
+        }
+
+        .fallback {
+          display: grid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage" data-glass-signature>
+      <canvas aria-label="玻璃签名 WebGL 演示"></canvas>
+      <div class="draw-layer" data-signature-draw aria-hidden="true"></div>
+      <div class="fallback">
+        <img src="/feichuan-signature-glass-source.svg" alt="Feichuan signature" />
+      </div>
+    </main>
+
+    <script>
+      const stage = document.querySelector("[data-glass-signature]");
+      const canvas = stage?.querySelector("canvas");
+      const prefersReduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      if (canvas && !prefersReduced) {
+        const gl = canvas.getContext("webgl", { antialias: true, alpha: false });
+        if (!gl) {
+          stage?.classList.add("no-webgl");
+        } else {
+          const vertexSource = `
+            attribute vec2 a_position;
+            varying vec2 v_uv;
+
+            void main() {
+              v_uv = a_position * 0.5 + 0.5;
+              gl_Position = vec4(a_position, 0.0, 1.0);
+            }
+          `;
+
+          const fragmentSource = `
+            precision highp float;
+
+            varying vec2 v_uv;
+            uniform sampler2D u_mask;
+            uniform vec2 u_resolution;
+            uniform vec2 u_pointer;
+            uniform float u_time;
+            uniform float u_draw;
+
+            vec2 signatureUv(vec2 uv) {
+              float stageAspect = u_resolution.x / u_resolution.y;
+              float maskAspect = 850.021 / 333.5;
+              vec2 size = stageAspect > maskAspect
+                ? vec2(maskAspect / stageAspect, 1.0)
+                : vec2(1.0, stageAspect / maskAspect);
+              return (uv - (1.0 - size) * 0.5) / size;
+            }
+
+            float signatureMask(vec2 uv) {
+              vec2 sampleUv = signatureUv(uv);
+              if (
+                sampleUv.x < 0.0 ||
+                sampleUv.x > 1.0 ||
+                sampleUv.y < 0.0 ||
+                sampleUv.y > 1.0
+              ) {
+                return 0.0;
+              }
+              float reveal = 1.0 - smoothstep(u_draw, u_draw + 0.075, sampleUv.x);
+              return texture2D(u_mask, vec2(sampleUv.x, 1.0 - sampleUv.y)).a * reveal;
+            }
+
+            float hash(vec2 p) {
+              return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+            }
+
+            float noise(vec2 p) {
+              vec2 i = floor(p);
+              vec2 f = fract(p);
+              vec2 u = f * f * (3.0 - 2.0 * f);
+              return mix(
+                mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+                mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+                u.y
+              );
+            }
+
+            vec3 field(vec2 uv) {
+              vec2 p = uv;
+              float t = u_time * 0.08;
+              float gridX = smoothstep(0.018, 0.0, abs(fract(p.x * 18.0) - 0.5));
+              float gridY = smoothstep(0.018, 0.0, abs(fract(p.y * 10.0) - 0.5));
+              float grid = max(gridX, gridY) * 0.18;
+              float wave = sin((p.x + p.y) * 9.0 + u_time * 0.9) * 0.5 + 0.5;
+              float mist = noise(p * 4.0 + vec2(t, -t));
+              float beam = smoothstep(0.6, 0.0, distance(p, u_pointer)) * 0.52;
+              vec3 base = vec3(0.035, 0.047, 0.075);
+              vec3 warm = vec3(0.9, 0.67, 0.28);
+              vec3 blue = vec3(0.22, 0.62, 0.84);
+              vec3 ink = mix(base, blue, 0.18 + wave * 0.22);
+              ink += warm * pow(max(0.0, 1.0 - distance(p, vec2(0.18 + sin(u_time * 0.12) * 0.04, 0.72))), 3.2) * 0.85;
+              ink += blue * beam;
+              ink += vec3(grid);
+              ink += mist * 0.035;
+              return ink;
+            }
+
+            void main() {
+              vec2 uv = v_uv;
+              float mask = signatureMask(uv);
+              float edge = mask * (1.0 - signatureMask(uv + vec2(0.004, 0.0)));
+              edge += mask * (1.0 - signatureMask(uv - vec2(0.004, 0.0)));
+
+              vec2 ripple = vec2(
+                sin((uv.y * 16.0) + u_time * 1.1),
+                cos((uv.x * 11.0) - u_time * 0.9)
+              ) * 0.0035;
+
+              vec2 refractOffset = (uv - u_pointer) * 0.035 * mask + ripple * mask;
+              vec2 chroma = normalize(refractOffset + vec2(0.0001)) * (0.006 + edge * 0.012);
+
+              float r = field(uv + refractOffset + chroma).r;
+              float g = field(uv + refractOffset).g;
+              float b = field(uv + refractOffset - chroma).b;
+              vec3 color = field(uv);
+              vec3 glass = vec3(r, g, b);
+
+              float highlight = pow(smoothstep(0.72, 0.0, abs((uv.x - uv.y) - (sin(u_time * 0.4) * 0.4))), 5.0);
+              glass += vec3(0.94, 0.88, 0.62) * highlight * mask * 0.22;
+              glass += vec3(0.95, 0.98, 1.0) * edge * 0.58;
+
+              color = mix(color, glass, mask * 0.9);
+              color += vec3(1.0, 0.24, 0.12) * edge * 0.22;
+              color += vec3(0.04, 0.6, 1.0) * edge * 0.24;
+              color = pow(color, vec3(0.92));
+
+              gl_FragColor = vec4(color, 1.0);
+            }
+          `;
+
+          const compileShader = (type, source) => {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+              throw new Error(gl.getShaderInfoLog(shader) || "Shader failed");
+            }
+            return shader;
+          };
+
+          const program = gl.createProgram();
+          gl.attachShader(program, compileShader(gl.VERTEX_SHADER, vertexSource));
+          gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, fragmentSource));
+          gl.linkProgram(program);
+          if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            throw new Error(gl.getProgramInfoLog(program) || "Program failed");
+          }
+
+          const buffer = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+            gl.STATIC_DRAW,
+          );
+
+          const image = new Image();
+          image.src = "/feichuan-signature-glass-mask.png";
+
+          const texture = gl.createTexture();
+          gl.bindTexture(gl.TEXTURE_2D, texture);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+          const position = gl.getAttribLocation(program, "a_position");
+          const uniforms = {
+            mask: gl.getUniformLocation(program, "u_mask"),
+            resolution: gl.getUniformLocation(program, "u_resolution"),
+            pointer: gl.getUniformLocation(program, "u_pointer"),
+            time: gl.getUniformLocation(program, "u_time"),
+            draw: gl.getUniformLocation(program, "u_draw"),
+          };
+
+          let pointerX = 0.68;
+          let pointerY = 0.42;
+          let targetX = pointerX;
+          let targetY = pointerY;
+
+          const resize = () => {
+            const dpr = Math.min(devicePixelRatio || 1, 2);
+            const width = Math.floor(innerWidth * dpr);
+            const height = Math.floor(innerHeight * dpr);
+            if (canvas.width !== width || canvas.height !== height) {
+              canvas.width = width;
+              canvas.height = height;
+              gl.viewport(0, 0, width, height);
+            }
+          };
+
+          addEventListener("resize", resize);
+          addEventListener("pointermove", (event) => {
+            targetX = event.clientX / innerWidth;
+            targetY = 1 - event.clientY / innerHeight;
+          });
+
+          const renderStart = performance.now();
+          const render = (now) => {
+            resize();
+            pointerX += (targetX - pointerX) * 0.06;
+            pointerY += (targetY - pointerY) * 0.06;
+            const draw = Math.min((now - renderStart) / 5600, 1);
+
+            gl.useProgram(program);
+            gl.enableVertexAttribArray(position);
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.uniform1i(uniforms.mask, 0);
+            gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
+            gl.uniform2f(uniforms.pointer, pointerX, pointerY);
+            gl.uniform1f(uniforms.time, now * 0.001);
+            gl.uniform1f(uniforms.draw, draw);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            requestAnimationFrame(render);
+          };
+
+          image.addEventListener("load", () => {
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            requestAnimationFrame(render);
+          });
+        }
+      }
+
+      const drawLayer = document.querySelector("[data-signature-draw]");
+      if (drawLayer && !prefersReduced) {
+        fetch("/feichuan-signature-glass-source.svg")
+          .then((response) => response.text())
+          .then((markup) => {
+            drawLayer.innerHTML = markup;
+            const svg = drawLayer.querySelector("svg");
+            svg?.removeAttribute("id");
+            svg?.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+            const paths = [...drawLayer.querySelectorAll("path")];
+            paths.forEach((path, index) => {
+              const length = path.getTotalLength();
+              path.style.strokeDasharray = `${length}`;
+              path.style.strokeDashoffset = `${length}`;
+              path.animate(
+                [
+                  { strokeDashoffset: length, opacity: 0 },
+                  { strokeDashoffset: length, opacity: 1, offset: 0.08 },
+                  { strokeDashoffset: 0, opacity: 1 },
+                ],
+                {
+                  duration: 2200,
+                  delay: index * 360,
+                  easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+                  fill: "forwards",
+                },
+              );
+            });
+
+            window.setTimeout(() => {
+              drawLayer.style.opacity = "0.22";
+            }, 6400);
+          });
+      }
+    </script>
+  </body>
+</html>
