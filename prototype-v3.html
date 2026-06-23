@@ -53,19 +53,8 @@ body{background:var(--bg);color:var(--tx);
 #hero .staged>*{opacity:0;transform:translateY(24px)}
 #hero .staged .name{font-size:clamp(52px,9vw,96px);font-weight:700;letter-spacing:-.04em;line-height:1}
 #hero .staged .intro{font-size:clamp(14px,1.8vw,18px);color:var(--tx2);margin-top:16px;max-width:420px}
-#hero .staged .tags{display:flex;gap:16px;margin-top:24px;flex-wrap:wrap;position:relative;perspective:800px}
-.badge-3d{display:inline-block;width:52px;height:52px;position:relative;transform-style:preserve-3d;transition:transform .1s linear}
-.badge-3d .face{position:absolute;width:100%;height:100%;display:flex;align-items:center;justify-content:center;
-  border-radius:12px;backface-visibility:hidden}
-.badge-3d .front{background:var(--bg2);border:1px solid var(--line);transform:translateZ(8px)}
-.badge-3d .back{background:var(--ui);border:1px solid var(--line);transform:rotateY(180deg) translateZ(8px)}
-.badge-3d .edge{position:absolute;background:var(--line);border-radius:2px}
-.badge-3d .edge-t{width:100%;height:16px;top:-8px;left:0;transform:rotateX(90deg) translateZ(8px);border-radius:12px 12px 0 0}
-.badge-3d .edge-b{width:100%;height:16px;bottom:-8px;left:0;transform:rotateX(-90deg) translateZ(8px);border-radius:0 0 12px 12px}
-.badge-3d .edge-l{width:16px;height:100%;left:-8px;top:0;transform:rotateY(-90deg) translateZ(8px);border-radius:12px 0 0 12px}
-.badge-3d .edge-r{width:16px;height:100%;right:-8px;top:0;transform:rotateY(90deg) translateZ(8px);border-radius:0 12px 12px 0}
-.badge-3d img{width:24px;height:24px}
-.badge-3d .label{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--tx3);white-space:nowrap}
+#hero .staged .tags{margin-top:24px;position:relative}
+#badgeCanvas{width:clamp(300px,50vw,520px);height:120px;display:block}
 /* bubbles */
 .bubbles{position:absolute;inset:0;pointer-events:none;z-index:1}
 .bubble{position:absolute;border-radius:50%;border:1px solid var(--line);opacity:0}
@@ -234,12 +223,7 @@ body{background:var(--bg);color:var(--tx);
       <span class="name" data-auto>扉川</span>
       <span class="intro" data-scroll>Creative Frontend · 交互设计<br>网站本身就是作品。</span>
       <div class="tags" data-scroll>
-        <div class="badge-3d" data-speed="0.8"><div class="face front"><img src="https://cdn.simpleicons.org/vuedotjs/4FC08D" alt="Vue"></div><div class="face back"><img src="https://cdn.simpleicons.org/vuedotjs/4FC08D" alt="Vue"></div><div class="edge edge-l"></div><div class="edge edge-r"></div><span class="label">Vue</span></div>
-        <div class="badge-3d" data-speed="1.2"><div class="face front"><img src="https://cdn.simpleicons.org/react/61DAFB" alt="React"></div><div class="face back"><img src="https://cdn.simpleicons.org/react/61DAFB" alt="React"></div><div class="edge edge-l"></div><div class="edge edge-r"></div><span class="label">React</span></div>
-        <div class="badge-3d" data-speed="0.6"><div class="face front"><img src="https://cdn.simpleicons.org/greensock/88CE02" alt="GSAP"></div><div class="face back"><img src="https://cdn.simpleicons.org/greensock/88CE02" alt="GSAP"></div><div class="edge edge-l"></div><div class="edge edge-r"></div><span class="label">GSAP</span></div>
-        <div class="badge-3d" data-speed="1.0"><div class="face front"><img src="https://cdn.simpleicons.org/threedotjs/FFFFFF" alt="WebGL"></div><div class="face back"><img src="https://cdn.simpleicons.org/threedotjs/FFFFFF" alt="WebGL"></div><div class="edge edge-l"></div><div class="edge edge-r"></div><span class="label">WebGL</span></div>
-        <div class="badge-3d" data-speed="0.9"><div class="face front"><img src="https://cdn.simpleicons.org/anthropic/D4A27F" alt="Agent"></div><div class="face back"><img src="https://cdn.simpleicons.org/anthropic/D4A27F" alt="Agent"></div><div class="edge edge-l"></div><div class="edge edge-r"></div><span class="label">Agent UI</span></div>
-        <div class="badge-3d" data-speed="1.4"><div class="face front"><img src="https://cdn.simpleicons.org/tauri/FFC131" alt="Tauri"></div><div class="face back"><img src="https://cdn.simpleicons.org/tauri/FFC131" alt="Tauri"></div><div class="edge edge-l"></div><div class="edge edge-r"></div><span class="label">Tauri</span></div>
+        <canvas id="badgeCanvas"></canvas>
       </div>
     </div>
     <div class="scroll-hint" data-auto>scroll</div>
@@ -419,6 +403,87 @@ body{background:var(--bg);color:var(--tx);
 </footer>
 </div><!-- /#footer-wrap -->
 
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+(function(){
+const canvas=document.getElementById('badgeCanvas');
+if(!canvas)return;
+const W=canvas.clientWidth,H=canvas.clientHeight;
+canvas.width=W*devicePixelRatio;canvas.height=H*devicePixelRatio;
+
+const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+renderer.setSize(W,H);renderer.setPixelRatio(devicePixelRatio);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(40,W/H,0.1,100);
+camera.position.set(0,0,8);
+
+// lighting
+const ambient=new THREE.AmbientLight(0xffffff,0.4);scene.add(ambient);
+const dir=new THREE.DirectionalLight(0xffffff,1.2);dir.position.set(3,4,5);scene.add(dir);
+const rim=new THREE.DirectionalLight(0x4385BE,0.6);rim.position.set(-3,-2,3);scene.add(rim);
+
+// coin geometry — thick cylinder
+const geom=new THREE.CylinderGeometry(0.45,0.45,0.12,32);
+
+const icons=[
+  {url:'https://cdn.simpleicons.org/vuedotjs/4FC08D',color:0x4FC08D},
+  {url:'https://cdn.simpleicons.org/react/61DAFB',color:0x61DAFB},
+  {url:'https://cdn.simpleicons.org/greensock/88CE02',color:0x88CE02},
+  {url:'https://cdn.simpleicons.org/threedotjs/FFFFFF',color:0xFFFFFF},
+  {url:'https://cdn.simpleicons.org/anthropic/D4A27F',color:0xD4A27F},
+  {url:'https://cdn.simpleicons.org/tauri/FFC131',color:0xFFC131},
+];
+
+const coins=[];
+const loader=new THREE.TextureLoader();
+const spacing=1.3;
+const startX=-(icons.length-1)*spacing/2;
+
+icons.forEach((ic,i)=>{
+  const mat=new THREE.MeshStandardMaterial({color:0x282726,metalness:0.7,roughness:0.25});
+  const coin=new THREE.Mesh(geom,mat);
+  coin.rotation.x=Math.PI/2;
+  coin.position.x=startX+i*spacing;
+  coin.position.y=0;
+  scene.add(coin);
+  coins.push(coin);
+
+  // load logo as decal texture on top face
+  loader.load(ic.url,(tex)=>{
+    tex.colorSpace=THREE.SRGBColorSpace;
+    const decalGeom=new THREE.CircleGeometry(0.32,32);
+    const decalMat=new THREE.MeshBasicMaterial({map:tex,transparent:true});
+    const decal=new THREE.Mesh(decalGeom,decalMat);
+    decal.position.set(0,0.061,0);
+    decal.rotation.x=-Math.PI/2;
+    coin.add(decal);
+  },undefined,()=>{
+    // fallback: colored circle
+    const fallGeom=new THREE.CircleGeometry(0.32,32);
+    const fallMat=new THREE.MeshBasicMaterial({color:ic.color});
+    const fall=new THREE.Mesh(fallGeom,fallMat);
+    fall.position.set(0,0.061,0);fall.rotation.x=-Math.PI/2;
+    coin.add(fall);
+  });
+});
+
+window._badgeCoins=coins;
+
+// render loop
+let active=true;
+function render(){
+  if(!active)return;
+  renderer.render(scene,camera);
+  requestAnimationFrame(render);
+}
+render();
+const io=new IntersectionObserver(([e])=>{active=e.isIntersecting;if(active)render();},{threshold:0.1});
+io.observe(canvas);
+})();
+</script>
 <script>
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
@@ -522,11 +587,10 @@ function tick(){
   });
 
   // Hero 3D badges — full 360° rotation driven by scroll
-  document.querySelectorAll('#hero .badge-3d').forEach(badge=>{
-    const speed=parseFloat(badge.dataset.speed)||1;
-    const rotY=scrollY*speed%360;
-    const rotX=Math.sin(scrollY*0.003*speed)*15;
-    badge.style.transform=`rotateY(${rotY}deg) rotateX(${rotX}deg)`;
+  if(window._badgeCoins)window._badgeCoins.forEach((c,i)=>{
+    const speed=[0.8,1.2,0.6,1.0,0.9,1.4][i];
+    c.rotation.y=scrollY*0.005*speed;
+    c.rotation.x=Math.sin(scrollY*0.003*speed)*0.3;
   });
 
   // §1 Text animations — each section driven by its own scroll progress
