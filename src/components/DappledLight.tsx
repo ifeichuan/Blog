@@ -1,5 +1,5 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
+import { forwardRef, useImperativeHandle, useRef } from 'react'
 import * as THREE from 'three'
 
 const vertexShader = `
@@ -13,6 +13,10 @@ void main() {
 const fragmentShader = `
 uniform float u_time;
 uniform vec2 u_resolution;
+uniform vec3 u_ground1;
+uniform vec3 u_ground2;
+uniform vec3 u_shade;
+uniform vec3 u_sun;
 varying vec2 vUv;
 
 float hash(vec2 p) {
@@ -64,24 +68,72 @@ void main() {
   float caustic = fbm(p * 13.0 + vec2(t * 0.09, -t * 0.04));
   sunPatches *= mix(0.86, 1.16, caustic) * vignette;
 
-  vec3 ground = mix(vec3(0.67, 0.55, 0.35), vec3(0.86, 0.78, 0.58), uv.y);
-  vec3 shade = vec3(0.30, 0.36, 0.22);
-  vec3 sun = vec3(1.0, 0.86, 0.50);
-
-  vec3 color = mix(ground * shade, ground, 0.56);
-  color = mix(color, sun, clamp(sunPatches, 0.0, 1.0));
-  color += vec3(1.0, 0.65, 0.22) * sunPatches * 0.22;
+  vec3 ground = mix(u_ground1, u_ground2, uv.y);
+  vec3 color = mix(ground * u_shade, ground, 0.56);
+  color = mix(color, u_sun, clamp(sunPatches, 0.0, 1.0));
+  color += u_sun * sunPatches * 0.22;
   gl_FragColor = vec4(color, 1.0);
 }
 `
 
-function DappledPlane() {
+export type ColorScheme = {
+  ground1: [number, number, number]
+  ground2: [number, number, number]
+  shade: [number, number, number]
+  sun: [number, number, number]
+}
+
+export const COLOR_SCHEMES: Record<string, ColorScheme> = {
+  forest: {
+    ground1: [0.67, 0.55, 0.35],
+    ground2: [0.86, 0.78, 0.58],
+    shade: [0.30, 0.36, 0.22],
+    sun: [1.0, 0.86, 0.50],
+  },
+  dawn: {
+    ground1: [0.72, 0.55, 0.50],
+    ground2: [0.92, 0.75, 0.65],
+    shade: [0.35, 0.25, 0.30],
+    sun: [1.0, 0.72, 0.55],
+  },
+  ocean: {
+    ground1: [0.35, 0.52, 0.58],
+    ground2: [0.60, 0.76, 0.82],
+    shade: [0.18, 0.28, 0.35],
+    sun: [0.85, 0.95, 1.0],
+  },
+  lavender: {
+    ground1: [0.58, 0.48, 0.62],
+    ground2: [0.80, 0.72, 0.85],
+    shade: [0.28, 0.22, 0.35],
+    sun: [0.95, 0.85, 1.0],
+  },
+  mono: {
+    ground1: [0.88, 0.87, 0.85],
+    ground2: [0.96, 0.95, 0.93],
+    shade: [0.40, 0.40, 0.40],
+    sun: [1.0, 1.0, 0.98],
+  },
+  sky: {
+    ground1: [0.55, 0.72, 0.88],
+    ground2: [0.78, 0.88, 0.96],
+    shade: [0.32, 0.45, 0.62],
+    sun: [1.0, 0.98, 0.92],
+  },
+}
+
+type DappledPlaneProps = { scheme: ColorScheme }
+
+function DappledPlane({ scheme }: DappledPlaneProps) {
   const matRef = useRef<THREE.ShaderMaterial>(null)
 
   useFrame((state) => {
-    if (matRef.current) {
-      matRef.current.uniforms.u_time.value = state.clock.elapsedTime
-    }
+    if (!matRef.current) return
+    matRef.current.uniforms.u_time.value = state.clock.elapsedTime
+    matRef.current.uniforms.u_ground1.value.set(...scheme.ground1)
+    matRef.current.uniforms.u_ground2.value.set(...scheme.ground2)
+    matRef.current.uniforms.u_shade.value.set(...scheme.shade)
+    matRef.current.uniforms.u_sun.value.set(...scheme.sun)
   })
 
   return (
@@ -94,13 +146,19 @@ function DappledPlane() {
         uniforms={{
           u_time: { value: 0 },
           u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+          u_ground1: { value: new THREE.Vector3(...scheme.ground1) },
+          u_ground2: { value: new THREE.Vector3(...scheme.ground2) },
+          u_shade: { value: new THREE.Vector3(...scheme.shade) },
+          u_sun: { value: new THREE.Vector3(...scheme.sun) },
         }}
       />
     </mesh>
   )
 }
 
-export function DappledLight() {
+type DappledLightProps = { scheme?: ColorScheme }
+
+export function DappledLight({ scheme = COLOR_SCHEMES.forest }: DappledLightProps) {
   return (
     <div className="dappled-bg">
       <Canvas
@@ -108,7 +166,7 @@ export function DappledLight() {
         camera={{ position: [0, 0, 1] }}
         style={{ width: '100%', height: '100%' }}
       >
-        <DappledPlane />
+        <DappledPlane scheme={scheme} />
       </Canvas>
     </div>
   )

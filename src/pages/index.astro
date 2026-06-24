@@ -1,7 +1,6 @@
 ---
 import "@/styles/tailwind.css";
-import { DappledLight } from "@/components/DappledLight";
-import { HeroContent } from "@/components/HeroContent";
+import { HeroSection } from "@/components/HeroSection";
 ---
 
 <!doctype html>
@@ -12,19 +11,8 @@ import { HeroContent } from "@/components/HeroContent";
     <title>Feichuan</title>
   </head>
   <body>
-    <main class="relative min-h-screen flex items-center justify-center p-4">
-      <section
-        class="relative z-1 w-[99vw] h-[99vh] rounded-2xl overflow-hidden"
-      >
-        <div class="absolute inset-0 z-0">
-          <DappledLight client:only="react" />
-        </div>
-        <div
-          class="relative z-10 h-full flex items-center justify-center text-near-black"
-        >
-          <HeroContent client:only="react" />
-        </div>
-      </section>
+    <main class="relative min-h-screen flex items-center justify-center">
+      <HeroSection client:only="react" />
     </main>
   </body>
 </html>
