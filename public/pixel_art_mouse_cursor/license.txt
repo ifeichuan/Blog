@@ -1,0 +1,11 @@
+Model Information:
+* title:	Pixel Art (Mouse Cursor)
+* source:	https://sketchfab.com/3d-models/pixel-art-mouse-cursor-7cc4bad913b74b48b86d8d05e2785b9c
+* author:	Alex_F (https://sketchfab.com/Alex_F)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Pixel Art (Mouse Cursor)" (https://sketchfab.com/3d-models/pixel-art-mouse-cursor-7cc4bad913b74b48b86d8d05e2785b9c) by Alex_F (https://sketchfab.com/Alex_F) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
