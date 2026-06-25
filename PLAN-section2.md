@@ -83,6 +83,32 @@ Section 1 → Section 2 过渡 + Section 2 内容区。涉及 5 个独立效果�
 
 ---
 
+### 6. 素材：Shockwave 涟漪过渡（参考）
+
+**参考**：
+- https://www.reacticx.com/docs/components/shockwave（React Native / Expo / Skia 实现，卡片切换的水波扩散转场）
+- `@react-three/postprocessing` 内建 `ShockWave` 效果（WebGL 后处理涟漪，可用于 3D 场景）
+
+**用途**：
+- 水波涟漪扩散的卡片/页面转场效果
+- 已在项目引入 `@react-three/postprocessing`，场景中可直接挂载 3D 版 ShockWave
+
+---
+
+### 7. Section 2 素材：Fluid Glass（玻璃质感参考）
+
+**参考**：
+- https://www.reactbits.dev/components/fluid-glass
+
+**用途**：
+- 作为 Section 2 头像/简介卡片的玻璃折射、色差、lens/bar/cube 交互参考
+- 先借鉴视觉语言，不直接引入依赖；原组件依赖 `three`、`@react-three/fiber`、`@react-three/drei`、`maath`
+
+**落地建议**：
+- lazy：优先复用现有 SVG/CSS 玻璃滤镜，只有需要真实 3D 折射时再引入 R3F 版本
+
+---
+
 ## 执行顺序
 
 | Step | 模块 | 依赖 |

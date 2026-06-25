@@ -1,5 +1,5 @@
-import { Canvas, useFrame } from '@react-three/fiber'
-import { forwardRef, useImperativeHandle, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
 import * as THREE from 'three'
 
 const vertexShader = `
@@ -124,7 +124,7 @@ export const COLOR_SCHEMES: Record<string, ColorScheme> = {
 
 type DappledPlaneProps = { scheme: ColorScheme }
 
-function DappledPlane({ scheme }: DappledPlaneProps) {
+export function DappledPlane({ scheme }: DappledPlaneProps) {
   const matRef = useRef<THREE.ShaderMaterial>(null)
 
   useFrame((state) => {
@@ -137,10 +137,11 @@ function DappledPlane({ scheme }: DappledPlaneProps) {
   })
 
   return (
-    <mesh>
+    <mesh renderOrder={-1}>
       <planeGeometry args={[2, 2]} />
       <shaderMaterial
         ref={matRef}
+        depthWrite={false}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
         uniforms={{
@@ -156,18 +157,4 @@ function DappledPlane({ scheme }: DappledPlaneProps) {
   )
 }
 
-type DappledLightProps = { scheme?: ColorScheme }
 
-export function DappledLight({ scheme = COLOR_SCHEMES.forest }: DappledLightProps) {
-  return (
-    <div className="dappled-bg">
-      <Canvas
-        gl={{ antialias: true, alpha: false }}
-        camera={{ position: [0, 0, 1] }}
-        style={{ width: '100%', height: '100%' }}
-      >
-        <DappledPlane scheme={scheme} />
-      </Canvas>
-    </div>
-  )
-}
