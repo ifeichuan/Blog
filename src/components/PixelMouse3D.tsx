@@ -7,6 +7,70 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 
 const baseRotZ = 0.785
+const stickerUrls = [
+  '/logo-stickers/chatgpt.svg',
+  '/logo-stickers/css.svg',
+  '/logo-stickers/javascript.svg',
+  '/logo-stickers/react.svg',
+  '/logo-stickers/tailwind.svg',
+  '/logo-stickers/vue.svg',
+]
+const mouseBeforeLogoDelay = 0.75
+const logoInDuration = 0.5
+const logoGap = 0.15
+const STICKER_SIZE = 128
+
+// SVG 多无 width/height，TextureLoader 用 <img> 加载拿不到尺寸会得到空纹理；
+// 这里 fetch 文本后补尺寸、转 blob 再 drawImage 栅格化到 canvas，保证内容能渲染。
+function svgToStickerTexture(url: string): Promise<THREE.CanvasTexture> {
+  return fetch(url)
+    .then((r) => r.text())
+    .then((svg) => {
+      const sized = /<svg[^>]*\swidth=/.test(svg) ? svg : svg.replace(/<svg/, `<svg width="${STICKER_SIZE}" height="${STICKER_SIZE}"`)
+      const blob = new Blob([sized], { type: 'image/svg+xml;charset=utf-8' })
+      const blobUrl = URL.createObjectURL(blob)
+      return new Promise<THREE.CanvasTexture>((resolve, reject) => {
+        const img = new Image()
+        img.onload = () => {
+          const cv = document.createElement('canvas')
+          cv.width = cv.height = STICKER_SIZE
+          const ctx = cv.getContext('2d')!
+          ctx.drawImage(img, 0, 0, STICKER_SIZE, STICKER_SIZE)
+          URL.revokeObjectURL(blobUrl)
+          const tex = new THREE.CanvasTexture(cv)
+          tex.colorSpace = THREE.SRGBColorSpace
+          resolve(tex)
+        }
+        img.onerror = (e) => { URL.revokeObjectURL(blobUrl); reject(e) }
+        img.src = blobUrl
+      })
+    })
+}
+
+// 原 claude 贴纸：白边 + 橙色填充，保持原观感
+function claudeStickerTexture(): Promise<THREE.CanvasTexture> {
+  return fetch('/claudecode-color.svg')
+    .then((r) => r.text())
+    .then((svg) => {
+      const d = new DOMParser().parseFromString(svg, 'image/svg+xml').querySelector('path')?.getAttribute('d') || ''
+      const cv = document.createElement('canvas')
+      cv.width = cv.height = STICKER_SIZE
+      const ctx = cv.getContext('2d')!
+      ctx.save()
+      ctx.scale(STICKER_SIZE / 24, STICKER_SIZE / 24)
+      ctx.lineJoin = 'round'
+      ctx.lineWidth = 1.0
+      ctx.strokeStyle = '#ffffff'
+      const p = new Path2D(d)
+      ctx.stroke(p)
+      ctx.fillStyle = '#D97757'
+      ctx.fill(p, 'evenodd')
+      ctx.restore()
+      const tex = new THREE.CanvasTexture(cv)
+      tex.colorSpace = THREE.SRGBColorSpace
+      return tex
+    })
+}
 
 function bendGeo(geo: THREE.PlaneGeometry) {
   const pos = geo.attributes.position as THREE.BufferAttribute
@@ -36,7 +100,7 @@ export function PixelMouseScene({ play }: { play: boolean }) {
   const reduceRef = useRef(reduce)
   const playRef = useRef(play)
   const logoTlRef = useRef<gsap.core.Timeline | null>(null)
-  const enterTlRef = useRef<gsap.core.Timeline | null>(null)
+  const logoTimerRef = useRef<number | null>(null)
 
   useEffect(() => { reduceRef.current = reduce }, [reduce])
 
@@ -46,17 +110,16 @@ export function PixelMouseScene({ play }: { play: boolean }) {
     const entry = entryRef.current
     if (!entry) return
     entry.visible = true
-    logoTlRef.current?.play()
-    enterTlRef.current?.kill()
-    if (reduceRef.current) {
-      entry.scale.set(1, 1, 1)
-      entry.position.y = baseY.current
-    } else {
-      entry.scale.set(0, 0, 0)
-      enterTlRef.current = gsap.timeline()
-      enterTlRef.current.to(entry.scale, { x: 1, y: 1, z: 1, duration: 0.6, ease: 'back.out(1.6)' }, 0)
-      enterTlRef.current.fromTo(entry.position, { y: baseY.current + 1.5 }, { y: baseY.current, duration: 0.6, ease: 'power2.out' }, 0)
+    if (logoTimerRef.current) window.clearTimeout(logoTimerRef.current)
+    logoTlRef.current?.pause(0)
+    if (!reduceRef.current) {
+      logoTimerRef.current = window.setTimeout(() => {
+        logoTimerRef.current = null
+        logoTlRef.current?.play()
+      }, mouseBeforeLogoDelay * 1000)
     }
+    entry.scale.set(1, 1, 1)
+    entry.position.y = baseY.current
   }, [play])
 
   useEffect(() => {
@@ -65,7 +128,7 @@ export function PixelMouseScene({ play }: { play: boolean }) {
     const entry = entryRef.current
     if (!wrapper || !entry) return
     entry.visible = false
-    entry.scale.set(0, 0, 0)
+    entry.scale.set(1, 1, 1)
 
     const pmrem = new THREE.PMREMGenerator(gl)
     scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
@@ -111,35 +174,30 @@ export function PixelMouseScene({ play }: { play: boolean }) {
     )
 
     const logos: THREE.Mesh[] = []
-    let logoMat: THREE.MeshBasicMaterial | null = null
-    fetch('/claudecode-color.svg')
-      .then((r) => r.text())
-      .then((svg) => {
-        const d = new DOMParser().parseFromString(svg, 'image/svg+xml').querySelector('path')?.getAttribute('d') || ''
-        const SZ = 128
-        const cv = document.createElement('canvas')
-        cv.width = cv.height = SZ
-        const ctx = cv.getContext('2d')!
-        ctx.save()
-        ctx.scale(SZ / 24, SZ / 24)
-        ctx.lineJoin = 'round'
-        ctx.lineWidth = 1.0
-        ctx.strokeStyle = '#ffffff'
-        const p = new Path2D(d)
-        ctx.stroke(p)
-        ctx.fillStyle = '#D97757'
-        ctx.fill(p, 'evenodd')
-        ctx.restore()
-        const logoTex = new THREE.CanvasTexture(cv)
-        logoTex.colorSpace = THREE.SRGBColorSpace
-        logoMat = new THREE.MeshBasicMaterial({ map: logoTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })
-        logoMat.toneMapped = false
+    const logoMats: THREE.MeshBasicMaterial[] = []
+    const logoTextures: THREE.Texture[] = []
+    const texturePromises: Promise<THREE.CanvasTexture>[] = [
+      claudeStickerTexture(),
+      ...stickerUrls.map((url) => svgToStickerTexture(url)),
+    ]
+    Promise.allSettled(texturePromises)
+      .then((results) => {
+        const textures: THREE.CanvasTexture[] = []
+        for (const r of results) {
+          if (r.status === 'fulfilled' && r.value) textures.push(r.value)
+        }
+        if (!textures.length) return
         const tl = gsap.timeline({ paused: true })
-        const LOGO_COUNT = 8
-        for (let i = 0; i < LOGO_COUNT; i++) {
+        for (const texture of textures) {
+          logoTextures.push(texture)
+          const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide, depthWrite: false })
+          mat.toneMapped = false
+          logoMats.push(mat)
+        }
+        for (let i = 0; i < textures.length; i++) {
           const geo = new THREE.PlaneGeometry(1, 1, 5, 5)
           bendGeo(geo)
-          const m = new THREE.Mesh(geo, logoMat)
+          const m = new THREE.Mesh(geo, logoMats[i])
           const target = 0.4 + Math.random() * 0.6
           m.scale.set(0, 0, 1)
           m.position.set((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 4)
@@ -159,26 +217,29 @@ export function PixelMouseScene({ play }: { play: boolean }) {
           if (reduceRef.current) {
             m.scale.set(target, target, 1)
           } else {
-            tl.to(m.scale, { x: target, y: target, duration: 0.5, ease: 'back.out(1.6)' }, i * 0.06)
+            tl.to(m.scale, { x: target, y: target, duration: logoInDuration, ease: 'back.out(1.6)' }, i * (logoInDuration + logoGap))
           }
         }
         logosRef.current = logos
         if (!reduceRef.current) {
           logoTlRef.current = tl
-          if (playRef.current) tl.play()
+          if (playRef.current && !logoTimerRef.current) {
+            logoTimerRef.current = window.setTimeout(() => {
+              logoTimerRef.current = null
+              tl.play()
+            }, mouseBeforeLogoDelay * 1000)
+          }
         }
       })
-      .catch((e) => console.error('[PixelMouseScene] svg load failed', e))
+      .catch((e) => console.error('[PixelMouseScene] sticker load failed', e))
 
     return () => {
       window.removeEventListener('mousemove', onMove)
+      if (logoTimerRef.current) window.clearTimeout(logoTimerRef.current)
       logoTlRef.current?.kill()
-      enterTlRef.current?.kill()
       logosRef.current.forEach((m) => (m.geometry as THREE.BufferGeometry).dispose())
-      if (logoMat) {
-        logoMat.map?.dispose()
-        logoMat.dispose()
-      }
+      logoMats.forEach((mat) => mat.dispose())
+      logoTextures.forEach((texture) => texture.dispose())
       scene.environment = null
       pmrem.dispose()
     }
