@@ -190,7 +190,7 @@ export function PixelMouseScene({ play }: { play: boolean }) {
         const tl = gsap.timeline({ paused: true })
         for (const texture of textures) {
           logoTextures.push(texture)
-          const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide, depthWrite: false })
+          const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.FrontSide, depthWrite: false })
           mat.toneMapped = false
           logoMats.push(mat)
         }

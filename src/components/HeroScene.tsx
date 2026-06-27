@@ -1,17 +1,30 @@
-import { Canvas } from '@react-three/fiber'
+import { useEffect } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
 import { DappledPlane, type ColorScheme } from './DappledLight'
 import { PixelMouseScene } from './PixelMouse3D'
 
 const camera = { fov: 32, position: [0, 0, 10] as [number, number, number], near: 0.1, far: 100 }
 
+// frameloop="demand" 下，仅按设定 fps 周期性 invalidate 触发重渲染，把 144Hz 降到目标帧率
+function FrameLimiter({ fps }: { fps: number }) {
+  const invalidate = useThree((s) => s.invalidate)
+  useEffect(() => {
+    const id = setInterval(() => invalidate(), 1000 / fps)
+    return () => clearInterval(id)
+  }, [fps, invalidate])
+  return null
+}
+
 export function HeroScene({ scheme }: { scheme: ColorScheme }) {
   return (
     <Canvas
+      frameloop="demand"
       gl={{ antialias: true, alpha: false }}
       dpr={[1, 2]}
       camera={camera}
       style={{ width: '100%', height: '100%' }}
     >
+      <FrameLimiter fps={30} />
       <DappledPlane scheme={scheme} />
     </Canvas>
   )
@@ -20,11 +33,13 @@ export function HeroScene({ scheme }: { scheme: ColorScheme }) {
 export function HeroMouseLayer({ play }: { play: boolean }) {
   return (
     <Canvas
+      frameloop="demand"
       gl={{ antialias: true, alpha: true }}
       dpr={[1, 2]}
       camera={camera}
       style={{ width: '100%', height: '100%' }}
     >
+      <FrameLimiter fps={60} />
       <ambientLight intensity={0.75} />
       <directionalLight position={[2, 4, 3]} intensity={0.4} />
       <PixelMouseScene play={play} />
