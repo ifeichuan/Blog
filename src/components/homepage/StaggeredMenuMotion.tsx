@@ -171,18 +171,24 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
               <span className="sm-toggle-line">Close</span>
             </motion.span>
           </span>
-          <span className="sm-icon" aria-hidden="true">
+          <span className="sm-icon" aria-hidden="true" style={{ height: 14, width: 14, position: 'relative' }}>
             <motion.span
               className="sm-icon-line"
-              style={{ transform: 'translate(-50%, calc(-50% - 3px))' }}
-              animate={{ rotate: open ? 45 : 0, y: open ? 0 : -3 }}
-              transition={{ duration: open ? 0.8 : 0.35, ease: easeOut }}
+              style={{ transform: 'translate(-50%, calc(-50% - 4px))' }}
+              animate={{ rotate: open ? 405 : 0, y: open ? 0 : -4 }}
+              transition={{ duration: open ? 1 : 0.4, ease: easeOut }}
             />
             <motion.span
               className="sm-icon-line"
-              style={{ transform: 'translate(-50%, calc(-50% + 3px))' }}
-              animate={{ rotate: open ? -45 : 0, y: open ? 0 : 3 }}
-              transition={{ duration: open ? 0.8 : 0.35, ease: easeOut }}
+              style={{ transform: 'translate(-50%, -50%)' }}
+              animate={{ opacity: open ? 0 : 1, scaleX: open ? 0 : 1 }}
+              transition={{ duration: 0.2 }}
+            />
+            <motion.span
+              className="sm-icon-line"
+              style={{ transform: 'translate(-50%, calc(-50% + 4px))' }}
+              animate={{ rotate: open ? -405 : 0, y: open ? 0 : 4 }}
+              transition={{ duration: open ? 1 : 0.4, ease: easeOut }}
             />
           </span>
         </button>
