@@ -1,5 +1,6 @@
 import { StaggeredMenu } from './homepage/StaggeredMenu'
 import { HeroSection } from './HeroSection'
+import { FpsMeter } from './FpsMeter'
 
 const menuItems = [
   { label: 'Posts', link: '/blogs', ariaLabel: 'Go to Posts' },
@@ -29,6 +30,7 @@ export function IndexPage() {
       <main className="relative min-h-screen flex items-center justify-center">
         <HeroSection />
       </main>
+      <FpsMeter />
     </>
   )
 }
