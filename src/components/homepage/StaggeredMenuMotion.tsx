@@ -171,15 +171,20 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
               <span className="sm-toggle-line">Close</span>
             </motion.span>
           </span>
-          <motion.span
-            className="sm-icon"
-            aria-hidden="true"
-            animate={{ rotate: open ? 45 : 0 }}
-            transition={{ duration: open ? 0.8 : 0.35, ease: easeOut }}
-          >
-            <span className="sm-icon-line" style={{ transform: 'translate(-50%, calc(-50% - 3px))' }} />
-            <span className="sm-icon-line" style={{ transform: 'translate(-50%, calc(-50% + 3px))' }} />
-          </motion.span>
+          <span className="sm-icon" aria-hidden="true">
+            <motion.span
+              className="sm-icon-line"
+              style={{ transform: 'translate(-50%, calc(-50% - 3px))' }}
+              animate={{ rotate: open ? 45 : 0, y: open ? 0 : -3 }}
+              transition={{ duration: open ? 0.8 : 0.35, ease: easeOut }}
+            />
+            <motion.span
+              className="sm-icon-line"
+              style={{ transform: 'translate(-50%, calc(-50% + 3px))' }}
+              animate={{ rotate: open ? -45 : 0, y: open ? 0 : 3 }}
+              transition={{ duration: open ? 0.8 : 0.35, ease: easeOut }}
+            />
+          </span>
         </button>
       </header>
 
