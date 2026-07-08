@@ -2,15 +2,21 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import './StaggeredMenu.css'
 
+// GSAP power4.out ≈ cubic-bezier(0.25, 1, 0.5, 1)
+// GSAP power3.in  ≈ cubic-bezier(0.5, 0, 0.75, 0)
+// GSAP power4.out (items) same as above but longer duration
+const easeOut = [0.25, 1, 0.5, 1] as const
+const easeIn = [0.5, 0, 0.75, 0] as const
+
 const panelVariants = {
   closed: { x: '100%' },
   open: {
     x: 0,
-    transition: { type: 'spring' as const, stiffness: 300, damping: 30, mass: 0.8 }
+    transition: { duration: 0.65, ease: easeOut }
   },
   exit: {
     x: '100%',
-    transition: { duration: 0.28, ease: [0.4, 0, 1, 1] as const }
+    transition: { duration: 0.32, ease: easeIn }
   }
 }
 
@@ -18,11 +24,11 @@ const prelayerVariants = {
   closed: { x: '100%' },
   open: (i: number) => ({
     x: 0,
-    transition: { type: 'spring' as const, stiffness: 320, damping: 28, mass: 0.7, delay: i * 0.06 }
+    transition: { duration: 0.5, ease: easeOut, delay: i * 0.07 }
   }),
   exit: {
     x: '100%',
-    transition: { duration: 0.25, ease: [0.4, 0, 1, 1] as const }
+    transition: { duration: 0.32, ease: easeIn }
   }
 }
 
@@ -31,19 +37,19 @@ const itemVariants = {
   open: (i: number) => ({
     y: 0,
     rotate: 0,
-    transition: { type: 'spring' as const, stiffness: 200, damping: 20, mass: 0.6, delay: 0.15 + i * 0.08 }
+    transition: { duration: 1, ease: easeOut, delay: 0.15 + i * 0.1 }
   }),
-  exit: { y: '140%', rotate: 10, transition: { duration: 0.2 } }
+  exit: { y: '140%', rotate: 10, transition: { duration: 0.2, ease: easeIn } }
 }
 
 const socialVariants = {
-  closed: { y: 20, opacity: 0 },
+  closed: { y: 25, opacity: 0 },
   open: (i: number) => ({
     y: 0,
     opacity: 1,
-    transition: { type: 'spring' as const, stiffness: 200, damping: 20, delay: 0.3 + i * 0.06 }
+    transition: { duration: 0.55, ease: [0.33, 1, 0.68, 1] as const, delay: 0.3 + i * 0.08 }
   }),
-  exit: { y: 20, opacity: 0, transition: { duration: 0.15 } }
+  exit: { y: 25, opacity: 0, transition: { duration: 0.15, ease: easeIn } }
 }
 
 interface MenuItem {
@@ -153,7 +159,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
             <motion.span
               className="sm-toggle-textInner"
               animate={{ y: open ? '-50%' : '0%' }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              transition={{ duration: 0.5, ease: easeOut }}
             >
               <span className="sm-toggle-line">Menu</span>
               <span className="sm-toggle-line">Close</span>
@@ -163,7 +169,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
             className="sm-icon"
             aria-hidden="true"
             animate={{ rotate: open ? 225 : 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            transition={{ duration: open ? 0.8 : 0.35, ease: easeOut }}
           >
             <span className="sm-icon-line" />
             <span className="sm-icon-line sm-icon-line-v" />
