@@ -1,6 +1,7 @@
 ---
 import "@/styles/tailwind.css";
 import { HeroSection } from "@/components/HeroSection";
+import { StaggeredMenu } from "@/components/homepage/StaggeredMenu";
 ---
 
 <!doctype html>
@@ -11,6 +12,24 @@ import { HeroSection } from "@/components/HeroSection";
     <title>Feichuan</title>
   </head>
   <body>
+    <StaggeredMenu
+      client:only="react"
+      isFixed
+      position="right"
+      items={[
+        { label: 'Posts', link: '/blogs', ariaLabel: 'Go to Posts' },
+        { label: 'Labs', link: '/labs', ariaLabel: 'Go to Labs' },
+        { label: 'Resumes', link: '/resumes', ariaLabel: 'Go to Resumes' },
+      ]}
+      socialItems={[
+        { label: 'GitHub', link: 'https://github.com' },
+        { label: 'Email', link: 'mailto:hi@feichuan.dev' },
+      ]}
+      colors={['#DA702C', '#4385BE']}
+      accentColor="#DA702C"
+      menuButtonColor="#141413"
+      openMenuButtonColor="#141413"
+    />
     <main class="relative min-h-screen flex items-center justify-center">
       <HeroSection client:only="react" />
     </main>

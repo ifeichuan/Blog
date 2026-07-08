@@ -1,0 +1,92 @@
+---
+import Base from "@/layouts/Base.astro";
+---
+
+<Base enableIntro={false} title="Layered Parallax Clouds">
+  <main class="cloud-scroll-lab" data-cloud-scroll-lab>
+    <section class="cloud-shot" aria-label="Layered Parallax Clouds scroll demo">
+      <div class="sticky-frame">
+        <iframe
+          title="Layered Parallax Clouds"
+          src="/hyperframes/layered-parallax-clouds/index.html"
+          loading="eager"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </section>
+  </main>
+</Base>
+
+<script>
+  const shot = document.querySelector<HTMLElement>(".cloud-shot");
+  const frame = document.querySelector<HTMLIFrameElement>("iframe");
+
+  function clamp(value: number) {
+    return Math.max(0, Math.min(1, value));
+  }
+
+  function sendCloudProgress(progress: number) {
+    frame?.contentWindow?.postMessage(
+      { type: "cloud-scroll-progress", progress: clamp(progress) },
+      window.location.origin,
+    );
+  }
+
+  function updateCloudProgress(scroll = window.scrollY) {
+    if (!shot) return;
+    const travel = Math.max(1, shot.offsetHeight - window.innerHeight);
+    sendCloudProgress(scroll / travel);
+  }
+
+  frame?.addEventListener("load", () => updateCloudProgress());
+  window.addEventListener("lenis-scroll", (event) => {
+    updateCloudProgress((event as CustomEvent).detail?.scroll ?? window.scrollY);
+  });
+  window.addEventListener("scroll", () => updateCloudProgress(), { passive: true });
+  window.addEventListener("resize", () => updateCloudProgress());
+  requestAnimationFrame(() => updateCloudProgress());
+</script>
+
+<style>
+  .cloud-scroll-lab {
+    min-height: 330vh;
+  }
+
+  .cloud-shot {
+    min-height: 320vh;
+    position: relative;
+  }
+
+  .sticky-frame {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: 6.5rem 1.5rem 3rem;
+  }
+
+  .sticky-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% 50%, transparent 0 42%, rgba(3, 12, 20, 0.2) 100%);
+  }
+
+  iframe {
+    display: block;
+    width: min(1180px, calc((100vh - 10.5rem) * 16 / 9), 100%);
+    aspect-ratio: 16 / 9;
+    border: 1px solid rgba(236, 246, 248, 0.32);
+    background: #081b2b;
+    box-shadow: 0 28px 90px rgba(3, 13, 22, 0.28);
+  }
+
+  @media (max-width: 760px) {
+    .sticky-frame {
+      padding-inline: 1rem;
+    }
+  }
+</style>
