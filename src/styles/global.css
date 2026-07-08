@@ -15,7 +15,6 @@
 * {
   scroll-behavior: smooth;
   scrollbar-width: none;
-  cursor: none;
 }
 :root {
   -ms-text-autospace: normal;
@@ -23,7 +22,6 @@
   scrollbar-width: none;
   font-display: fallback;
   box-sizing: border-box !important;
-  cursor: none;
 
   --radius: 0.625rem;
   --background: oklch(1 0 0);
