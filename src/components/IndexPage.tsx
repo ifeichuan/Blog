@@ -1,4 +1,4 @@
-import { StaggeredMenu } from './homepage/StaggeredMenu'
+import { StaggeredMenu } from './homepage/StaggeredMenuMotion'
 import { HeroSection } from './HeroSection'
 import { FpsMeter } from './FpsMeter'
 
