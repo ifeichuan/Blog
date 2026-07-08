@@ -143,7 +143,6 @@
   pointer-events: auto;
   opacity: 0;
   border-radius: 1rem 0 0 1rem;
-  filter: url(#sm-distort);
 }
 
 [data-position='left'] .staggered-menu-panel {
