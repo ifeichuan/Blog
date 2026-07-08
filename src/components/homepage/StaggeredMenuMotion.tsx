@@ -4,21 +4,15 @@ import './StaggeredMenu.css'
 
 // GSAP power4.out ≈ cubic-bezier(0.25, 1, 0.5, 1)
 // GSAP power3.in  ≈ cubic-bezier(0.5, 0, 0.75, 0)
-// GSAP power4.out (items) same as above but longer duration
 const easeOut = [0.25, 1, 0.5, 1] as const
 const easeIn = [0.5, 0, 0.75, 0] as const
 
-const panelVariants = {
-  closed: { x: '100%' },
-  open: {
-    x: 0,
-    transition: { duration: 0.65, ease: easeOut }
-  },
-  exit: {
-    x: '100%',
-    transition: { duration: 0.32, ease: easeIn }
-  }
-}
+// Original GSAP timeline staging:
+// t=0.00        prelayer[0] starts
+// t=0.07        prelayer[1] starts
+// t=lastLayer+0.08  panel starts (≈0.15)
+// t=panelStart + 0.65*0.15  items start (≈0.25)
+// So panel needs delay relative to prelayers, items need delay relative to panel
 
 const prelayerVariants = {
   closed: { x: '100%' },
@@ -32,12 +26,24 @@ const prelayerVariants = {
   }
 }
 
+const panelVariants = {
+  closed: { x: '100%' },
+  open: {
+    x: 0,
+    transition: { duration: 0.65, ease: easeOut, delay: 0.15 }
+  },
+  exit: {
+    x: '100%',
+    transition: { duration: 0.32, ease: easeIn }
+  }
+}
+
 const itemVariants = {
   closed: { y: '140%', rotate: 10 },
   open: (i: number) => ({
     y: 0,
     rotate: 0,
-    transition: { duration: 1, ease: easeOut, delay: 0.15 + i * 0.1 }
+    transition: { duration: 1, ease: easeOut, delay: 0.25 + i * 0.1 }
   }),
   exit: { y: '140%', rotate: 10, transition: { duration: 0.2, ease: easeIn } }
 }
@@ -47,7 +53,7 @@ const socialVariants = {
   open: (i: number) => ({
     y: 0,
     opacity: 1,
-    transition: { duration: 0.55, ease: [0.33, 1, 0.68, 1] as const, delay: 0.3 + i * 0.08 }
+    transition: { duration: 0.55, ease: [0.33, 1, 0.68, 1] as const, delay: 0.45 + i * 0.08 }
   }),
   exit: { y: 25, opacity: 0, transition: { duration: 0.15, ease: easeIn } }
 }
