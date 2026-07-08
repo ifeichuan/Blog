@@ -25,6 +25,7 @@ export const StaggeredMenu = ({
   const panelRef = useRef(null);
   const preLayersRef = useRef(null);
   const preLayerElsRef = useRef([]);
+  const displaceRef = useRef(null);
   const plusHRef = useRef(null);
   const plusVRef = useRef(null);
   const iconRef = useRef(null);
@@ -119,6 +120,16 @@ export const StaggeredMenu = ({
       { xPercent: 0, duration: panelDuration, ease: 'power4.out' },
       panelInsertTime
     );
+
+    // Displacement stretch: panel edge warps outward then snaps back
+    const displace = displaceRef.current;
+    if (displace) {
+      const dmNode = displace.parentNode.querySelector('feDisplacementMap');
+      if (dmNode) {
+        gsap.set(dmNode, { attr: { scale: 35 } });
+        tl.to(dmNode, { attr: { scale: 0 }, duration: 0.8, ease: 'elastic.out(1, 0.4)' }, panelInsertTime);
+      }
+    }
 
     if (itemEls.length) {
       const itemsStartRatio = 0.15;
@@ -227,6 +238,12 @@ export const StaggeredMenu = ({
         const socialLinks = Array.from(panel.querySelectorAll('.sm-socials-link'));
         if (socialTitle) gsap.set(socialTitle, { opacity: 0 });
         if (socialLinks.length) gsap.set(socialLinks, { y: 25, opacity: 0 });
+        // Reset displacement filter
+        const displace = displaceRef.current;
+        if (displace) {
+          const dmNode = displace.parentNode.querySelector('feDisplacementMap');
+          if (dmNode) gsap.set(dmNode, { attr: { scale: 0 } });
+        }
         busyRef.current = false;
       }
     });
@@ -357,6 +374,14 @@ export const StaggeredMenu = ({
       data-position={position}
       data-open={open || undefined}
     >
+      <svg className="sm-distort-svg" aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0 }}>
+        <defs>
+          <filter id="sm-distort" x="-10%" y="0%" width="120%" height="100%">
+            <feTurbulence ref={displaceRef} type="fractalNoise" baseFrequency="0.015" numOctaves="3" seed="2" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+      </svg>
       <div ref={preLayersRef} className="sm-prelayers" aria-hidden="true">
         {(() => {
           const raw = colors && colors.length ? colors.slice(0, 4) : ['#1e1e22', '#35353c'];
