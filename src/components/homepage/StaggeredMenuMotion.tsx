@@ -178,7 +178,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
             transition={{ duration: open ? 0.8 : 0.35, ease: easeOut }}
           >
             <span className="sm-icon-line" />
-            <span className="sm-icon-line sm-icon-line-v" />
+            <span className="sm-icon-line sm-icon-line-v" style={{ transform: 'translate(-50%, -50%) rotate(90deg)' }} />
           </motion.span>
         </button>
       </header>
