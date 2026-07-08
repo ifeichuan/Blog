@@ -150,13 +150,6 @@
   left: 0;
 }
 
-.sm-gooey-svg {
-  position: absolute;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-}
-
 .sm-prelayers {
   position: absolute;
   top: 0;
@@ -168,7 +161,6 @@
   opacity: 0;
   border-radius: 1rem 0 0 1rem;
   overflow: hidden;
-  filter: url(#goo-prelayers);
 }
 
 [data-position='left'] .sm-prelayers {
