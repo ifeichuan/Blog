@@ -357,6 +357,15 @@ export const StaggeredMenu = ({
       data-position={position}
       data-open={open || undefined}
     >
+      <svg className="sm-gooey-svg" aria-hidden="true">
+        <defs>
+          <filter id="goo-prelayers">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+            <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+          </filter>
+        </defs>
+      </svg>
       <div ref={preLayersRef} className="sm-prelayers" aria-hidden="true">
         {(() => {
           const raw = colors && colors.length ? colors.slice(0, 4) : ['#1e1e22', '#35353c'];
