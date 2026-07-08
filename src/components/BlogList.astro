@@ -61,12 +61,12 @@ const viewsByPath = new Map(views.map((item) => [item.path, item]));
             {/* 根据 p 元素的内容动态修改h2位置 */}
             <h2
               transition:name="title"
-              class="title left-0 absolute bg-white/40 p-2 backdrop-blur-2xl w-full mix-blend-overlay text-3xl [text-shadow:0_0_5px_rgba(0,0,0,0.8)] font-extrabold "
+              class="title left-0 absolute bg-[#eae9e3] p-2 w-full text-3xl [text-shadow:0_0_5px_rgba(0,0,0,0.8)] font-extrabold "
             >
               {p.data.title}
             </h2>
             <p
-              class="description absolute left-0 bottom-0 w-full max-h-1/3 text-lg bg-white/60 backdrop-blur-2xl font-serif"
+              class="description absolute left-0 bottom-0 w-full max-h-1/3 text-lg bg-[#f0efe9] font-serif"
               class:list={!p.data.description ? "p-0" : "p-4.5"}
             >
               {p.data.description}

@@ -87,12 +87,11 @@ body {
 
 .smooth-content {
   background-color: #f5f4ed;
-  position: relative;
 }
 
-.smooth-content::after {
+.smooth-content::before {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: url("/noise-bg.png") repeat;
   opacity: 0.4;
