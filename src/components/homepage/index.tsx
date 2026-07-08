@@ -37,6 +37,7 @@ export function Homepage() {
         accentColor="#DA702C"
         menuButtonColor="#CECDC3"
         openMenuButtonColor="#CECDC3"
+        logoUrl="/feichuan-logo.svg"
       />
       <CustomCursor />
       <ClickSpark />
