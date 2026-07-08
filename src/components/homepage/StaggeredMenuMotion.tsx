@@ -161,36 +161,29 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
           type="button"
           style={{ color: open ? openMenuButtonColor : menuButtonColor }}
         >
-          <span className="sm-toggle-textWrap" aria-hidden="true">
-            <motion.span
-              className="sm-toggle-textInner"
-              animate={{ y: open ? '-50%' : '0%' }}
-              transition={{ duration: 0.5, ease: easeOut }}
-            >
-              <span className="sm-toggle-line">Menu</span>
-              <span className="sm-toggle-line">Close</span>
-            </motion.span>
-          </span>
-          <span className="sm-icon" aria-hidden="true" style={{ height: 14, width: 14, position: 'relative' }}>
-            <motion.span
-              className="sm-icon-line"
-              style={{ transform: 'translate(-50%, calc(-50% - 4px))' }}
-              animate={{ rotate: open ? 405 : 0, y: open ? 0 : -4 }}
+          <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+            <motion.line
+              x1="4" y1="8" x2="26" y2="8"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+              animate={{ rotate: open ? 405 : 0, y: open ? 7 : 0 }}
+              style={{ originX: '50%', originY: '50%', transformOrigin: '15px 8px' }}
               transition={{ duration: open ? 1 : 0.4, ease: easeOut }}
             />
-            <motion.span
-              className="sm-icon-line"
-              style={{ transform: 'translate(-50%, -50%)' }}
+            <motion.line
+              x1="4" y1="15" x2="26" y2="15"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round"
               animate={{ opacity: open ? 0 : 1, scaleX: open ? 0 : 1 }}
+              style={{ originX: '50%', originY: '50%', transformOrigin: '15px 15px' }}
               transition={{ duration: 0.2 }}
             />
-            <motion.span
-              className="sm-icon-line"
-              style={{ transform: 'translate(-50%, calc(-50% + 4px))' }}
-              animate={{ rotate: open ? -405 : 0, y: open ? 0 : 4 }}
+            <motion.line
+              x1="4" y1="22" x2="26" y2="22"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+              animate={{ rotate: open ? -405 : 0, y: open ? -7 : 0 }}
+              style={{ originX: '50%', originY: '50%', transformOrigin: '15px 22px' }}
               transition={{ duration: open ? 1 : 0.4, ease: easeOut }}
             />
-          </span>
+          </svg>
         </button>
       </header>
 
@@ -201,7 +194,12 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
               <motion.div
                 key={'prelayer-' + i}
                 className="sm-prelayers"
-                style={{ background: c, opacity: 1, zIndex: 5 + i }}
+                style={{
+                  background: `radial-gradient(ellipse at ${i === 0 ? '30% 40%' : '70% 60%'}, ${c}ee, ${c}), url('/noise-bg.png')`,
+                  backgroundBlendMode: 'overlay',
+                  opacity: 1,
+                  zIndex: 5 + i
+                }}
                 variants={prelayerVariants}
                 custom={i}
                 initial="closed"
@@ -275,6 +273,8 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                   </div>
                 )}
               </div>
+              {/* Mesh background at bottom with vertical fade */}
+              <div className="sm-panel-mesh" aria-hidden="true" />
             </motion.aside>
           </>
         )}

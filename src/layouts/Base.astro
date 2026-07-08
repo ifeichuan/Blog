@@ -18,7 +18,7 @@ export type Props = {
 const {
   title = "",
   description = SITE_DESCRIPTION,
-  banner = "/mesh.webp",
+  banner,
   enableIntro = false,
   ogType = "website",
 }: Props = Astro.props;
@@ -37,8 +37,7 @@ const {
 
     <div class:list={["smooth-wrapper", enableIntro && "slot"]}>
       <div
-        class=`background w-screen smooth-content bg-fixed bg-no-repeat bg-cover`
-        style={`background-image:url(${banner});`}
+        class="background w-screen smooth-content"
       >
         <slot />
         <Footer />

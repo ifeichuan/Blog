@@ -11,6 +11,15 @@ import { IndexPage } from "@/components/IndexPage";
     <title>Feichuan</title>
   </head>
   <body>
-    <IndexPage client:only="react" />
+    <main>
+      <IndexPage client:only="react" />
+    </main>
   </body>
 </html>
+
+<style is:global>
+  html, body {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+</style>

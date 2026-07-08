@@ -22,7 +22,7 @@
   left: 0;
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   padding: 2em;
   background: transparent;
@@ -42,7 +42,7 @@
 
 .sm-logo-img {
   display: block;
-  height: 32px;
+  height: 48px;
   width: auto;
   object-fit: contain;
 }
@@ -184,6 +184,22 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.sm-panel-mesh {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 45%;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 0 0 0 1rem;
+  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+  mask-image: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+  background: url('/src/assets/mesh-post.png') center bottom / cover no-repeat;
 }
 
 .sm-socials {

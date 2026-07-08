@@ -84,6 +84,23 @@ body {
   overflow: hidden;
   height: 100vh;
 }
+
+.smooth-content {
+  background-color: #f5f4ed;
+  position: relative;
+}
+
+.smooth-content::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/noise-bg.png") repeat;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: multiply;
+}
+
 /*
   ---break---
  */
