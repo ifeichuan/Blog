@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 3,
+  "source": {
+    "url": "https://farayan.me/dappled",
+    "canonicalUrl": "https://farayan.me/dappled",
+    "route": "/dappled",
+    "permissionBoundary": "public",
+    "allowedPermissionBoundaries": ["public", "user-authorized", "external-blocked"],
+    "viewport": { "width": 729, "height": 492, "dpr": 2 }
+  },
+  "targetSurfaces": ["surface-1"],
+  "runtime": {
+    "backend": "WebGL2",
+    "framework": "Three.js r180 + React Three Fiber",
+    "platform": "Next.js source page",
+    "owner": "main-thread"
+  },
+  "renderGraph": {
+    "passes": [
+      { "order": 1, "name": "directional shadow", "target": "8192x8192 depth texture", "drawsPerFrame": 193 },
+      { "order": 2, "name": "main scene", "target": "default framebuffer", "drawsPerFrame": 7 }
+    ],
+    "framebuffers": ["directionalLight.shadow.map", "default"],
+    "dependencies": ["L-System branch/leaf transforms -> shadow map -> white ground MeshStandardMaterial"]
+  },
+  "resources": [
+    {
+      "url": "https://farayan.me/dappled/leaves/leaf.png",
+      "localPath": "evidence/resources/leaf.png",
+      "dimensions": [536, 536],
+      "sha256": "9e920a3c71e2a1395a6888fb5a224116fd8e3cd8ea60d7103c154521b9b1fe77",
+      "truth": "SOURCE"
+    }
+  ],
+  "state": {
+    "gl": {
+      "context": "webgl2",
+      "alpha": true,
+      "antialias": true,
+      "premultipliedAlpha": true,
+      "powerPreference": "high-performance",
+      "shadowMapSize": [8192, 8192]
+    },
+    "webgpu": {},
+    "canvas2d": {}
+  },
+  "timeline": {
+    "timeOrigin": "React Three Fiber clock start",
+    "unit": "seconds",
+    "deltaRule": "absolute clock.elapsedTime",
+    "random": "unseeded Math.random at mount; every reload produces a new tree"
+  },
+  "inputs": {
+    "pointer": null,
+    "scroll": { "coupling": "DOM page only", "referenceScrollY": 147 },
+    "resize": { "canvas": "500x307 CSS max, DPR-scaled backing store" },
+    "route": "/dappled",
+    "wind": { "type": "radio", "values": { "XS": 1, "M": 10, "L": 20 }, "referenceState": "L" }
+  },
+  "output": {
+    "colorSpace": "sRGB",
+    "toneMapping": "ACESFilmicToneMapping",
+    "premultipliedAlpha": true,
+    "domComposite": "500x307 canvas with 2px radius on rgb(242,240,238) page background"
+  },
+  "pageBindings": ["Geist Mono typography", "Wind controls", "project title/date", "project description/dev notes"],
+  "routes": ["/dappled"],
+  "evidence": [
+    "scout-card.json",
+    "evidence/source/scene-facts.json",
+    "evidence/runtime/context.json",
+    "evidence/runtime/webgl-capture.json",
+    "evidence/resources/leaf.png",
+    "evidence/screenshots/source-target-scrolled.png"
+  ],
+  "truth": {
+    "leafFacts": [
+      { "fact": "scene constants and L-System settings", "truth": "SOURCE", "path": "evidence/source/scene-facts.json" },
+      { "fact": "leaf texture", "truth": "SOURCE", "path": "evidence/resources/leaf.png" },
+      { "fact": "active shader programs and light uniforms", "truth": "SOURCE", "path": "evidence/runtime/webgl-capture.json" }
+    ],
+    "wiringFacts": [
+      { "fact": "shadow pass precedes main ground pass", "truth": "SOURCE", "path": "evidence/runtime/webgl-capture.json" },
+      { "fact": "wind drives branch and leaf useFrame rotations", "truth": "SOURCE", "path": "evidence/source/scene-facts.json" },
+      { "fact": "reference screenshot uses scrollY 147 and wind L", "truth": "SOURCE", "path": "evidence/screenshots/source-target-scrolled.png" }
+    ],
+    "defaultLabel": "GUESS",
+    "allowedTruth": ["SOURCE", "PARTIAL", "GUESS"]
+  },
+  "unknowns": {
+    "blocking": [],
+    "important": ["Unseeded source RNG prevents deterministic pixel identity across reloads."],
+    "deferred": ["Optional deterministic seed for authoring is excluded from source replay."],
+    "external": []
+  },
+  "replay": {
+    "route": "SOURCE_REPLAY",
+    "allowedRoutes": ["SOURCE_REPLAY", "PIPELINE_REPLAY", "BEHAVIOR_REBUILD"],
+    "fidelityTier": "source-structure-high",
+    "fallbacks": []
+  },
+  "gateDecision": {
+    "replayReady": true,
+    "requiredEvidence": {
+      "targetSurfaces": [{ "status": "passed", "evidenceId": "ev-101", "path": "scout-card.json", "truth": "SOURCE", "notes": "Locked target surface-1." }],
+      "runtimeOwnerBackend": [{ "status": "passed", "evidenceId": "ev-102", "path": "evidence/runtime/context.json", "truth": "SOURCE", "notes": "Main-thread Three.js WebGL2." }],
+      "renderGraphOrFallback": [{ "status": "passed", "evidenceId": "ev-103", "path": "evidence/runtime/webgl-capture.json", "truth": "SOURCE", "notes": "Shadow and main passes captured." }],
+      "criticalResources": [{ "status": "passed", "evidenceId": "ev-104", "path": "evidence/resources/leaf.png", "truth": "SOURCE", "notes": "Exact public leaf alpha texture." }],
+      "timelineAndInputs": [{ "status": "passed", "evidenceId": "ev-105", "path": "evidence/source/scene-facts.json", "truth": "SOURCE", "notes": "Clock, RNG, and wind mappings recovered." }],
+      "outputComposite": [{ "status": "passed", "evidenceId": "ev-106", "path": "evidence/runtime/webgl-capture.json", "truth": "SOURCE", "notes": "ACES, sRGB, PCSS, DPR, and DOM composite recorded." }],
+      "truthLabels": [{ "status": "passed", "evidenceId": "ev-107", "path": "replay-manifest.json", "truth": "SOURCE", "notes": "Implementation facts are labeled." }],
+      "blockingUnknownsResolvedOrDowngraded": [{ "status": "passed", "evidenceId": "ev-108", "path": "replay-manifest.json", "truth": "SOURCE", "notes": "No blocking unknown remains." }]
+    },
+    "blockers": [],
+    "decidedAt": "2026-07-11T00:40:00+08:00"
+  }
+}

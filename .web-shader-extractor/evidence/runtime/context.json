@@ -1,0 +1,25 @@
+{
+  "canvas": {
+    "outerHTML": "<canvas style=\"display: block; width: 500px; height: 307px;\" data-engine=\"three.js r180\" width=\"1000\" height=\"614\"></canvas>",
+    "dataset": { "engine": "three.js r180" }
+  },
+  "context": {
+    "type": "webgl2",
+    "attributes": {
+      "alpha": true,
+      "depth": true,
+      "stencil": false,
+      "antialias": true,
+      "premultipliedAlpha": true,
+      "preserveDrawingBuffer": false,
+      "powerPreference": "high-performance",
+      "failIfMajorPerformanceCaveat": false
+    }
+  },
+  "owner": {
+    "thread": "main-thread",
+    "stackEntry": "_next/static/chunks/b536a0f1-05ee2c75df4a3b9d.js:197:19906",
+    "reactThreeFiberConfigure": "_next/static/chunks/147-dcbc1926b9fcea69.js:1:33720"
+  },
+  "truth": "SOURCE"
+}

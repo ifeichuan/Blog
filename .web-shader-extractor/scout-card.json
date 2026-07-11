@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 3,
+  "source": {
+    "url": "https://farayan.me/dappled",
+    "canonicalUrl": "https://farayan.me/dappled",
+    "route": "/dappled",
+    "viewport": { "width": 729, "height": 492, "dpr": 2 },
+    "browser": "HeadlessChrome/148.0.0.0 via agent-browser 0.27.0",
+    "backend": "webgl2",
+    "capturedAt": "2026-07-11T00:33:00+08:00"
+  },
+  "candidates": [
+    {
+      "id": "surface-1",
+      "selector": "canvas[data-engine='three.js r180']",
+      "frame": "main",
+      "context": "webgl2",
+      "owner": "main-thread",
+      "visualCoverage": "high",
+      "temporalActivity": "high",
+      "ablationImpact": "complete",
+      "evidence": ["evidence/scout/surface-1.json"]
+    }
+  ],
+  "lockStatus": "locked",
+  "allowedLockStatus": ["unlocked", "provisional", "attributed", "locked"],
+  "allowedTruth": ["SOURCE", "PARTIAL", "GUESS"],
+  "targetSet": ["surface-1"],
+  "alternatives": [
+    { "type": "iframe", "excluded": true, "reason": "No iframes exist on the route." },
+    { "type": "canvas2d", "excluded": true, "reason": "The target canvas owns an active WebGL2 context." },
+    { "type": "dom-layer", "excluded": true, "reason": "Canvas ablation removes the complete light field while controls remain." }
+  ],
+  "effectBoundary": "surface-plus-dom",
+  "frameworkHypotheses": [
+    { "name": "Three.js r180", "status": "confirmed", "truth": "SOURCE", "evidence": "evidence/runtime/context.json" },
+    { "name": "React Three Fiber", "status": "confirmed", "truth": "SOURCE", "evidence": "evidence/runtime/context.json" }
+  ],
+  "platformHypotheses": [],
+  "interactions": ["wind-radio: XS|M|L", "resize", "continuous-animation"],
+  "scopeRisk": "low",
+  "blockingUnknowns": [],
+  "nextProbe": {
+    "type": "preload",
+    "target": "surface-1",
+    "resolves": ["shader-source", "uniform-updates", "texture-state", "draw-state"]
+  },
+  "evidence": [
+    "evidence/screenshots/source-target-scrolled.png",
+    "evidence/screenshots/source-ablation-canvas-hidden.png",
+    "evidence/runtime/context.json",
+    "evidence/network/index.json"
+  ],
+  "gateDecision": {
+    "targetAttributed": true,
+    "targetLocked": true,
+    "requiredEvidence": {
+      "visualAttribution": [{ "status": "passed", "evidenceId": "ev-001", "path": "evidence/screenshots/source-ablation-canvas-hidden.png", "truth": "SOURCE", "notes": "Hiding surface-1 removes the full light field." }],
+      "targetSet": [{ "status": "passed", "evidenceId": "ev-002", "path": "evidence/scout/surface-1.json", "truth": "SOURCE", "notes": "Only one canvas exists and it covers the requested effect." }],
+      "contextAndOwner": [{ "status": "passed", "evidenceId": "ev-003", "path": "evidence/runtime/context.json", "truth": "SOURCE", "notes": "WebGL2 context created on the main thread." }],
+      "targetBoundSourceOrFramework": [{ "status": "passed", "evidenceId": "ev-004", "path": "evidence/runtime/context.json", "truth": "SOURCE", "notes": "Canvas data-engine and creation stack bind Three.js r180 and React Three Fiber to surface-1." }],
+      "effectBoundary": [{ "status": "passed", "evidenceId": "ev-005", "path": "evidence/screenshots/source-target-scrolled.png", "truth": "SOURCE", "notes": "Canvas effect plus DOM wind controls." }],
+      "primaryTraceRoute": [{ "status": "passed", "evidenceId": "ev-006", "path": "evidence/runtime/context-probe.js", "truth": "SOURCE", "notes": "Target-bound WebGL2 preload capture." }],
+      "alternativesExcluded": [{ "status": "passed", "evidenceId": "ev-007", "path": "evidence/scout/surface-1.json", "truth": "SOURCE", "notes": "No iframe, video, WebGPU, or Canvas2D alternative." }]
+    },
+    "blockers": [],
+    "decidedAt": "2026-07-11T00:33:00+08:00"
+  },
+  "truthNotes": {
+    "source": ["surface attribution", "WebGL2 backend", "main-thread owner", "Three.js r180", "React Three Fiber"],
+    "partial": ["wind-speed mapping", "active shader and draw state"],
+    "guess": []
+  }
+}

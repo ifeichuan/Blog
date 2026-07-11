@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 3,
+  "state": "RAW_REPLAY",
+  "gateStatus": {
+    "targetAttributed": true,
+    "targetLocked": true,
+    "replayReady": true,
+    "baselineVerified": false,
+    "projectVerified": false
+  },
+  "strategy": {
+    "primaryTraceRoute": "target-bound WebGL2 preload capture",
+    "replayRoute": "SOURCE_REPLAY",
+    "toolProfile": "navigate,runtime-eval,preload-script,network-metadata,network-body,canvas-screenshot,interaction,local-run,multi-frame-compare"
+  },
+  "attempts": [
+    { "strategy": "light-scout", "count": 1, "result": "target-attributed" },
+    { "strategy": "context-preload", "count": 1, "result": "target-locked" }
+  ],
+  "targetSet": ["surface-1"],
+  "unknowns": {
+    "blocking": [],
+    "important": ["Unseeded source RNG prevents deterministic pixel identity across reloads."],
+    "deferred": ["editable component boundaries"],
+    "external": []
+  },
+  "evidenceIndex": [
+    "evidence/scout/surface-1.json",
+    "evidence/runtime/context.json",
+    "evidence/network/index.json",
+    "evidence/screenshots/source-target-scrolled.png",
+    "evidence/screenshots/source-ablation-canvas-hidden.png"
+  ],
+  "allowedGateArtifactStatuses": ["missing", "incomplete", "passed", "blocked"],
+  "artifacts": {
+    "scoutCard": "scout-card.json",
+    "manifest": "replay-manifest.json",
+    "qaReport": "qa-report.md",
+    "knownGaps": "known-gaps.md"
+  },
+  "gateArtifacts": {
+    "targetAttribution": { "artifact": "scout-card.json", "status": "passed" },
+    "targetLock": { "artifact": "scout-card.json", "status": "passed" },
+    "replayReady": { "artifact": "replay-manifest.json", "status": "passed" },
+    "baselineVerify": { "artifact": "qa-report.md", "status": "missing" },
+    "projectVerify": { "artifact": "qa-report.md", "status": "missing" }
+  },
+  "budgets": {
+    "sameStrategyMax": 2,
+    "captureStrategyCategoriesMax": 3,
+    "repairRoundsMax": 6,
+    "plateauRoundsMax": 2
+  },
+  "plateau": { "roundsWithoutProgress": 0, "lastProgress": "Replay manifest passed with source scene, render graph, resource, timing, and input facts." },
+  "nextAction": {
+    "state": "RAW_REPLAY",
+    "unknown": "whether the recovered source model runs and matches the target composition",
+    "action": "build and run the immutable local baseline",
+    "expectedEvidence": "evidence/screenshots/baseline-target-scrolled.png"
+  },
+  "replayTier": "source-structure-high",
+  "qa": { "sourceToBaseline": [], "baselineToEditable": [] }
+}

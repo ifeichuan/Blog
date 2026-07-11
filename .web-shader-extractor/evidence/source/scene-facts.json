@@ -1,0 +1,48 @@
+{
+  "sourceUrl": "https://farayan.me/_next/static/chunks/app/dappled/page-d4a4e76ec9d1b50b.js",
+  "sourceBytes": 32960,
+  "sourceEtag": "f3f0757ab58697730263c28163d6880b",
+  "componentSourceLine": 101,
+  "scene": {
+    "camera": { "fov": 10.5, "position": [-18.375, 21, 0] },
+    "treePosition": [-7, 0, 14],
+    "ground": { "geometry": "PlaneGeometry", "size": [30, 30], "rotation": [-1.5707963267948966, 0, 0], "receiveShadow": true },
+    "directionalLight": {
+      "position": [-15, 28, 23],
+      "intensity": 5,
+      "color": "#ffe5c7",
+      "castShadow": true,
+      "shadowMapSize": [8192, 8192],
+      "shadowCamera": { "near": 1, "far": 50, "left": -20, "right": 20, "top": 20, "bottom": -20 },
+      "shadowBias": -0.0005
+    },
+    "ambientLight": { "intensity": 0.8, "color": "#9dacb1" },
+    "softShadows": { "focus": 1, "samples": 70, "size": 25 },
+    "treeSettings": {
+      "tubularSegments": 10,
+      "radialSegments": 8,
+      "maxLevel": 4,
+      "startLength": 12,
+      "startRadius": 0.5,
+      "lengthFactor": 0.65,
+      "radiusFactor": 0.8,
+      "branchesPerBranch": 4,
+      "isUniformBranchHeight": true,
+      "curveV": 0,
+      "curveTopAngle": -90,
+      "curveBottomAngle": 90,
+      "curveRes": 15,
+      "leafSize": 6,
+      "leafCurve": 1,
+      "leavesPerBranch": 3,
+      "tropism": [0, -0.05, 0]
+    }
+  },
+  "timeline": {
+    "unit": "seconds",
+    "clock": "React Three Fiber clock.elapsedTime",
+    "random": "unseeded Math.random during component initialization",
+    "wind": { "XS": 1, "M": 10, "L": 20 }
+  },
+  "truth": "SOURCE"
+}

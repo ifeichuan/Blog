@@ -1,0 +1,22 @@
+{
+  "id": "surface-1",
+  "selector": "canvas[data-engine='three.js r180']",
+  "frame": "main",
+  "boundsAtTargetScroll": { "x": 114.5, "y": 100.375, "width": 500, "height": 307 },
+  "cssSize": { "width": 500, "height": 307 },
+  "backingSize": { "width": 1000, "height": 614 },
+  "dpr": 2,
+  "visibility": "visible",
+  "zIndex": "auto",
+  "context": "webgl2",
+  "owner": "main-thread",
+  "visualCoverage": "high",
+  "temporalActivity": "high",
+  "interactionCoupling": "wind-radio",
+  "ablationImpact": "complete",
+  "evidence": [
+    "../screenshots/source-target-scrolled.png",
+    "../screenshots/source-ablation-canvas-hidden.png",
+    "../runtime/context.json"
+  ]
+}

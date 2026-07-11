@@ -1,0 +1,30 @@
+{
+  "capturedDraws": 5000,
+  "programs": [
+    { "id": 1, "role": "branch shadow depth", "draws": 1225, "vertexShaderLength": 14813, "fragmentShaderLength": 12360 },
+    { "id": 4, "role": "alpha-tested leaf shadow depth", "draws": 3600, "alphaTest": 0.001, "vertexShaderLength": 14893, "fragmentShaderLength": 12421 },
+    { "id": 148, "role": "ground main pass", "draws": 25, "vertexShaderLength": 19283, "fragmentShaderLength": 110563 },
+    { "id": 151, "role": "transparent leaf main pass", "draws": 75, "opacity": 0, "vertexShaderLength": 17927, "fragmentShaderLength": 17231 },
+    { "id": 152, "role": "transparent leaf main pass variant", "draws": 75, "opacity": 0, "vertexShaderLength": 17908, "fragmentShaderLength": 17212 }
+  ],
+  "shadowPass": {
+    "viewport": [0, 0, 8192, 8192],
+    "framebuffer": 2,
+    "depthTest": true,
+    "blend": false,
+    "branchIndexCount": 480,
+    "leafIndexCount": 2400,
+    "leafAlphaTest": 0.001
+  },
+  "mainPass": {
+    "viewport": [0, 0, 500, 307],
+    "framebuffer": null,
+    "groundIndexCount": 6,
+    "directionalLightColorLinear": [5, 3.9176888465881348, 2.855624198913574],
+    "ambientLightColorLinear": [0.26973089575767517, 0.330034077167511, 0.3517257273197174],
+    "toneMapping": "ACESFilmicToneMapping",
+    "outputColorSpace": "sRGB",
+    "softShadowShader": "PCSS and PCF paths present"
+  },
+  "truth": "SOURCE"
+}
