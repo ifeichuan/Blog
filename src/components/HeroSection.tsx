@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { useReducedMotion } from 'motion/react'
 import gsap from 'gsap'
 import { COLOR_SCHEMES } from './DappledLight'
@@ -7,7 +7,7 @@ import { HeroMouseLayer, HeroScene } from './HeroScene'
 
 const schemeNames = Object.keys(COLOR_SCHEMES) as (keyof typeof COLOR_SCHEMES)[]
 
-export function HeroSection() {
+export function HeroSection({ play }: { play: boolean }) {
   const [contentPlay, setContentPlay] = useState(false)
   const [mousePlay, setMousePlay] = useState(false)
   const [schemeIndex, setSchemeIndex] = useState(0)
@@ -20,12 +20,22 @@ export function HeroSection() {
   const currentScheme = COLOR_SCHEMES[currentName]
   const next = () => setSchemeIndex((i) => (i + 1) % schemeNames.length)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const bg = bgRef.current
     const content = contentRef.current
     const mouse = mouseRef.current
     if (!bg || !content || !mouse) return
     const reduce = reduced ?? false
+
+    if (!play) {
+      if (!reduce) {
+        gsap.set(bg, { filter: 'blur(18px)', opacity: 0.5, y: -30, scale: 1.04 })
+        gsap.set(content, { opacity: 0, y: 20 })
+        gsap.set(mouse, { opacity: 0, filter: 'blur(12px)', y: 40 })
+      }
+      return
+    }
+
     if (reduce) {
       setContentPlay(true)
       setMousePlay(true)
@@ -44,7 +54,7 @@ export function HeroSection() {
     return () => {
       tl.kill()
     }
-  }, [reduced])
+  }, [play, reduced])
 
   return (
     <section className="relative z-1 w-[calc(100vw-1.5rem)] h-[calc(100vh-1.5rem)] rounded-2xl overflow-hidden">

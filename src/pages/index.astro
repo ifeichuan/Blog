@@ -1,6 +1,9 @@
 ---
 import "@/styles/tailwind.css";
-import { IndexPage } from "@/components/IndexPage";
+import HomeIntro from "@/components/HomeIntro.astro";
+import HomeMenuPlaceholder from "@/components/HomeMenuPlaceholder.astro";
+
+const isDev = import.meta.env.DEV;
 ---
 
 <!doctype html>
@@ -13,11 +16,36 @@ import { IndexPage } from "@/components/IndexPage";
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#f5f4ed" />
+    {
+      isDev && (
+        <script is:inline type="module">
+          import { injectIntoGlobalHook } from "/@react-refresh";
+          injectIntoGlobalHook(window);
+          window.$RefreshReg$ = () => {};
+          window.$RefreshSig$ = () => (type) => type;
+        </script>
+      )
+    }
   </head>
   <body>
-    <main>
-      <IndexPage client:only="react" />
-    </main>
+    <HomeIntro />
+    <HomeMenuPlaceholder />
+    <div id="homepage-root"></div>
+
+    <script>
+      const target = document.getElementById("homepage-root");
+
+      if (target) {
+        import("@/entries/homepage")
+          .then(({ mountHomepage }) => mountHomepage(target))
+          .catch((error) => {
+            console.error("Failed to load homepage", error);
+            target.textContent = "Unable to load the homepage.";
+            target.classList.add("homepage-error");
+            window.dispatchEvent(new Event("homepage:error"));
+          });
+      }
+    </script>
   </body>
 </html>
 
@@ -25,5 +53,20 @@ import { IndexPage } from "@/components/IndexPage";
   html, body {
     overflow-y: auto !important;
     height: auto !important;
+  }
+
+  html[data-intro-active="true"],
+  html[data-intro-active="true"] body {
+    overflow: hidden !important;
+  }
+
+  .homepage-error {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    color: #141413;
+    background: #f5f4ed;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 </style>

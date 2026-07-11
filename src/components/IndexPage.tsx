@@ -1,34 +1,24 @@
-import { StaggeredMenu } from './homepage/StaggeredMenuMotion'
+import { useEffect, useState } from 'react'
 import { HeroSection } from './HeroSection'
 import { FpsMeter } from './FpsMeter'
 
-const menuItems = [
-  { label: 'Posts', link: '/blogs', ariaLabel: 'Go to Posts' },
-  { label: 'Labs', link: '/labs', ariaLabel: 'Go to Labs' },
-  { label: 'Resumes', link: '/resumes', ariaLabel: 'Go to Resumes' },
-]
-
-const socialItems = [
-  { label: 'GitHub', link: 'https://github.com' },
-  { label: 'Email', link: 'mailto:hi@feichuan.dev' },
-]
-
 export function IndexPage() {
+  const [introComplete, setIntroComplete] = useState(false)
+
+  useEffect(() => {
+    const handleIntroEnd = () => setIntroComplete(true)
+    window.addEventListener('Intro:end', handleIntroEnd, { once: true })
+
+    document.documentElement.dataset.homepageReady = 'true'
+    window.dispatchEvent(new Event('homepage:ready'))
+
+    return () => window.removeEventListener('Intro:end', handleIntroEnd)
+  }, [])
+
   return (
     <>
-      <StaggeredMenu
-        isFixed
-        position="right"
-        items={menuItems}
-        socialItems={socialItems}
-        colors={['#DA702C', '#4385BE']}
-        accentColor="#DA702C"
-        menuButtonColor="#141413"
-        openMenuButtonColor="#141413"
-        logoUrl="/feichuan-logo.svg"
-      />
       <main className="relative min-h-screen flex items-center justify-center">
-        <HeroSection />
+        <HeroSection play={introComplete} />
       </main>
       <FpsMeter />
     </>
