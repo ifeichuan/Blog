@@ -2,3 +2,14 @@
 @import "tw-animate-css";
 @import "./new.css";
 @plugin "@tailwindcss/typography";
+
+@layer components {
+  .homepage-card {
+    width: calc(100vw - 1.5rem);
+    height: calc(100vh - 1.5rem);
+    flex: none;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    corner-shape: squircle;
+  }
+}

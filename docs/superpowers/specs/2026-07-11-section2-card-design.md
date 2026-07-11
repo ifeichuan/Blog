@@ -24,7 +24,7 @@
 
 ## 外观
 
-Section 2 初始为空白的 `#faf9f5` 表面。内容、Pixel Trail、头像、转场、主题控制和滚动动画均不在本次改动范围内。
+Section 2 初始为空白的 `warm-sand (#e8e6dc)` 表面，与页面的 `parchment (#f5f4ed)` 背景形成清晰区分。内容、Pixel Trail、头像、转场、主题控制和滚动动画均不在本次改动范围内。
 
 ## 验收
 

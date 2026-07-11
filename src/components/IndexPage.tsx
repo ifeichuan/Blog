@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { HeroSection } from './HeroSection'
 import { FpsMeter } from './FpsMeter'
+import { SectionTwo } from './SectionTwo'
 
 export function IndexPage() {
   const [introExiting, setIntroExiting] = useState(false)
@@ -30,12 +31,13 @@ export function IndexPage() {
 
   return (
     <>
-      <main className="relative min-h-screen flex items-center justify-center">
+      <main className="relative flex min-h-screen flex-col items-center gap-3 py-3">
         <HeroSection
           play={introExiting}
           onBackgroundReady={handleBackgroundReady}
           onMouseAssetsReady={handleMouseAssetsReady}
         />
+        <SectionTwo />
       </main>
       <FpsMeter />
     </>

@@ -63,7 +63,7 @@ export function HeroSection({ play, onBackgroundReady, onMouseAssetsReady }: Her
   }, [play, reduced])
 
   return (
-    <section className="relative z-1 w-[calc(100vw-1.5rem)] h-[calc(100vh-1.5rem)] rounded-2xl overflow-hidden">
+    <section className="homepage-card relative z-1">
       <div ref={bgRef} className="absolute inset-0 z-0">
         <HeroScene scheme={currentScheme} onReady={onBackgroundReady} />
       </div>
