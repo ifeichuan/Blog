@@ -85,7 +85,7 @@ function bendGeo(geo: THREE.PlaneGeometry) {
   geo.computeVertexNormals()
 }
 
-export function PixelMouseScene({ play }: { play: boolean }) {
+export function PixelMouseScene({ play, onReady }: { play: boolean; onReady?: () => void }) {
   const { scene, gl, camera, size } = useThree()
   const reduced = useReducedMotion()
   const reduce = reduced ?? matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -123,10 +123,27 @@ export function PixelMouseScene({ play }: { play: boolean }) {
   }, [play])
 
   useEffect(() => {
-    if (!desktop) return
+    if (!desktop) {
+      onReady?.()
+      return
+    }
     const wrapper = wrapperRef.current
     const entry = entryRef.current
     if (!wrapper || !entry) return
+    let disposed = false
+    let modelSettled = false
+    let stickersSettled = false
+    const reportReady = () => {
+      if (!disposed && modelSettled && stickersSettled) onReady?.()
+    }
+    const settleModel = () => {
+      modelSettled = true
+      reportReady()
+    }
+    const settleStickers = () => {
+      stickersSettled = true
+      reportReady()
+    }
     entry.visible = false
     entry.scale.set(1, 1, 1)
 
@@ -142,6 +159,7 @@ export function PixelMouseScene({ play }: { play: boolean }) {
     new GLTFLoader().load(
       '/pixel_art_mouse_cursor/scene.gltf',
       (gltf) => {
+        if (disposed) return
         const model = gltf.scene
         const box = new THREE.Box3().setFromObject(model)
         const sz = box.getSize(new THREE.Vector3())
@@ -168,9 +186,13 @@ export function PixelMouseScene({ play }: { play: boolean }) {
         })
         wrapper.add(model)
         modelRef.current = model
+        settleModel()
       },
       undefined,
-      (e) => console.error('[PixelMouseScene] load failed', e),
+      (e) => {
+        console.error('[PixelMouseScene] load failed', e)
+        settleModel()
+      },
     )
 
     const logos: THREE.Mesh[] = []
@@ -182,11 +204,15 @@ export function PixelMouseScene({ play }: { play: boolean }) {
     ]
     Promise.allSettled(texturePromises)
       .then((results) => {
+        if (disposed) return
         const textures: THREE.CanvasTexture[] = []
         for (const r of results) {
           if (r.status === 'fulfilled' && r.value) textures.push(r.value)
         }
-        if (!textures.length) return
+        if (!textures.length) {
+          settleStickers()
+          return
+        }
         const tl = gsap.timeline({ paused: true })
         for (const texture of textures) {
           logoTextures.push(texture)
@@ -230,10 +256,15 @@ export function PixelMouseScene({ play }: { play: boolean }) {
             }, mouseBeforeLogoDelay * 1000)
           }
         }
+        settleStickers()
       })
-      .catch((e) => console.error('[PixelMouseScene] sticker load failed', e))
+      .catch((e) => {
+        console.error('[PixelMouseScene] sticker load failed', e)
+        settleStickers()
+      })
 
     return () => {
+      disposed = true
       window.removeEventListener('mousemove', onMove)
       if (logoTimerRef.current) window.clearTimeout(logoTimerRef.current)
       logoTlRef.current?.kill()
@@ -243,7 +274,7 @@ export function PixelMouseScene({ play }: { play: boolean }) {
       scene.environment = null
       pmrem.dispose()
     }
-  }, [desktop, scene, gl])
+  }, [desktop, scene, gl, onReady])
 
   useEffect(() => {
     const entry = entryRef.current

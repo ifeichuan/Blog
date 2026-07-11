@@ -1,0 +1,510 @@
+---
+import meshPost from "@/assets/mesh-post.png";
+
+type MenuItem = {
+  label: string;
+  link: string;
+  ariaLabel?: string;
+};
+
+type SocialItem = {
+  label: string;
+  link: string;
+};
+
+interface Props {
+  position?: "left" | "right";
+  colors?: string[];
+  items?: MenuItem[];
+  socialItems?: SocialItem[];
+  displaySocials?: boolean;
+  displayItemNumbering?: boolean;
+  logoUrl?: string;
+  menuButtonColor?: string;
+  openMenuButtonColor?: string;
+  accentColor?: string;
+  closeOnClickAway?: boolean;
+}
+
+const {
+  position = "right",
+  colors = ["#B497CF", "#5227FF"],
+  items = [],
+  socialItems = [],
+  displaySocials = true,
+  displayItemNumbering = true,
+  logoUrl = "/feichuan-logo.svg",
+  menuButtonColor = "#141413",
+  openMenuButtonColor = "#141413",
+  accentColor = "#5227FF",
+  closeOnClickAway = true,
+} = Astro.props;
+
+const preparedColors = colors.length ? colors.slice(0, 4) : ["#1e1e22", "#35353c"];
+if (preparedColors.length >= 3) preparedColors.splice(Math.floor(preparedColors.length / 2), 1);
+const offscreen = position === "left" ? "-100%" : "100%";
+---
+
+<div
+  class="staggered-menu-wrapper"
+  data-staggered-menu
+  data-position={position}
+  data-close-on-click-away={String(closeOnClickAway)}
+  style={`--sm-accent:${accentColor};--sm-menu-color:${menuButtonColor};--sm-open-menu-color:${openMenuButtonColor};--sm-offscreen:${offscreen};`}
+>
+  {
+    preparedColors.map((color, index) => (
+      <div
+        class="sm-prelayer"
+        data-sm-prelayer
+        hidden
+        aria-hidden="true"
+        style={`z-index:${5 + index};background:radial-gradient(ellipse at ${index === 0 ? "30% 40%" : "70% 60%"}, ${color}ee, ${color}),url('/noise-bg.png');background-blend-mode:overlay;`}
+      />
+    ))
+  }
+
+  <header class="staggered-menu-header" aria-label="Main navigation header">
+    <a class="sm-logo" href="/" aria-label="Feichuan home">
+      <img src={logoUrl} alt="" class="sm-logo-img" draggable="false" width="48" height="48" />
+    </a>
+    <button
+      class="sm-toggle"
+      data-sm-toggle
+      aria-label="Open menu"
+      aria-expanded="false"
+      aria-controls="staggered-menu-panel"
+      type="button"
+    >
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+        <line class="sm-toggle-line sm-toggle-line-top" x1="4" y1="8" x2="26" y2="8" />
+        <line class="sm-toggle-line sm-toggle-line-middle" x1="4" y1="15" x2="26" y2="15" />
+        <line class="sm-toggle-line sm-toggle-line-bottom" x1="4" y1="22" x2="26" y2="22" />
+      </svg>
+    </button>
+  </header>
+
+  <aside id="staggered-menu-panel" class="staggered-menu-panel" data-sm-panel hidden inert aria-hidden="true">
+    <div class="sm-panel-inner">
+      <ul class="sm-panel-list" role="list" data-numbering={displayItemNumbering || undefined}>
+        {
+          items.map((item, index) => (
+            <li class="sm-panel-item-wrap">
+              <a class="sm-panel-item" href={item.link} aria-label={item.ariaLabel} data-index={index + 1}>
+                <span class="sm-panel-item-label" data-sm-item>{item.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      {
+        displaySocials && socialItems.length > 0 && (
+          <div class="sm-socials" aria-label="Social links">
+            <h3 class="sm-socials-title" data-sm-social>Socials</h3>
+            <ul class="sm-socials-list" role="list">
+              {socialItems.map((item) => (
+                <li class="sm-socials-item">
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" class="sm-socials-link" data-sm-social>
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
+    </div>
+    <div class="sm-panel-mesh" aria-hidden="true" style={`--sm-mesh:url('${meshPost.src}')`} />
+  </aside>
+</div>
+
+<script>
+  import { animate } from "motion";
+
+  const easeOut = [0.25, 1, 0.5, 1] as const;
+  const easeIn = [0.5, 0, 0.75, 0] as const;
+  const socialEase = [0.33, 1, 0.68, 1] as const;
+
+  document.querySelectorAll<HTMLElement>("[data-staggered-menu]").forEach((wrapper) => {
+    if (wrapper.dataset.initialized === "true") return;
+    wrapper.dataset.initialized = "true";
+
+    const toggle = wrapper.querySelector<HTMLButtonElement>("[data-sm-toggle]");
+    const panel = wrapper.querySelector<HTMLElement>("[data-sm-panel]");
+    const layers = Array.from(wrapper.querySelectorAll<HTMLElement>("[data-sm-prelayer]"));
+    const items = Array.from(wrapper.querySelectorAll<HTMLElement>("[data-sm-item]"));
+    const socials = Array.from(wrapper.querySelectorAll<HTMLElement>("[data-sm-social]"));
+    const topLine = wrapper.querySelector<SVGLineElement>(".sm-toggle-line-top");
+    const middleLine = wrapper.querySelector<SVGLineElement>(".sm-toggle-line-middle");
+    const bottomLine = wrapper.querySelector<SVGLineElement>(".sm-toggle-line-bottom");
+
+    if (!toggle || !panel || !topLine || !middleLine || !bottomLine) return;
+
+    const offscreen = wrapper.dataset.position === "left" ? "-100%" : "100%";
+    let open = false;
+    let closeTimer = 0;
+    let controls: ReturnType<typeof animate>[] = [];
+
+    const stopAnimations = () => {
+      controls.forEach((control) => control.stop());
+      controls = [];
+    };
+
+    const setOpenState = (next: boolean) => {
+      open = next;
+      toggle.setAttribute("aria-expanded", String(next));
+      toggle.setAttribute("aria-label", next ? "Close menu" : "Open menu");
+      panel.setAttribute("aria-hidden", String(!next));
+      wrapper.toggleAttribute("data-open", next);
+    };
+
+    const animateIcon = (opening: boolean) => {
+      const lineTransition = { duration: opening ? 1 : 0.4, ease: easeOut };
+      controls.push(
+        animate(topLine, { rotate: opening ? 405 : 0, y: opening ? 7 : 0 }, lineTransition),
+        animate(middleLine, { opacity: opening ? 0 : 1, scaleX: opening ? 0 : 1 }, { duration: 0.2 }),
+        animate(bottomLine, { rotate: opening ? -405 : 0, y: opening ? -7 : 0 }, lineTransition),
+      );
+    };
+
+    const openMenu = () => {
+      window.clearTimeout(closeTimer);
+      stopAnimations();
+      layers.forEach((layer) => { layer.hidden = false; });
+      panel.hidden = false;
+      panel.inert = false;
+      setOpenState(true);
+
+      layers.forEach((layer, index) => {
+        controls.push(animate(layer, { x: "0%" }, { duration: 0.5, ease: easeOut, delay: index * 0.07 }));
+      });
+      controls.push(animate(panel, { x: "0%" }, { duration: 0.65, ease: easeOut, delay: 0.15 }));
+      items.forEach((item, index) => {
+        controls.push(animate(item, { y: "0%", rotate: 0 }, { duration: 1, ease: easeOut, delay: 0.25 + index * 0.1 }));
+      });
+      socials.forEach((social, index) => {
+        controls.push(animate(social, { y: 0, opacity: 1 }, { duration: 0.55, ease: socialEase, delay: 0.45 + index * 0.08 }));
+      });
+      animateIcon(true);
+    };
+
+    const closeMenu = () => {
+      if (!open) return;
+      window.clearTimeout(closeTimer);
+      stopAnimations();
+      setOpenState(false);
+      panel.inert = true;
+
+      layers.forEach((layer) => {
+        controls.push(animate(layer, { x: offscreen }, { duration: 0.32, ease: easeIn }));
+      });
+      controls.push(animate(panel, { x: offscreen }, { duration: 0.32, ease: easeIn }));
+      items.forEach((item) => {
+        controls.push(animate(item, { y: "140%", rotate: 10 }, { duration: 0.2, ease: easeIn }));
+      });
+      socials.forEach((social) => {
+        controls.push(animate(social, { y: 25, opacity: 0 }, { duration: 0.15, ease: easeIn }));
+      });
+      animateIcon(false);
+
+      closeTimer = window.setTimeout(() => {
+        layers.forEach((layer) => { layer.hidden = true; });
+        panel.hidden = true;
+      }, 320);
+    };
+
+    toggle.addEventListener("click", () => {
+      if (open) closeMenu();
+      else openMenu();
+    });
+
+    if (wrapper.dataset.closeOnClickAway === "true") {
+      document.addEventListener("mousedown", (event) => {
+        if (!open || !(event.target instanceof Node)) return;
+        if (!panel.contains(event.target) && !toggle.contains(event.target)) closeMenu();
+      });
+    }
+  });
+</script>
+
+<style>
+  .staggered-menu-wrapper {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .staggered-menu-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    box-sizing: border-box;
+    display: flex;
+    width: 100%;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 2rem;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  .sm-logo,
+  .sm-toggle {
+    pointer-events: auto;
+  }
+
+  .sm-logo {
+    display: flex;
+    width: 3rem;
+    height: 3rem;
+    align-items: center;
+    user-select: none;
+  }
+
+  .sm-logo-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .sm-toggle {
+    position: relative;
+    display: inline-flex;
+    width: 1.875rem;
+    height: 1.875rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--sm-menu-color);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    overflow: visible;
+  }
+
+  [data-open] .sm-toggle {
+    color: var(--sm-open-menu-color);
+  }
+
+  .sm-toggle:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.67);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+
+  .sm-toggle-line {
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .sm-toggle-line-top {
+    transform-origin: 15px 8px;
+  }
+
+  .sm-toggle-line-middle {
+    transform-origin: 15px 15px;
+  }
+
+  .sm-toggle-line-bottom {
+    transform-origin: 15px 22px;
+  }
+
+  .sm-prelayer,
+  .staggered-menu-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: clamp(260px, 38vw, 420px);
+    height: 100%;
+    transform: translateX(var(--sm-offscreen));
+  }
+
+  [data-position="left"] .sm-prelayer,
+  [data-position="left"] .staggered-menu-panel {
+    right: auto;
+    left: 0;
+  }
+
+  .sm-prelayer {
+    bottom: 0;
+    border-radius: 1rem 0 0 1rem;
+    overflow: hidden;
+    opacity: 1;
+    pointer-events: none;
+  }
+
+  .staggered-menu-panel {
+    z-index: 10;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    padding: 6rem 2rem 2rem;
+    overflow-y: auto;
+    background: white;
+    backdrop-filter: blur(12px);
+    border-radius: 1rem 0 0 1rem;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sm-panel-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .sm-panel-list,
+  .sm-socials-list {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sm-panel-list {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .sm-panel-item-wrap {
+    position: relative;
+    overflow: hidden;
+    line-height: 1;
+  }
+
+  .sm-panel-item {
+    position: relative;
+    display: inline-block;
+    padding-right: 1.4em;
+    color: #000;
+    font-size: 3.5rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 250ms;
+  }
+
+  .sm-panel-item:hover {
+    color: var(--sm-accent);
+  }
+
+  .sm-panel-item-label {
+    display: inline-block;
+    transform: translateY(140%) rotate(10deg);
+    transform-origin: 50% 100%;
+    will-change: transform;
+  }
+
+  .sm-panel-list[data-numbering] {
+    counter-reset: smItem;
+  }
+
+  .sm-panel-list[data-numbering] .sm-panel-item::after {
+    position: absolute;
+    top: 0.1em;
+    right: 2.8em;
+    color: var(--sm-accent);
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0;
+    opacity: var(--sm-num-opacity, 0);
+    content: counter(smItem, decimal-leading-zero);
+    counter-increment: smItem;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .sm-socials {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: auto;
+    padding-top: 2rem;
+  }
+
+  .sm-socials-title {
+    margin: 0;
+    color: var(--sm-accent);
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .sm-socials-list {
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .sm-socials-title,
+  .sm-socials-link {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  .sm-socials-link {
+    position: relative;
+    display: inline-block;
+    padding: 2px 0;
+    color: #111;
+    font-size: 1.2rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 300ms, opacity 300ms;
+  }
+
+  .sm-socials-list:hover .sm-socials-link:not(:hover),
+  .sm-socials-list:focus-within .sm-socials-link:not(:focus-visible) {
+    opacity: 0.35 !important;
+  }
+
+  .sm-socials-link:hover,
+  .sm-socials-link:focus-visible {
+    color: var(--sm-accent);
+    opacity: 1 !important;
+  }
+
+  .sm-socials-link:focus-visible {
+    outline: 2px solid var(--sm-accent);
+    outline-offset: 3px;
+  }
+
+  .sm-panel-mesh {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 45%;
+    overflow: hidden;
+    background: var(--sm-mesh) center bottom / cover no-repeat;
+    border-radius: 0 0 0 1rem;
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  @media (max-width: 1024px) {
+    .sm-prelayer,
+    .staggered-menu-panel {
+      right: 0;
+      left: 0;
+      width: 100%;
+      border-radius: 0;
+    }
+
+    [data-open] .sm-logo-img {
+      filter: invert(100%);
+    }
+  }
+</style>

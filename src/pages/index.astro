@@ -1,9 +1,18 @@
 ---
 import "@/styles/tailwind.css";
 import HomeIntro from "@/components/HomeIntro.astro";
-import HomeMenuPlaceholder from "@/components/HomeMenuPlaceholder.astro";
+import StaggeredMenu from "@/components/homepage/StaggeredMenu.astro";
 
 const isDev = import.meta.env.DEV;
+const menuItems = [
+  { label: "Posts", link: "/blogs", ariaLabel: "Go to Posts" },
+  { label: "Labs", link: "/labs", ariaLabel: "Go to Labs" },
+  { label: "Resumes", link: "/resumes", ariaLabel: "Go to Resumes" },
+];
+const socialItems = [
+  { label: "GitHub", link: "https://github.com" },
+  { label: "Email", link: "mailto:hi@feichuan.dev" },
+];
 ---
 
 <!doctype html>
@@ -29,7 +38,16 @@ const isDev = import.meta.env.DEV;
   </head>
   <body>
     <HomeIntro />
-    <HomeMenuPlaceholder />
+    <StaggeredMenu
+      position="right"
+      items={menuItems}
+      socialItems={socialItems}
+      colors={["#DA702C", "#4385BE"]}
+      accentColor="#DA702C"
+      menuButtonColor="#141413"
+      openMenuButtonColor="#141413"
+      logoUrl="/feichuan-logo.svg"
+    />
     <div id="homepage-root"></div>
 
     <script>

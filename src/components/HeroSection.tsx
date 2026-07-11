@@ -7,7 +7,13 @@ import { HeroMouseLayer, HeroScene } from './HeroScene'
 
 const schemeNames = Object.keys(COLOR_SCHEMES) as (keyof typeof COLOR_SCHEMES)[]
 
-export function HeroSection({ play }: { play: boolean }) {
+type HeroSectionProps = {
+  play: boolean
+  onBackgroundReady?: () => void
+  onMouseAssetsReady?: () => void
+}
+
+export function HeroSection({ play, onBackgroundReady, onMouseAssetsReady }: HeroSectionProps) {
   const [contentPlay, setContentPlay] = useState(false)
   const [mousePlay, setMousePlay] = useState(false)
   const [schemeIndex, setSchemeIndex] = useState(0)
@@ -59,10 +65,10 @@ export function HeroSection({ play }: { play: boolean }) {
   return (
     <section className="relative z-1 w-[calc(100vw-1.5rem)] h-[calc(100vh-1.5rem)] rounded-2xl overflow-hidden">
       <div ref={bgRef} className="absolute inset-0 z-0">
-        <HeroScene scheme={currentScheme} />
+        <HeroScene scheme={currentScheme} onReady={onBackgroundReady} />
       </div>
       <div ref={mouseRef} className="absolute inset-0 z-[2] hidden md:block">
-        <HeroMouseLayer play={mousePlay} />
+        <HeroMouseLayer play={mousePlay} onReady={onMouseAssetsReady} />
       </div>
       <div ref={contentRef} className="relative z-10 h-full flex items-center justify-center text-near-black">
         <HeroContent play={contentPlay} />

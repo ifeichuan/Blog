@@ -31,6 +31,7 @@
     };
 
     const removeIntro = () => {
+      window.dispatchEvent(new Event("Intro:exit"));
       intro.classList.add("is-exiting");
       const exitDuration = reducedMotion || seen ? 120 : 420;
 

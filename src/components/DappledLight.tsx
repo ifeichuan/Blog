@@ -122,10 +122,14 @@ export const COLOR_SCHEMES: Record<string, ColorScheme> = {
   },
 }
 
-type DappledPlaneProps = { scheme: ColorScheme }
+type DappledPlaneProps = {
+  scheme: ColorScheme
+  onReady?: () => void
+}
 
-export function DappledPlane({ scheme }: DappledPlaneProps) {
+export function DappledPlane({ scheme, onReady }: DappledPlaneProps) {
   const matRef = useRef<THREE.ShaderMaterial>(null)
+  const readyRef = useRef(false)
 
   useFrame((state) => {
     if (!matRef.current) return
@@ -137,7 +141,14 @@ export function DappledPlane({ scheme }: DappledPlaneProps) {
   })
 
   return (
-    <mesh renderOrder={-1}>
+    <mesh
+      renderOrder={-1}
+      onAfterRender={() => {
+        if (readyRef.current) return
+        readyRef.current = true
+        onReady?.()
+      }}
+    >
       <planeGeometry args={[2, 2]} />
       <shaderMaterial
         ref={matRef}
@@ -156,5 +167,4 @@ export function DappledPlane({ scheme }: DappledPlaneProps) {
     </mesh>
   )
 }
-
 

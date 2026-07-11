@@ -15,7 +15,7 @@ function FrameLimiter({ fps }: { fps: number }) {
   return null
 }
 
-export function HeroScene({ scheme }: { scheme: ColorScheme }) {
+export function HeroScene({ scheme, onReady }: { scheme: ColorScheme; onReady?: () => void }) {
   return (
     <Canvas
       frameloop="demand"
@@ -25,12 +25,20 @@ export function HeroScene({ scheme }: { scheme: ColorScheme }) {
       style={{ width: '100%', height: '100%' }}
     >
       <FrameLimiter fps={30} />
-      <DappledPlane scheme={scheme} />
+      <DappledPlane scheme={scheme} onReady={onReady} />
     </Canvas>
   )
 }
 
-export function HeroMouseLayer({ play }: { play: boolean }) {
+export function HeroMouseLayer({ play, onReady }: { play: boolean; onReady?: () => void }) {
+  const desktop = matchMedia('(min-width: 768px)').matches
+
+  useEffect(() => {
+    if (!desktop) onReady?.()
+  }, [desktop, onReady])
+
+  if (!desktop) return null
+
   return (
     <Canvas
       frameloop="demand"
@@ -42,7 +50,7 @@ export function HeroMouseLayer({ play }: { play: boolean }) {
       <FrameLimiter fps={60} />
       <ambientLight intensity={0.75} />
       <directionalLight position={[2, 4, 3]} intensity={0.4} />
-      <PixelMouseScene play={play} />
+      <PixelMouseScene play={play} onReady={onReady} />
     </Canvas>
   )
 }
