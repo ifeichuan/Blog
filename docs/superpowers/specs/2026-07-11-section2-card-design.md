@@ -1,34 +1,34 @@
-# Section 2 Card Design
+# Section 2 卡片设计
 
-## Scope
+## 范围
 
-Add the structural Section 2 card directly after the homepage hero. This change only creates the card shell and shared shape treatment; it does not implement the effects described in `PLAN-section2.md`.
+在首页 Hero 后面直接添加 Section 2 结构卡片。本次改动只创建卡片骨架与共用的形状样式，不实现 `PLAN-section2.md` 中描述的特效。
 
-## Structure
+## 结构
 
-- Add `src/components/SectionTwo.tsx` as the isolated extension point for future Section 2 content.
-- Render `HeroSection` and `SectionTwo` in a vertical homepage stack.
-- Keep both cards centered with a `0.75rem` page inset and a `0.75rem` gap.
+- 新增 `src/components/SectionTwo.tsx`，作为未来 Section 2 内容的独立扩展点。
+- 在首页中纵向排列 `HeroSection` 与 `SectionTwo`。
+- 两张卡片保持居中，页面边距和卡片间距均为 `0.75rem`。
 
-## Geometry
+## 几何尺寸
 
-Both cards use the same fixed viewport-relative geometry:
+两张卡片使用完全相同的视口相对尺寸：
 
-- Width: `calc(100vw - 1.5rem)`
-- Height: `calc(100vh - 1.5rem)`
-- Corner radius: `1.5rem`
-- Corner shape: `squircle`
-- Overflow: clipped
+- 宽度：`calc(100vw - 1.5rem)`
+- 高度：`calc(100vh - 1.5rem)`
+- 圆角半径：`1.5rem`
+- 圆角形状：`squircle` 超椭圆
+- 溢出内容：裁切
 
-The shared card class uses `corner-shape: squircle` with the radius as a fallback when the property is unsupported.
+共用卡片样式使用 `corner-shape: squircle`；浏览器不支持该属性时，回退为相同半径的普通圆角。
 
-## Appearance
+## 外观
 
-Section 2 starts as an empty `#faf9f5` surface. Content, Pixel Trail, avatar, transitions, theme controls, and scroll animation remain outside this change.
+Section 2 初始为空白的 `#faf9f5` 表面。内容、Pixel Trail、头像、转场、主题控制和滚动动画均不在本次改动范围内。
 
-## Verification
+## 验收
 
-- Confirm both cards have identical computed width, height, radius, and corner shape.
-- Confirm the vertical inset and gap are `0.75rem`.
-- Check desktop and mobile viewports for horizontal overflow.
-- Run the production build.
+- 确认两张卡片计算后的宽度、高度、圆角半径和圆角形状完全一致。
+- 确认纵向页面边距与卡片间距均为 `0.75rem`。
+- 检查桌面端和移动端视口，确保没有横向溢出。
+- 运行生产构建。
