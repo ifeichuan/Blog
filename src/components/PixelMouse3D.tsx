@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type MutableRefObject } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useReducedMotion } from 'motion/react'
 import gsap from 'gsap'
@@ -85,7 +85,15 @@ function bendGeo(geo: THREE.PlaneGeometry) {
   geo.computeVertexNormals()
 }
 
-export function PixelMouseScene({ play, onReady }: { play: boolean; onReady?: () => void }) {
+export function PixelMouseScene({
+  play,
+  transitionProgressRef,
+  onReady,
+}: {
+  play: boolean
+  transitionProgressRef?: MutableRefObject<number>
+  onReady?: () => void
+}) {
   const { scene, gl, camera, size } = useThree()
   const reduced = useReducedMotion()
   const reduce = reduced ?? matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -290,10 +298,17 @@ export function PixelMouseScene({ play, onReady }: { play: boolean; onReady?: ()
   useFrame((state) => {
     const entry = entryRef.current
     const wrapper = wrapperRef.current
-    if (!entry || !entry.visible || !wrapper) return
+    if (!entry || !wrapper) return
     const reduce = reduceRef.current
     const model = modelRef.current
     const t = state.clock.elapsedTime
+    const transition = transitionProgressRef?.current ?? 0
+    const presence = 1 - THREE.MathUtils.smoothstep(transition, 0.1, 0.82)
+    entry.visible = playRef.current && presence > 0.001
+    if (!entry.visible) return
+    entry.scale.setScalar(Math.max(0.001, presence))
+    entry.rotation.z = transition * transition * 0.45
+    entry.position.y = baseY.current + transition * 1.8
     const { x: mx, y: my } = mouse.current
     if (model) {
       if (reduce) {
