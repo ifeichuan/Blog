@@ -1,7 +1,9 @@
 (function () {
   const stage = document.querySelector("#siri-stage");
   const surface = document.querySelector("#siri-surface");
+  const backdrop = document.querySelector("#siri-backdrop");
   const canvas = document.querySelector("#siri-canvas");
+  const hitTarget = document.querySelector("#siri-hit-target");
   const control = document.querySelector("#siri-control");
   const status = document.querySelector("#siri-status");
   const dialog = document.querySelector("#siri-dialog");
@@ -51,6 +53,20 @@
     if (params && typeof params.caretGlowAlpha === "number") {
       surface.style.setProperty("--caret-glow-alpha", `${params.caretGlowAlpha}`);
     }
+  }
+
+  function syncBackdropLayout(layout) {
+    if (!layout) return;
+    const dpr = renderer.dpr;
+    const width = (layout.panelSize[0] - layout.margin * 2) / dpr;
+    const height = (layout.panelSize[1] - layout.margin * 2) / dpr;
+    [backdrop, hitTarget].forEach((element) => {
+      element.style.left = `${(layout.panelOrigin[0] + layout.margin) / dpr}px`;
+      element.style.top = `${(layout.panelOrigin[1] + layout.margin) / dpr}px`;
+      element.style.width = `${width}px`;
+      element.style.height = `${height}px`;
+      element.style.borderRadius = `${layout.cornerRadius / dpr}px`;
+    });
   }
 
   function setMessage(text, hiddenText) {
@@ -136,16 +152,8 @@
     surface.style.setProperty("--orb-y", `${offsetY}px`);
   }
 
-  function isOrbHit(event) {
-    const rect = canvas.getBoundingClientRect();
-    const dx = event.clientX - (rect.left + rect.width * 0.5);
-    const dy = event.clientY - (rect.top + rect.height * 0.5);
-    return dx * dx + dy * dy <= ORB_RADIUS * ORB_RADIUS;
-  }
-
   function beginPress(event, canDrag) {
     if (pointerId !== null || dialog.contains(event.target)) return;
-    if (canDrag && state.mode === "idle" && !isOrbHit(event)) return;
     event.preventDefault();
     pointerId = event.pointerId;
     clickArmed = true;
@@ -154,7 +162,7 @@
     startY = event.clientY;
     originX = offsetX;
     originY = offsetY;
-    if (canDrag) canvas.setPointerCapture(pointerId);
+    if (canDrag) hitTarget.setPointerCapture(pointerId);
     window.clearTimeout(pressTimer);
     pressTimer = window.setTimeout(() => {
       clickArmed = false;
@@ -180,7 +188,7 @@
   function endPress(event) {
     if (event.pointerId !== pointerId) return;
     window.clearTimeout(pressTimer);
-    if (canvas.hasPointerCapture(pointerId)) canvas.releasePointerCapture(pointerId);
+    if (hitTarget.hasPointerCapture(pointerId)) hitTarget.releasePointerCapture(pointerId);
     pointerId = null;
     delete surface.dataset.dragging;
     if (dragging) {
@@ -203,7 +211,7 @@
     const channels = state.step(dt, audio);
     channels.audio = audio;
     renderer.setFrame(channels, (now - startTime) / 1000);
-    renderer.render();
+    syncBackdropLayout(renderer.render());
     requestAnimationFrame(frame);
   }
 
@@ -217,8 +225,8 @@
   ["pointerdown", "pointerup"].forEach((type) => {
     dialog.addEventListener(type, (event) => event.stopPropagation());
   });
-  canvas.addEventListener("pointerdown", (event) => beginPress(event, true));
-  canvas.addEventListener("pointermove", movePress);
+  hitTarget.addEventListener("pointerdown", (event) => beginPress(event, true));
+  hitTarget.addEventListener("pointermove", movePress);
   control.addEventListener("pointerdown", (event) => beginPress(event, false));
   window.addEventListener("pointerup", endPress);
   window.addEventListener("pointercancel", (event) => {
@@ -230,14 +238,14 @@
     dragging = false;
     delete surface.dataset.dragging;
   });
-  canvas.addEventListener("keydown", (event) => {
+  hitTarget.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && state.mode === "dialog") closeDialog();
     if ((event.code === "Space" || event.code === "Enter") && !event.repeat && state.mode !== "dialog") {
       event.preventDefault();
       enterListening();
     }
   });
-  canvas.addEventListener("keyup", (event) => {
+  hitTarget.addEventListener("keyup", (event) => {
     if ((event.code === "Space" || event.code === "Enter") && state.mode === "listening") {
       event.preventDefault();
       enterThinking(DEFAULT_REPLY);

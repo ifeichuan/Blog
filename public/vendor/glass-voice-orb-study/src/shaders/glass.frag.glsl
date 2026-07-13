@@ -3,9 +3,7 @@ precision highp float;
 
 uniform vec2 uResolution;
 uniform sampler2D uSceneTexture;
-uniform sampler2D uBackground;
 
-uniform vec2 uTextureSize;
 uniform vec2 uPanelSize;
 uniform vec2 uCanvasSize;
 uniform vec2 uPanelOrigin;
@@ -31,7 +29,6 @@ uniform float uCausticAmount;
 uniform float uShadowOffsetY;
 uniform float uCausticOffsetY;
 uniform float uProjectionSoftness;
-uniform float uBackgroundReady;
 
 out vec4 outColor;
 
@@ -45,28 +42,8 @@ vec2 rotate2d(vec2 v, float a) {
 	return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
 }
 
-vec2 coverUv(vec2 canvasUv) {
-	vec2 pixel = canvasUv * uCanvasSize;
-	float cover = max(uCanvasSize.x / uTextureSize.x, uCanvasSize.y / uTextureSize.y);
-	vec2 fitted = uTextureSize * cover;
-	vec2 offset = (fitted - uCanvasSize) * 0.5;
-	return clamp((pixel + offset) / fitted, vec2(0.0), vec2(1.0));
-}
-
-vec3 fallbackBackground(vec2 uv) {
-	float vignette = smoothstep(0.95, 0.12, distance(uv, vec2(0.5)));
-	vec3 top = vec3(0.015, 0.018, 0.022);
-	vec3 bottom = vec3(0.0, 0.0, 0.0);
-	return mix(bottom, top, 1.0 - uv.y) + vec3(0.02, 0.035, 0.055) * vignette;
-}
-
-vec3 sampleBackground(vec2 canvasUv) {
-	vec3 image = texture(uBackground, coverUv(canvasUv)).rgb;
-	return mix(fallbackBackground(canvasUv), image, clamp(uBackgroundReady, 0.0, 1.0));
-}
-
-vec3 sampleScene(vec2 canvasUv) {
-	return texture(uSceneTexture, vec2(canvasUv.x, 1.0 - canvasUv.y)).rgb;
+vec4 sampleScene(vec2 canvasUv) {
+	return texture(uSceneTexture, vec2(canvasUv.x, 1.0 - canvasUv.y));
 }
 
 float supercircleDistance(vec2 p, vec2 b, float n, vec2 param) {
@@ -196,11 +173,12 @@ vec4 glassFragment(vec2 pixel) {
 	vec2 baseUv = (uPanelOrigin + panelUv * uPanelSize) / uCanvasSize;
 	vec2 rUv = clamp(refractedUv(baseUv, d, grad), vec2(0.0), vec2(1.0));
 
-	// glass = refraction + highlight ONLY — no face color (no saturation/black/luma/tint),
-	// so it looks like untouched glass over whatever is behind it.
-	vec3 col = sampleScene(rUv);
-	col += vec3(highlightBand(d, grad) * uHlAmount);
-	return vec4(col, alpha);
+	vec4 scene = sampleScene(rUv);
+	float highlight = saturate(highlightBand(d, grad) * uHlAmount);
+	float contentAlpha = scene.a + highlight * (1.0 - scene.a);
+	vec3 premultiplied = scene.rgb + vec3(highlight) * (1.0 - scene.a);
+	vec3 straight = contentAlpha > 0.0001 ? premultiplied / contentAlpha : vec3(0.0);
+	return vec4(straight, alpha * contentAlpha);
 }
 
 void main() {

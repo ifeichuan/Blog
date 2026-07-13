@@ -1,7 +1,7 @@
 /*
 [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
-INPUT: Canvas, loaded shaders, background image, and per-frame state/audio channels.
-OUTPUT: Three-FBO glass-refraction render of the siri27 effect onto the canvas.
+INPUT: Canvas, loaded shaders, and per-frame state/audio channels.
+OUTPUT: Transparent glass-effect render plus the responsive layout used by the DOM backdrop.
 POS: Owns draw order and responsive glass layout; DOM overlays mirror these viewport clamps.
 */
 (function () {
@@ -35,13 +35,6 @@ POS: Owns draw order and responsive glass layout; DOM overlays mirror these view
       this.passes = {};
       this.effectTarget = null;
       this.sceneTarget = null;
-      this.background = { texture: null, width: 1, height: 1, ready: 0 };
-      const gl = this.gl;
-      this.fallbackTexture = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, this.fallbackTexture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([16, 14, 12, 255]));
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       this.dpr = 1; this.width = 1; this.height = 1;
       this.time = 0; this.channels = null;
     }
@@ -54,30 +47,8 @@ POS: Owns draw order and responsive glass layout; DOM overlays mirror these view
         this.passes[name] = P.createProgram(gl, vertex, fragments[name]);
       }
       this.vao = gl.createVertexArray();
-      this.setBackground(window.SIRI_DEFAULT_BG || "./assets/96bdad248714663.69fdafdc31e48.webp");
       this.resize();
       window.addEventListener("resize", () => this.resize(), { passive: true });
-    }
-
-    setBackground(url) {
-      const gl = this.gl;
-      const image = new Image();
-      image.crossOrigin = "anonymous";
-      image.onload = () => {
-        const texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, image);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        const old = this.background.texture;
-        this.background = { texture, width: image.width, height: image.height, ready: 1 };
-        if (old) gl.deleteTexture(old);
-        if (url.startsWith("blob:")) URL.revokeObjectURL(url);
-      };
-      image.src = url;
     }
 
     resize() {
@@ -181,7 +152,6 @@ POS: Owns draw order and responsive glass layout; DOM overlays mirror these view
       const L = this._layout();
       this._ensureTargets(L);
       const u = window.SiriUniforms.build(this, L);
-      const bg = this.background.texture || this.fallbackTexture;
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.effectTarget.framebuffer);
       gl.viewport(0, 0, this.effectTarget.width, this.effectTarget.height);
       this._premultBlend(false);
@@ -193,9 +163,8 @@ POS: Owns draw order and responsive glass layout; DOM overlays mirror these view
       this._premultBlend(false);
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.sceneTarget.framebuffer);
       gl.viewport(0, 0, this.width, this.height);
-      gl.clearColor(0, 0, 0, 1);
+      gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
-      this._draw(this.passes.background, u.background, [{ name: "uBackground", texture: bg }]);
       this._premultBlend(true);
       this._draw(this.passes.compose, u.compose, [
         { name: "uEffectTexture", texture: this.effectTarget.texture },
@@ -205,8 +174,8 @@ POS: Owns draw order and responsive glass layout; DOM overlays mirror these view
       gl.viewport(0, 0, this.width, this.height);
       this._draw(this.passes.glass, u.glass, [
         { name: "uSceneTexture", texture: this.sceneTarget.texture },
-        { name: "uBackground", texture: bg },
       ]);
+      return L;
     }
   }
 

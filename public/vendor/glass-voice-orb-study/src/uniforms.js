@@ -1,6 +1,6 @@
 /*
 [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
-INPUT: Renderer (dpr/size/time/channels/background) and the computed layout.
+INPUT: Renderer (dpr/size/time/channels) and the computed layout.
 OUTPUT: Per-pass uniform value maps, copied 1:1 from the siri27 reference defaults.
 POS: Pure uniform dictionary; no GL calls, no animation, no state transitions.
 */
@@ -93,13 +93,6 @@ POS: Pure uniform dictionary; no GL calls, no animation, no state transitions.
       uAppear: ch.dotsAppear,
     };
 
-    const background = {
-      uResolution: res,
-      uTextureSize: [r.background.width, r.background.height],
-      uCanvasSize: canvas,
-      uBackgroundReady: r.background.ready,
-    };
-
     const compose = {
       uResolution: res,
       uCanvasSize: canvas,
@@ -113,7 +106,6 @@ POS: Pure uniform dictionary; no GL calls, no animation, no state transitions.
 
     const glass = {
       uResolution: res,
-      uTextureSize: [r.background.width, r.background.height],
       uPanelSize: L.panelSize,
       uCanvasSize: canvas,
       uPanelOrigin: L.panelOrigin,
@@ -136,10 +128,9 @@ POS: Pure uniform dictionary; no GL calls, no animation, no state transitions.
       uShadowOffsetY: num("shadowOffsetY", 0.3),
       uCausticOffsetY: num("causticOffsetY", -1),
       uProjectionSoftness: num("projectionSoftness", 4.2) * dpr,
-      uBackgroundReady: r.background.ready,
     };
 
-    return { background, wave, dots, compose, glass };
+    return { wave, dots, compose, glass };
   }
 
   window.SiriUniforms = { build };

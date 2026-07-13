@@ -7,7 +7,6 @@ POS: Adapter only; all visual math lives in src/shaders/*.glsl, not here.
 (function () {
   const DIR = "/vendor/glass-voice-orb-study/src/shaders/";
   const FRAGMENTS = {
-    background: "background.frag.glsl",
     wave: "wave.frag.glsl",
     dots: "dots.frag.glsl",
     compose: "compose.frag.glsl",

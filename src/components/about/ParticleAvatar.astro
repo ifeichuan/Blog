@@ -1,0 +1,271 @@
+---
+interface Props {
+  alt?: string;
+}
+
+const { alt = "Portrait of Feichuan" } = Astro.props;
+---
+
+<div class="particle-avatar" data-particle-avatar>
+  <img src="/images/about-avatar.png" alt="" aria-hidden="true" width="1254" height="1254" decoding="async" />
+  <canvas
+    width="512"
+    height="512"
+    role="button"
+    tabindex="0"
+    aria-label={`Scatter ${alt}`}
+  ></canvas>
+  <span class="particle-avatar-label">{alt}</span>
+</div>
+
+<script>
+  const GRID = 16;
+  const TILE_SIZE = 32;
+
+  document.querySelectorAll<HTMLElement>("[data-particle-avatar]").forEach((root) => {
+    if (root.dataset.initialized === "true") return;
+    root.dataset.initialized = "true";
+
+    const canvas = root.querySelector("canvas");
+    const image = root.querySelector("img");
+    if (!(canvas instanceof HTMLCanvasElement) || !(image instanceof HTMLImageElement)) return;
+
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    let tiles: Array<{
+      sx: number;
+      sy: number;
+      sw: number;
+      sh: number;
+      tx: number;
+      ty: number;
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      delay: number;
+      scale: number;
+      opacity: number;
+      scatterX: number;
+      scatterY: number;
+    }> = [];
+    let scattered = true;
+    let animating = false;
+    let startTime = 0;
+    let frameId = 0;
+
+    const randomScatterPoint = () => {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 300 + Math.random() * 500;
+      return {
+        x: canvas.width * 0.5 + Math.cos(angle) * radius,
+        y: canvas.height * 0.5 + Math.sin(angle) * radius,
+      };
+    };
+
+    const springStep = (current: number, target: number, velocity: number) => {
+      const force = (target - current) * 150;
+      const nextVelocity = velocity + (force - velocity * 12) * 0.016;
+      return [current + nextVelocity * 0.016, nextVelocity] as const;
+    };
+
+    const draw = () => {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.imageSmoothingEnabled = false;
+      for (const tile of tiles) {
+        if (tile.opacity < 0.01) continue;
+        context.globalAlpha = tile.opacity;
+        const size = TILE_SIZE * tile.scale;
+        const offset = (TILE_SIZE - size) * 0.5;
+        context.drawImage(
+          image,
+          tile.sx,
+          tile.sy,
+          tile.sw,
+          tile.sh,
+          tile.x + offset,
+          tile.y + offset,
+          size,
+          size,
+        );
+      }
+      context.globalAlpha = 1;
+    };
+
+    const animate = () => {
+      if (!animating) return;
+      const elapsed = performance.now() - startTime;
+      let settled = true;
+
+      for (const tile of tiles) {
+        if (elapsed < tile.delay) {
+          settled = false;
+          continue;
+        }
+        const targetX = scattered ? tile.scatterX : tile.tx;
+        const targetY = scattered ? tile.scatterY : tile.ty;
+        const targetScale = scattered ? 0.6 : 1;
+        const targetOpacity = scattered ? 0 : 1;
+        [tile.x, tile.vx] = springStep(tile.x, targetX, tile.vx);
+        [tile.y, tile.vy] = springStep(tile.y, targetY, tile.vy);
+        tile.scale += (targetScale - tile.scale) * 0.08;
+        tile.opacity += (targetOpacity - tile.opacity) * 0.08;
+
+        if (
+          Math.abs(tile.x - targetX) > 0.3 ||
+          Math.abs(tile.y - targetY) > 0.3 ||
+          Math.abs(tile.vx) > 0.3 ||
+          Math.abs(tile.vy) > 0.3 ||
+          Math.abs(tile.opacity - targetOpacity) > 0.01
+        ) {
+          settled = false;
+        }
+      }
+
+      draw();
+      if (settled) {
+        animating = false;
+        return;
+      }
+      frameId = requestAnimationFrame(animate);
+    };
+
+    const transition = (nextScattered: boolean, originX: number, originY: number) => {
+      if (animating) return;
+      scattered = nextScattered;
+      const originCol = originX < canvas.width * 0.5 ? 0 : GRID - 1;
+      const originRow = originY < canvas.height * 0.5 ? 0 : GRID - 1;
+      const maxDistance = Math.hypot(GRID - 1, GRID - 1);
+
+      for (const tile of tiles) {
+        const col = Math.round(tile.tx / TILE_SIZE);
+        const row = Math.round(tile.ty / TILE_SIZE);
+        const distance = Math.hypot(col - originCol, row - originRow) / maxDistance;
+        if (scattered) {
+          const point = randomScatterPoint();
+          tile.scatterX = point.x;
+          tile.scatterY = point.y;
+          tile.delay = (1 - distance) * 600;
+        } else {
+          tile.delay = distance * 800;
+        }
+        tile.vx = 0;
+        tile.vy = 0;
+      }
+
+      canvas.setAttribute("aria-label", scattered ? "Assemble portrait of Feichuan" : "Scatter portrait of Feichuan");
+      startTime = performance.now();
+      animating = true;
+      frameId = requestAnimationFrame(animate);
+    };
+
+    const initialize = () => {
+      if (root.dataset.ready === "true") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        canvas.removeAttribute("role");
+        canvas.removeAttribute("tabindex");
+        canvas.removeAttribute("aria-label");
+        canvas.setAttribute("aria-hidden", "true");
+        root.dataset.ready = "true";
+        return;
+      }
+
+      const sourceWidth = image.naturalWidth / GRID;
+      const sourceHeight = image.naturalHeight / GRID;
+      for (let row = 0; row < GRID; row += 1) {
+        for (let col = 0; col < GRID; col += 1) {
+          const point = randomScatterPoint();
+          tiles.push({
+            sx: col * sourceWidth,
+            sy: row * sourceHeight,
+            sw: sourceWidth,
+            sh: sourceHeight,
+            tx: col * TILE_SIZE,
+            ty: row * TILE_SIZE,
+            x: point.x,
+            y: point.y,
+            vx: 0,
+            vy: 0,
+            delay: Math.random() * 800,
+            scale: 0.6,
+            opacity: 0,
+            scatterX: point.x,
+            scatterY: point.y,
+          });
+        }
+      }
+      root.dataset.ready = "true";
+      transition(false, canvas.width, 0);
+    };
+
+    canvas.addEventListener("click", (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+      const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+      transition(!scattered, x, y);
+    });
+    canvas.addEventListener("keydown", (event) => {
+      if (event.code !== "Space" && event.code !== "Enter") return;
+      event.preventDefault();
+      transition(!scattered, 0, 0);
+    });
+    window.addEventListener("pagehide", () => cancelAnimationFrame(frameId), { once: true });
+
+    if (image.complete && image.naturalWidth > 0) initialize();
+    else image.addEventListener("load", initialize, { once: true });
+  });
+</script>
+
+<style>
+  .particle-avatar {
+    position: relative;
+    width: var(--avatar-size, 128px);
+    aspect-ratio: 1;
+    flex: 0 0 auto;
+  }
+
+  .particle-avatar img,
+  .particle-avatar canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .particle-avatar img {
+    object-fit: cover;
+  }
+
+  .particle-avatar canvas {
+    opacity: 0;
+    cursor: pointer;
+    image-rendering: pixelated;
+    touch-action: manipulation;
+  }
+
+  .particle-avatar[data-ready="true"] img {
+    opacity: 0;
+  }
+
+  .particle-avatar[data-ready="true"] canvas {
+    opacity: 1;
+  }
+
+  .particle-avatar canvas:focus-visible {
+    outline: 2px solid #4385be;
+    outline-offset: 4px;
+  }
+
+  .particle-avatar-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+</style>
