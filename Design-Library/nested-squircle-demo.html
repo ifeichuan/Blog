@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Orbit Agent Workspace — Nested Squircle</title>
+  <style>
+    :root {
+      --ink: #202124;
+      --muted: #777b83;
+      --faint: #9da1a8;
+      --canvas: #e9ebee;
+      --shell: #f7f7f8;
+      --paper: #ffffff;
+      --line: #dedfe3;
+      --line-soft: #ececef;
+      --blue: #4778ff;
+      --blue-soft: #e9efff;
+      --violet: #8056df;
+      --green: #36a970;
+      --green-soft: #e8f6ef;
+      --orange: #db8b34;
+      --orange-soft: #fff1df;
+      --red: #d65b64;
+      --shadow: 0 28px 80px rgba(42, 46, 55, .16), 0 3px 12px rgba(42, 46, 55, .07);
+      --r-shell: 34px;
+      --g-shell: 8px;
+      --r-panel: calc(var(--r-shell) - var(--g-shell));
+      --g-panel: 8px;
+      --r-card: calc(var(--r-panel) - var(--g-panel));
+      --g-card: 6px;
+      --r-control: calc(var(--r-card) - var(--g-card));
+      --sidebar-w: 244px;
+      --detail-w: 336px;
+      --header-h: 58px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--canvas);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-width: 320px; min-height: 100%; }
+    body { margin: 0; overflow: hidden; }
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+    svg { display: block; }
+
+    :where(
+      .app-shell, .rail, .sidebar, .workspace, .detail-pane, .project-switcher,
+      .nav-item, .session-item, .toolbar-group, .segmented, .segmented button,
+      .metric, .column, .column-title, .task-card, .avatar, .tag, .priority,
+      .detail-card, .tool-call, .composer, .composer textarea, .composer-mode,
+      .composer-mode button, .icon-button, .primary-button, .status-pill,
+      .assignee-stack, .search, .empty-state, .list-row, .progress-track,
+      .presence, .formula, .kbd
+    ) {
+      corner-shape: squircle;
+    }
+
+    button, [role="button"], input, textarea { outline: none; }
+    :focus-visible { box-shadow: 0 0 0 3px rgba(71, 120, 255, .24); }
+
+    .desktop {
+      width: 100vw;
+      height: 100vh;
+      padding: 18px;
+      background:
+        radial-gradient(circle at 15% 8%, rgba(255, 255, 255, .92), transparent 26%),
+        radial-gradient(circle at 88% 86%, rgba(156, 169, 201, .28), transparent 30%),
+        var(--canvas);
+    }
+
+    .app-shell {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 68px var(--sidebar-w) minmax(420px, 1fr) 7px minmax(280px, var(--detail-w));
+      gap: var(--g-shell);
+      padding: var(--g-shell);
+      border: 1px solid rgba(255, 255, 255, .78);
+      border-radius: var(--r-shell);
+      background: rgba(247, 247, 248, .9);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(24px) saturate(1.15);
+      overflow: hidden;
+    }
+
+    .rail, .sidebar, .workspace, .detail-pane {
+      min-width: 0;
+      min-height: 0;
+      border-radius: var(--r-panel);
+    }
+
+    .rail {
+      padding: 9px;
+      background: #292b30;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 7px;
+      border-radius: 15px;
+      corner-shape: squircle;
+      background: linear-gradient(145deg, #8aa5ff, #4778ff 55%, #6852d8);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 9px 22px rgba(71,120,255,.32);
+    }
+
+    .rail-button {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 15px;
+      corner-shape: squircle;
+      background: transparent;
+      color: #9ea1aa;
+      cursor: pointer;
+      transition: color .18s ease, background .18s ease, transform .18s ease;
+    }
+
+    .rail-button:hover { color: #fff; background: rgba(255,255,255,.09); }
+    .rail-button:active { transform: scale(.94); }
+    .rail-button.active { color: #fff; background: rgba(255,255,255,.14); }
+    .rail-spacer { flex: 1; }
+
+    .presence {
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      background: #f0c7ab;
+      color: #6e3a27;
+      font-size: 12px;
+      font-weight: 750;
+      position: relative;
+    }
+
+    .presence::after {
+      content: "";
+      position: absolute;
+      right: -1px;
+      bottom: -1px;
+      width: 10px;
+      height: 10px;
+      border: 2px solid #292b30;
+      border-radius: 50%;
+      background: #47d482;
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #f1f1f3;
+      border: 1px solid rgba(0,0,0,.035);
+    }
+
+    .sidebar-top { padding: 10px; }
+    .project-switcher {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.84);
+      border-radius: var(--r-card);
+      padding: 10px 11px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .project-mark {
+      width: 34px;
+      height: 34px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      corner-shape: squircle;
+      background: #e7e0fb;
+      color: var(--violet);
+      font: 700 13px/1 ui-monospace, "SFMono-Regular", monospace;
+    }
+
+    .project-copy { flex: 1; min-width: 0; }
+    .project-copy strong, .project-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .project-copy strong { font-size: 13px; letter-spacing: -.01em; }
+    .project-copy small { margin-top: 3px; color: var(--muted); font-size: 11px; }
+
+    .sidebar-nav { padding: 2px 10px 10px; }
+    .nav-label, .section-label {
+      margin: 12px 8px 7px;
+      color: var(--faint);
+      font: 650 10px/1.2 ui-monospace, "SFMono-Regular", monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      width: 100%;
+      min-height: 36px;
+      padding: 7px 9px;
+      border: 0;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: transparent;
+      color: #5e626a;
+      cursor: pointer;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    .nav-item:hover { background: rgba(255,255,255,.68); color: var(--ink); }
+    .nav-item.active { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+    .nav-count { margin-left: auto; color: var(--faint); font: 600 10px/1 ui-monospace, monospace; }
+
+    .sessions-header { display: flex; align-items: center; padding: 0 10px; }
+    .sessions-header .section-label { flex: 1; }
+    .sessions-header button { border: 0; background: transparent; color: var(--faint); cursor: pointer; }
+
+    .session-list { padding: 0 8px 10px; overflow: auto; scrollbar-width: none; }
+    .session-list::-webkit-scrollbar { display: none; }
+    .session-item {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      padding: 9px 10px;
+      background: transparent;
+      display: grid;
+      grid-template-columns: 8px minmax(0,1fr) auto;
+      gap: 8px;
+      align-items: start;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .session-item:hover { background: rgba(255,255,255,.6); }
+    .session-item.active { background: #e5e9f6; }
+    .session-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 4px; background: var(--faint); }
+    .session-dot.live { background: var(--green); box-shadow: 0 0 0 4px rgba(54,169,112,.12); }
+    .session-copy { min-width: 0; }
+    .session-copy strong { display: block; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .session-copy small { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .session-time { color: var(--faint); font: 500 9px/1.2 ui-monospace, monospace; }
+
+    .workspace {
+      background: var(--paper);
+      border: 1px solid rgba(0,0,0,.05);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .workspace-header {
+      min-height: var(--header-h);
+      padding: 9px 12px 9px 17px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .workspace-title { min-width: 0; }
+    .eyebrow { color: var(--faint); font: 600 9px/1.2 ui-monospace, monospace; letter-spacing: .09em; text-transform: uppercase; }
+    .workspace-title h1 { margin: 3px 0 0; font-size: 17px; line-height: 1.1; letter-spacing: -.03em; }
+    .toolbar { margin-left: auto; display: flex; align-items: center; gap: 7px; }
+
+    .search {
+      width: 170px;
+      min-height: 34px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--faint);
+      background: #f8f8f9;
+    }
+
+    .search input { width: 100%; border: 0; background: transparent; color: var(--ink); font-size: 11px; }
+    .search input::placeholder { color: var(--faint); }
+
+    .segmented, .composer-mode {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #f2f2f4;
+    }
+
+    .segmented button, .composer-mode button {
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .segmented button { width: 28px; height: 26px; display: grid; place-items: center; }
+    .segmented button.active, .composer-mode button.active { color: var(--ink); background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
+    .icon-button, .primary-button {
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      display: inline-grid;
+      place-items: center;
+    }
+
+    .icon-button { width: 34px; height: 34px; background: #f2f2f4; color: var(--muted); }
+    .primary-button { min-width: 34px; height: 34px; padding: 0 12px; background: var(--ink); color: #fff; font-size: 11px; font-weight: 650; }
+    .icon-button:hover, .primary-button:hover { filter: brightness(.96); }
+
+    .metrics {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line-soft);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .metric {
+      min-width: max-content;
+      padding: 7px 9px;
+      border: 1px solid var(--line-soft);
+      border-radius: 11px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      background: #fbfbfc;
+    }
+
+    .metric strong { font: 700 12px/1 ui-monospace, monospace; }
+    .metric span { color: var(--muted); font-size: 10px; }
+    .metric .good { color: var(--green); }
+
+    .board-wrap { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+    .board {
+      height: 100%;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+      gap: 8px;
+      overflow: auto;
+      background: #f6f6f7;
+    }
+
+    .column {
+      min-width: 220px;
+      border-radius: var(--r-card);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--line-soft);
+      background: rgba(255,255,255,.68);
+    }
+
+    .column-header { padding: 9px 9px 7px; display: flex; align-items: center; gap: 8px; }
+    .column-title {
+      padding: 5px 8px;
+      border-radius: 9px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+
+    .column-title.todo { background: #eceef2; }
+    .column-title.doing { background: var(--blue-soft); color: #315cc8; }
+    .column-title.review { background: var(--orange-soft); color: #a46625; }
+    .column-count { color: var(--faint); font: 600 10px/1 ui-monospace, monospace; }
+    .column-add { margin-left: auto; border: 0; background: transparent; color: var(--faint); cursor: pointer; }
+
+    .card-list { padding: 0 7px 7px; display: flex; flex-direction: column; gap: 6px; overflow: auto; scrollbar-width: thin; }
+    .task-card {
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .task-card:hover { transform: translateY(-1px); border-color: #d3d7e2; box-shadow: 0 6px 18px rgba(35,39,50,.07); }
+    .task-card.selected { border-color: #91aaff; box-shadow: 0 0 0 2px rgba(71,120,255,.12); }
+    .task-top { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .priority { width: 7px; height: 7px; border-radius: 3px; background: var(--faint); }
+    .priority.high { background: var(--red); }
+    .priority.medium { background: var(--orange); }
+    .task-id { color: var(--faint); font: 600 9px/1 ui-monospace, monospace; }
+    .agent-live { margin-left: auto; display: flex; align-items: center; gap: 5px; color: var(--green); font: 650 9px/1 ui-monospace, monospace; }
+    .agent-live::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: pulse 1.6s ease-in-out infinite; }
+    .task-card h3 { margin: 0; font-size: 12px; line-height: 1.38; letter-spacing: -.012em; }
+    .task-card p { margin: 6px 0 0; color: var(--muted); font-size: 10px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .task-meta { margin-top: 10px; display: flex; align-items: center; gap: 6px; }
+    .tag { border-radius: 7px; padding: 4px 6px; background: #f1f2f4; color: #666b73; font: 600 8.5px/1 ui-monospace, monospace; }
+    .tag.agent { color: #5f3fb1; background: #eee8fb; }
+    .avatar { width: 20px; height: 20px; border-radius: 7px; display: grid; place-items: center; margin-left: auto; background: #dfe7ff; color: #3f5caa; font-size: 8px; font-weight: 750; }
+    .comments { display: flex; align-items: center; gap: 3px; color: var(--faint); font: 600 9px/1 ui-monospace, monospace; }
+
+    .list-view { height: 100%; padding: 10px; overflow: auto; background: #f6f6f7; display: none; }
+    .list-view.active { display: block; }
+    .board.hidden { display: none; }
+    .list-row {
+      display: grid;
+      grid-template-columns: 62px minmax(180px,1.8fr) minmax(100px,.8fr) 92px 54px;
+      align-items: center;
+      gap: 12px;
+      min-height: 47px;
+      padding: 7px 12px;
+      border: 1px solid var(--line-soft);
+      border-radius: 13px;
+      background: #fff;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+    .list-row strong { font-size: 11px; }
+    .list-row > span { color: var(--muted); }
+
+    .resize-handle {
+      position: relative;
+      min-width: 7px;
+      cursor: col-resize;
+      touch-action: none;
+    }
+    .resize-handle::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 50%;
+      width: 3px;
+      height: 40px;
+      border-radius: 3px;
+      background: #c7c9cf;
+      transform: translateY(-50%);
+      transition: height .18s ease, background .18s ease;
+    }
+    .resize-handle:hover::before, .resize-handle.dragging::before { height: 64px; background: var(--blue); }
+
+    .detail-pane {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,.05);
+      background: #f4f4f5;
+    }
+
+    .detail-header {
+      min-height: var(--header-h);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      border-bottom: 1px solid var(--line);
+    }
+    .detail-header .avatar { margin-left: 0; width: 30px; height: 30px; border-radius: 10px; background: #e6defa; color: var(--violet); }
+    .detail-title { min-width: 0; }
+    .detail-title strong { display: block; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .detail-title small { display: block; margin-top: 3px; color: var(--green); font: 600 9px/1 ui-monospace, monospace; }
+    .detail-header .icon-button { margin-left: auto; width: 30px; height: 30px; }
+
+    .detail-scroll { flex: 1; min-height: 0; padding: 8px; overflow: auto; }
+    .detail-card {
+      border: 1px solid var(--line);
+      border-radius: var(--r-card);
+      padding: 12px;
+      background: #fff;
+      margin-bottom: 8px;
+    }
+    .detail-card h2 { margin: 0 0 7px; font-size: 14px; line-height: 1.35; letter-spacing: -.02em; }
+    .detail-card > p { margin: 0; color: var(--muted); font-size: 10.5px; line-height: 1.55; }
+    .status-line { margin-top: 11px; display: flex; align-items: center; gap: 7px; }
+    .status-pill { padding: 5px 7px; border-radius: 8px; background: var(--blue-soft); color: #315cc8; font: 650 8.5px/1 ui-monospace, monospace; }
+    .status-line time { margin-left: auto; color: var(--faint); font: 500 9px/1 ui-monospace, monospace; }
+
+    .step-label { color: var(--faint); font: 650 9px/1 ui-monospace, monospace; letter-spacing: .07em; text-transform: uppercase; }
+    .progress-head { margin-top: 8px; display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+    .progress-head strong { color: var(--ink); }
+    .progress-track { height: 7px; margin-top: 7px; overflow: hidden; border-radius: 5px; background: #eceef2; }
+    .progress-track span { display: block; width: 68%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #647dff, #8762de); }
+
+    .timeline { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
+    .message { display: grid; grid-template-columns: 24px minmax(0,1fr); gap: 8px; align-items: start; }
+    .message .avatar { width: 24px; height: 24px; margin: 0; border-radius: 8px; background: #eee9fa; color: var(--violet); }
+    .message-copy strong { display: block; font-size: 10px; }
+    .message-copy p { margin: 3px 0 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+
+    .tool-call {
+      border: 1px solid var(--line-soft);
+      border-radius: 11px;
+      padding: 9px;
+      background: #f8f8f9;
+    }
+    .tool-head { display: flex; align-items: center; gap: 7px; }
+    .tool-head code { font: 650 9px/1 ui-monospace, monospace; }
+    .tool-head span { margin-left: auto; color: var(--green); font: 600 8px/1 ui-monospace, monospace; }
+    .tool-call p { margin: 6px 0 0; color: var(--muted); font: 500 8.5px/1.4 ui-monospace, monospace; word-break: break-all; }
+
+    .formula { margin-top: 9px; padding: 9px; border-radius: 11px; background: #f4f5f7; color: #555b65; font: 600 9px/1.55 ui-monospace, monospace; }
+    .formula b { color: var(--blue); }
+
+    .composer-wrap { padding: 0 8px 8px; }
+    .composer {
+      border: 1px solid #d7d9df;
+      border-radius: var(--r-card);
+      padding: 6px;
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 8px 24px rgba(41,45,55,.08);
+    }
+    .composer textarea {
+      width: 100%;
+      min-height: 48px;
+      max-height: 120px;
+      resize: none;
+      border: 0;
+      border-radius: var(--r-control);
+      padding: 8px;
+      background: transparent;
+      color: var(--ink);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+    .composer textarea::placeholder { color: var(--faint); }
+    .composer-footer { display: flex; align-items: center; gap: 6px; }
+    .composer-mode { border: 0; padding: 2px; }
+    .composer-mode button { padding: 5px 7px; font-size: 8.5px; font-weight: 650; }
+    .composer-footer .primary-button { margin-left: auto; min-width: 30px; width: 30px; height: 30px; padding: 0; background: var(--blue); }
+    .kbd { padding: 4px 6px; border-radius: 7px; background: #f1f2f4; color: var(--faint); font: 600 8px/1 ui-monospace, monospace; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 34px;
+      z-index: 20;
+      padding: 10px 14px;
+      border-radius: 14px;
+      corner-shape: squircle;
+      background: #25272c;
+      color: #fff;
+      box-shadow: 0 12px 34px rgba(0,0,0,.22);
+      font-size: 11px;
+      transform: translate(-50%, 20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: .24s ease;
+    }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+    @keyframes pulse { 0%,100% { opacity: .35; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
+
+    @media (max-width: 1040px) {
+      :root { --sidebar-w: 210px; --detail-w: 300px; }
+      .search { display: none; }
+      .metrics .metric:nth-child(n+4) { display: none; }
+    }
+
+    @media (max-width: 820px) {
+      body { overflow: auto; }
+      .desktop { min-height: 100vh; height: auto; padding: 0; }
+      .app-shell {
+        min-height: 100vh;
+        border: 0;
+        border-radius: 0;
+        grid-template-columns: 58px minmax(0,1fr);
+        grid-template-rows: minmax(620px, 1fr) auto;
+        padding: 6px;
+      }
+      .rail { grid-row: 1 / 3; }
+      .sidebar { display: none; }
+      .workspace { grid-column: 2; }
+      .resize-handle { display: none; }
+      .detail-pane { grid-column: 2; min-height: 520px; }
+      .board { grid-template-columns: repeat(3, 260px); }
+      .toolbar .primary-button { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="desktop">
+    <section class="app-shell" id="appShell">
+      <aside class="rail" aria-label="主导航">
+        <div class="brand" aria-label="Orbit">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.3c4.95 0 8.7 3.75 8.7 8.7s-3.75 8.7-8.7 8.7S3.3 16.95 3.3 12 7.05 3.3 12 3.3Z" stroke="white" stroke-width="1.8"/><path d="M4.8 15.9c4.9-1.2 9-4 11.8-8.6" stroke="white" stroke-width="1.8" stroke-linecap="round"/><circle cx="16.6" cy="7.3" r="2.1" fill="white"/></svg>
+        </div>
+        <button class="rail-button active" aria-label="工作台"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.7"/><rect x="3" y="14" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="14" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.7"/></svg></button>
+        <button class="rail-button" aria-label="Agent"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3 4.5 7.2v9.6L12 21l7.5-4.2V7.2L12 3Z" stroke="currentColor" stroke-width="1.7"/><path d="m8.5 12 2.2 2.2 4.8-4.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="rail-button" aria-label="收件箱"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 4h14l2 11v4H3v-4L5 4Z" stroke="currentColor" stroke-width="1.7"/><path d="M3 15h5l1.5 2h5l1.5-2h5" stroke="currentColor" stroke-width="1.7"/></svg></button>
+        <button class="rail-button" aria-label="搜索"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
+        <div class="rail-spacer"></div>
+        <button class="rail-button" aria-label="设置"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M19 12a7 7 0 0 0-.12-1.3l2-1.55-2-3.46-2.45 1A7.2 7.2 0 0 0 14.2 5.4L13.9 3h-4l-.3 2.4a7.2 7.2 0 0 0-2.03 1.3l-2.45-1-2 3.45 2 1.56A7 7 0 0 0 5 12c0 .44.04.87.12 1.29l-2 1.56 2 3.46 2.45-1a7.2 7.2 0 0 0 2.03 1.3l.3 2.39h4l.3-2.4a7.2 7.2 0 0 0 2.23-1.29l2.45 1 2-3.46-2-1.56c.08-.42.12-.85.12-1.29Z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/></svg></button>
+        <div class="presence" aria-label="方统义在线">FT</div>
+      </aside>
+
+      <aside class="sidebar" aria-label="项目侧边栏">
+        <div class="sidebar-top">
+          <button class="project-switcher">
+            <span class="project-mark">EY</span>
+            <span class="project-copy"><strong>Eyrie Desktop</strong><small>Product engineering</small></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m8 10 4 4 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-label">Workspace</div>
+          <button class="nav-item active"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4zM9 5v14M15 5v14" stroke="currentColor" stroke-width="1.6"/></svg>Kanban <span class="nav-count">12</span></button>
+          <button class="nav-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M7 6h13M7 12h13M7 18h13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="3.5" cy="6" r="1" fill="currentColor"/><circle cx="3.5" cy="12" r="1" fill="currentColor"/><circle cx="3.5" cy="18" r="1" fill="currentColor"/></svg>All tasks <span class="nav-count">28</span></button>
+          <button class="nav-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.6"/></svg>Agent runs <span class="nav-count">4</span></button>
+          <button class="nav-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 4h16v16H4zM7 8h10M7 12h7M7 16h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Notes</button>
+        </nav>
+        <div class="sessions-header"><div class="section-label">Active sessions</div><button aria-label="新建会话">+</button></div>
+        <div class="session-list">
+          <button class="session-item active"><span class="session-dot live"></span><span class="session-copy"><strong>Session event reducer</strong><small>Implementing · 6 tools</small></span><time class="session-time">NOW</time></button>
+          <button class="session-item"><span class="session-dot live"></span><span class="session-copy"><strong>Composer squircle shell</strong><small>Reviewing visual tokens</small></span><time class="session-time">2M</time></button>
+          <button class="session-item"><span class="session-dot"></span><span class="session-copy"><strong>Task cwd fallback</strong><small>Completed · 12 files</small></span><time class="session-time">41M</time></button>
+          <button class="session-item"><span class="session-dot"></span><span class="session-copy"><strong>Deep-link routing</strong><small>Paused at decision</small></span><time class="session-time">3H</time></button>
+          <button class="session-item"><span class="session-dot"></span><span class="session-copy"><strong>Notification sounds</strong><small>Draft proposal</small></span><time class="session-time">1D</time></button>
+        </div>
+      </aside>
+
+      <section class="workspace" aria-label="Kanban 工作区">
+        <header class="workspace-header">
+          <div class="workspace-title"><div class="eyebrow">Sprint 26 · Jul 13–19</div><h1>Agent workspace</h1></div>
+          <div class="toolbar">
+            <label class="search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="taskSearch" type="search" placeholder="Filter tasks"></label>
+            <div class="segmented" aria-label="视图切换"><button class="active" data-view="board" aria-label="看板视图"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4zM9 5v14M15 5v14" stroke="currentColor" stroke-width="1.6"/></svg></button><button data-view="list" aria-label="列表视图"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 6h13M7 12h13M7 18h13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="3.5" cy="6" r="1" fill="currentColor"/><circle cx="3.5" cy="12" r="1" fill="currentColor"/><circle cx="3.5" cy="18" r="1" fill="currentColor"/></svg></button></div>
+            <button class="primary-button" id="newTask">New task</button>
+          </div>
+        </header>
+
+        <div class="metrics">
+          <div class="metric"><strong>12</strong><span>open tasks</span></div>
+          <div class="metric"><strong class="good">4</strong><span>agents live</span></div>
+          <div class="metric"><strong>68%</strong><span>sprint done</span></div>
+          <div class="metric"><strong>18m</strong><span>avg. cycle</span></div>
+          <div class="metric"><strong>0</strong><span>blocked</span></div>
+        </div>
+
+        <div class="board-wrap">
+          <div class="board" id="board">
+            <section class="column" data-status="todo">
+              <header class="column-header"><span class="column-title todo">Backlog</span><span class="column-count">4</span><button class="column-add" aria-label="添加任务">+</button></header>
+              <div class="card-list">
+                <article class="task-card" tabindex="0" data-title="Define nested radius tokens" data-id="EY-184" data-status="Backlog"><div class="task-top"><span class="priority high"></span><span class="task-id">EY-184</span></div><h3>Define nested radius tokens</h3><p>Map shell, panel, card and control curves to a single spacing equation.</p><div class="task-meta"><span class="tag">design-system</span><span class="avatar">FT</span><span class="comments">◌ 3</span></div></article>
+                <article class="task-card" tabindex="0" data-title="Add multi-session notification routing" data-id="EY-179" data-status="Backlog"><div class="task-top"><span class="priority medium"></span><span class="task-id">EY-179</span></div><h3>Add multi-session notification routing</h3><p>Open completed Agent runs in the exact split-pane context.</p><div class="task-meta"><span class="tag">desktop</span><span class="avatar">YC</span><span class="comments">◌ 5</span></div></article>
+                <article class="task-card" tabindex="0" data-title="Persist project panel width" data-id="EY-176" data-status="Backlog"><div class="task-top"><span class="priority"></span><span class="task-id">EY-176</span></div><h3>Persist project panel width</h3><p>Restore the user’s preferred split after relaunch.</p><div class="task-meta"><span class="tag">state</span><span class="avatar">FT</span><span class="comments">◌ 2</span></div></article>
+              </div>
+            </section>
+
+            <section class="column" data-status="doing">
+              <header class="column-header"><span class="column-title doing">In progress</span><span class="column-count">3</span><button class="column-add" aria-label="添加任务">+</button></header>
+              <div class="card-list">
+                <article class="task-card selected" tabindex="0" data-title="Normalize session event reducer" data-id="EY-181" data-status="In progress"><div class="task-top"><span class="priority high"></span><span class="task-id">EY-181</span><span class="agent-live">AGENT</span></div><h3>Normalize session event reducer</h3><p>Handle delta and completed-only messages without duplicate rendering.</p><div class="task-meta"><span class="tag agent">codex</span><span class="tag">events</span><span class="avatar">AI</span><span class="comments">◌ 8</span></div></article>
+                <article class="task-card" tabindex="0" data-title="Build composer shell" data-id="EY-182" data-status="In progress"><div class="task-top"><span class="priority medium"></span><span class="task-id">EY-182</span><span class="agent-live">AGENT</span></div><h3>Build composer shell</h3><p>Unify input, approvals and tool attachments in one continuous surface.</p><div class="task-meta"><span class="tag agent">claude</span><span class="tag">ui</span><span class="avatar">AI</span><span class="comments">◌ 4</span></div></article>
+                <article class="task-card" tabindex="0" data-title="Batch replay events per frame" data-id="EY-173" data-status="In progress"><div class="task-top"><span class="priority high"></span><span class="task-id">EY-173</span></div><h3>Batch replay events per frame</h3><p>Replace O(n²) append behavior with a microtask event batch.</p><div class="task-meta"><span class="tag">performance</span><span class="avatar">FT</span><span class="comments">◌ 7</span></div></article>
+              </div>
+            </section>
+
+            <section class="column" data-status="review">
+              <header class="column-header"><span class="column-title review">Review</span><span class="column-count">3</span><button class="column-add" aria-label="添加任务">+</button></header>
+              <div class="card-list">
+                <article class="task-card" tabindex="0" data-title="Add unknown-part fallback" data-id="EY-168" data-status="Review"><div class="task-top"><span class="priority medium"></span><span class="task-id">EY-168</span></div><h3>Add unknown-part fallback</h3><p>Keep malformed or future event parts visible without breaking the thread.</p><div class="task-meta"><span class="tag">resilience</span><span class="avatar">FT</span><span class="comments">◌ 6</span></div></article>
+                <article class="task-card" tabindex="0" data-title="Align task cwd fallback" data-id="EY-164" data-status="Review"><div class="task-top"><span class="priority"></span><span class="task-id">EY-164</span></div><h3>Align task cwd fallback</h3><p>Infer the repository root when workingDir is omitted.</p><div class="task-meta"><span class="tag">daemon</span><span class="avatar">YC</span><span class="comments">◌ 2</span></div></article>
+                <article class="task-card" tabindex="0" data-title="Composer keyboard navigation" data-id="EY-160" data-status="Review"><div class="task-top"><span class="priority medium"></span><span class="task-id">EY-160</span></div><h3>Composer keyboard navigation</h3><p>Complete focus order and reduced-motion behavior.</p><div class="task-meta"><span class="tag">a11y</span><span class="avatar">FT</span><span class="comments">◌ 4</span></div></article>
+              </div>
+            </section>
+          </div>
+
+          <div class="list-view" id="listView">
+            <div class="list-row"><span>EY-181</span><strong>Normalize session event reducer</strong><span>In progress</span><span>Codex</span><span>High</span></div>
+            <div class="list-row"><span>EY-182</span><strong>Build composer shell</strong><span>In progress</span><span>Claude</span><span>Medium</span></div>
+            <div class="list-row"><span>EY-184</span><strong>Define nested radius tokens</strong><span>Backlog</span><span>Human</span><span>High</span></div>
+            <div class="list-row"><span>EY-168</span><strong>Add unknown-part fallback</strong><span>Review</span><span>Human</span><span>Medium</span></div>
+            <div class="list-row"><span>EY-164</span><strong>Align task cwd fallback</strong><span>Review</span><span>Human</span><span>Normal</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="resize-handle" id="resizeHandle" role="separator" aria-label="调整详情面板宽度" aria-orientation="vertical" tabindex="0"></div>
+
+      <aside class="detail-pane" aria-label="任务与 Agent Composer">
+        <header class="detail-header">
+          <span class="avatar">AI</span>
+          <span class="detail-title"><strong id="detailId">EY-181 · Agent run</strong><small>● Running for 06:42</small></span>
+          <button class="icon-button" aria-label="更多操作">•••</button>
+        </header>
+        <div class="detail-scroll">
+          <section class="detail-card">
+            <h2 id="detailTitle">Normalize session event reducer</h2>
+            <p id="detailDescription">Handle streaming deltas and completed-only messages without duplicate rendering or dropped final text.</p>
+            <div class="status-line"><span class="status-pill" id="detailStatus">IN PROGRESS</span><time>Updated now</time></div>
+          </section>
+
+          <section class="detail-card">
+            <div class="step-label">Current step</div>
+            <div class="progress-head"><span>Running focused tests</span><strong>68%</strong></div>
+            <div class="progress-track"><span></span></div>
+            <div class="timeline">
+              <div class="message"><span class="avatar">AI</span><div class="message-copy"><strong>Codex</strong><p>The reducer now treats completed text as a fallback rather than a duplicate source.</p></div></div>
+              <div class="tool-call"><div class="tool-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><code>pnpm test session-store</code><span>PASS</span></div><p>12 tests · 1.84s · no snapshots changed</p></div>
+              <div class="tool-call"><div class="tool-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4zM4 9h16" stroke="currentColor" stroke-width="1.7"/><circle cx="7" cy="7" r=".8" fill="currentColor"/></svg><code>read dispatcher.ts</code><span>DONE</span></div><p>packages/client/src/dispatcher.ts · lines 244–301</p></div>
+            </div>
+          </section>
+
+          <section class="detail-card">
+            <div class="step-label">Nested corner contract</div>
+            <div class="formula">shell <b>34px</b> − gap <b>8px</b> = panel <b>26px</b><br>panel <b>26px</b> − gap <b>8px</b> = card <b>18px</b><br>card <b>18px</b> − gap <b>6px</b> = control <b>12px</b></div>
+          </section>
+        </div>
+
+        <div class="composer-wrap">
+          <form class="composer" id="composer">
+            <textarea id="composerInput" rows="2" placeholder="Ask the agent to change this task…"></textarea>
+            <div class="composer-footer">
+              <div class="composer-mode" aria-label="Agent 模式"><button type="button">Plan</button><button type="button" class="active">Build</button><button type="button">Review</button></div>
+              <span class="kbd">⌘ ↵</span>
+              <button class="primary-button" type="submit" aria-label="发送"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 12 14-7-4.5 14-2.5-5-7-2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+            </div>
+          </form>
+        </div>
+      </aside>
+    </section>
+  </main>
+  <div class="toast" id="toast">Task added to backlog</div>
+
+  <script>
+    const shell = document.getElementById('appShell');
+    const handle = document.getElementById('resizeHandle');
+    const board = document.getElementById('board');
+    const listView = document.getElementById('listView');
+    const toast = document.getElementById('toast');
+    let dragging = false;
+
+    function setDetailWidth(clientX) {
+      const rect = shell.getBoundingClientRect();
+      const width = Math.max(280, Math.min(520, rect.right - clientX - 8));
+      shell.style.setProperty('--detail-w', `${width}px`);
+    }
+
+    handle.addEventListener('pointerdown', event => {
+      dragging = true;
+      handle.classList.add('dragging');
+      handle.setPointerCapture(event.pointerId);
+    });
+    handle.addEventListener('pointermove', event => dragging && setDetailWidth(event.clientX));
+    handle.addEventListener('pointerup', () => {
+      dragging = false;
+      handle.classList.remove('dragging');
+    });
+    handle.addEventListener('keydown', event => {
+      const current = parseInt(getComputedStyle(shell).getPropertyValue('--detail-w')) || 336;
+      if (event.key === 'ArrowLeft') shell.style.setProperty('--detail-w', `${Math.min(520, current + 16)}px`);
+      if (event.key === 'ArrowRight') shell.style.setProperty('--detail-w', `${Math.max(280, current - 16)}px`);
+    });
+
+    document.querySelectorAll('[data-view]').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-view]').forEach(item => item.classList.remove('active'));
+        button.classList.add('active');
+        const isList = button.dataset.view === 'list';
+        board.classList.toggle('hidden', isList);
+        listView.classList.toggle('active', isList);
+      });
+    });
+
+    function selectCard(card) {
+      document.querySelectorAll('.task-card').forEach(item => item.classList.remove('selected'));
+      card.classList.add('selected');
+      document.getElementById('detailId').textContent = `${card.dataset.id} · Agent run`;
+      document.getElementById('detailTitle').textContent = card.dataset.title;
+      document.getElementById('detailDescription').textContent = card.querySelector('p').textContent;
+      document.getElementById('detailStatus').textContent = card.dataset.status.toUpperCase();
+    }
+
+    document.querySelectorAll('.task-card').forEach(card => {
+      card.addEventListener('click', () => selectCard(card));
+      card.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') selectCard(card);
+      });
+    });
+
+    document.getElementById('taskSearch').addEventListener('input', event => {
+      const query = event.target.value.toLowerCase().trim();
+      document.querySelectorAll('.task-card').forEach(card => {
+        card.style.display = card.textContent.toLowerCase().includes(query) ? '' : 'none';
+      });
+    });
+
+    document.querySelectorAll('.composer-mode button').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.composer-mode button').forEach(item => item.classList.remove('active'));
+        button.classList.add('active');
+      });
+    });
+
+    const input = document.getElementById('composerInput');
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+    });
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    document.getElementById('composer').addEventListener('submit', event => {
+      event.preventDefault();
+      if (!input.value.trim()) return;
+      showToast('Instruction sent to Agent');
+      input.value = '';
+      input.style.height = 'auto';
+    });
+
+    input.addEventListener('keydown', event => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') document.getElementById('composer').requestSubmit();
+    });
+
+    document.getElementById('newTask').addEventListener('click', () => showToast('New task added to backlog'));
+    document.querySelectorAll('.column-add').forEach(button => button.addEventListener('click', () => showToast('Draft task created')));
+  </script>
+</body>
+</html>

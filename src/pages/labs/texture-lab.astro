@@ -1,0 +1,511 @@
+---
+import Base from "@/layouts/Base.astro";
+---
+
+<Base enableIntro={false}>
+  <main class="texture-lab-demo">
+    <canvas id="texture-canvas-a" class="texture-canvas active"></canvas>
+    <canvas id="texture-canvas-b" class="texture-canvas"></canvas>
+
+    <section class="section" data-section="0">
+      <div class="section-content">
+        <h1>Section 01</h1>
+        <p>Scroll to switch texture</p>
+      </div>
+    </section>
+
+    <section class="section" data-section="1">
+      <div class="section-content">
+        <h1>Section 02</h1>
+      </div>
+    </section>
+
+    <section class="section" data-section="2">
+      <div class="section-content">
+        <h1>Section 03</h1>
+      </div>
+    </section>
+
+    <section class="section" data-section="3">
+      <div class="section-content">
+        <h1>Section 04</h1>
+      </div>
+    </section>
+
+    <div class="hud">
+      <p id="current-effect"></p>
+      <button id="btn-randomize-effects" title="Randomize effects">&#9856;</button>
+    </div>
+  </main>
+</Base>
+
+<script>
+  import { WebGLRenderer } from "@/components/texture-lab/renderer";
+  import { EFFECT_TYPES, createEffect, BLEND_MODES } from "@/components/texture-lab/types";
+
+  // ─── Setup ───────────────────────────────────────────────────────────────────
+
+  const canvasA = document.getElementById("texture-canvas-a") as HTMLCanvasElement;
+  const canvasB = document.getElementById("texture-canvas-b") as HTMLCanvasElement;
+  const currentEffectEl = document.getElementById("current-effect")!;
+  const btnRandomizeEffects = document.getElementById("btn-randomize-effects")!;
+  const sections = document.querySelectorAll<HTMLElement>(".section");
+
+  let rendererA: InstanceType<typeof WebGLRenderer>;
+  let rendererB: InstanceType<typeof WebGLRenderer>;
+  let seed = Math.random() * 100000;
+  let currentSectionIndex = 0;
+  let activeCanvas: "a" | "b" = "a";
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  try {
+    rendererA = new WebGLRenderer(canvasA);
+    rendererB = new WebGLRenderer(canvasB);
+  } catch (e) {
+    console.error("WebGL not supported", e);
+  }
+
+  // ─── Effect pool (excludes overlay/displacement which need custom textures) ──
+
+  const EFFECT_POOL = [
+    EFFECT_TYPES.NOISE,
+    EFFECT_TYPES.CHROMATIC,
+    EFFECT_TYPES.VIGNETTE,
+    EFFECT_TYPES.SCANLINES,
+    EFFECT_TYPES.GRAIN,
+    EFFECT_TYPES.COLOR_GRADE,
+    EFFECT_TYPES.GLITCH,
+    EFFECT_TYPES.DUOTONE,
+    EFFECT_TYPES.DITHER,
+    EFFECT_TYPES.HALFTONE,
+    EFFECT_TYPES.POSTERIZE,
+    EFFECT_TYPES.LIGHT_LEAK,
+    EFFECT_TYPES.EXPOSURE,
+    EFFECT_TYPES.VIBRANCE,
+    EFFECT_TYPES.DOT_DITHER,
+    EFFECT_TYPES.EDGE,
+    EFFECT_TYPES.PIXELATE,
+    EFFECT_TYPES.BLUR,
+    EFFECT_TYPES.DISTORTION,
+    EFFECT_TYPES.CRT,
+    EFFECT_TYPES.KUWAHARA,
+    EFFECT_TYPES.BARREL,
+    EFFECT_TYPES.RIPPLE,
+    EFFECT_TYPES.BLOOM,
+    EFFECT_TYPES.RADIAL_BLUR,
+    EFFECT_TYPES.MOSAIC,
+    EFFECT_TYPES.TILT_SHIFT,
+  ];
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+  function rand(min: number, max: number) {
+    return Math.random() * (max - min) + min;
+  }
+  function pick<T>(arr: T[]): T {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+  function weightedCount() {
+    const r = Math.random();
+    if (r < 0.30) return 2;
+    if (r < 0.55) return 3;
+    if (r < 0.75) return 4;
+    if (r < 0.87) return 5;
+    if (r < 0.94) return 6;
+    if (r < 0.98) return 7;
+    return 8;
+  }
+
+  // ─── Conservative params (used when picking new effect combos) ───────────────
+
+  function conservativeParams(type: string): Record<string, any> {
+    switch (type) {
+      case EFFECT_TYPES.NOISE:
+        return { intensity: rand(0.05, 0.2), scale: rand(0.8, 1.5), monochrome: true, blendMode: pick([BLEND_MODES.OVERLAY, BLEND_MODES.SOFT_LIGHT]) };
+      case EFFECT_TYPES.CHROMATIC:
+        return { intensity: rand(0.002, 0.008), angle: rand(0, 360), radial: Math.random() > 0.4 };
+      case EFFECT_TYPES.VIGNETTE:
+        return { intensity: rand(0.3, 0.6), size: rand(0.4, 0.6), softness: rand(0.6, 1.0), color: "#000000" };
+      case EFFECT_TYPES.SCANLINES:
+        return { spacing: rand(3, 6), thickness: rand(0.5, 1.5), opacity: rand(0.1, 0.25), horizontal: true, offset: 0 };
+      case EFFECT_TYPES.GRAIN:
+        return { intensity: rand(0.05, 0.15), size: rand(1.0, 1.8), luminanceResponse: rand(0.3, 0.6), colored: false };
+      case EFFECT_TYPES.COLOR_GRADE:
+        return { brightness: rand(-0.08, 0.08), contrast: rand(-0.08, 0.12), saturation: rand(-0.2, 0.15), temperature: rand(-0.1, 0.1), tint: rand(-0.03, 0.03), shadows: "#000000", highlights: "#ffffff", shadowInfluence: 0, highlightInfluence: 0 };
+      case EFFECT_TYPES.GLITCH:
+        return { intensity: rand(0.1, 0.3), sliceCount: Math.floor(rand(3, 10)), rgbShift: rand(0.005, 0.015), angle: 0, seed: Math.floor(rand(0, 1000)), blockSize: rand(0.05, 0.12), colorShift: true };
+      case EFFECT_TYPES.DUOTONE:
+        return { shadowColor: pick(["#1a0533","#0d1b2a","#1b263b","#2b2d42","#003049","#10002b"]), highlightColor: pick(["#f5c542","#e0aaff","#76c893","#ef233c","#fcbf49","#c77dff"]), contrast: rand(0.9, 1.1), intensity: rand(0.8, 1.0) };
+      case EFFECT_TYPES.DITHER:
+        return { method: pick(["bayer2x2","bayer4x4","bayer8x8"]), levels: Math.floor(rand(3, 6)), threshold: rand(0.4, 0.6), scale: rand(0.8, 1.5) };
+      case EFFECT_TYPES.HALFTONE:
+        return { gridSize: Math.floor(rand(5, 10)), dotScale: rand(0.8, 1.1), angle: rand(0, 90), shape: pick(["circle","square","diamond"]), softness: rand(0.3, 0.6), contrast: rand(0, 0.15), invert: false, colorMode: pick(["original","monochrome"]), dotColor: "#000000", backgroundColor: "#ffffff", mixOriginal: rand(0, 0.15) };
+      case EFFECT_TYPES.POSTERIZE:
+        return { levels: Math.floor(rand(4, 8)), preserveHue: true };
+      case EFFECT_TYPES.LIGHT_LEAK:
+        return { color1: pick(["#ff6b35","#ff006e","#ffbe0b","#fb5607"]), color2: pick(["#f7931e","#8338ec","#3a86ff","#ff006e"]), position: rand(0.2, 0.8), angle: rand(0, 180), size: rand(0.4, 0.7), intensity: rand(0.3, 0.55), softness: rand(0.7, 1.0), blendMode: BLEND_MODES.SCREEN };
+      case EFFECT_TYPES.EXPOSURE:
+        return { exposure: rand(-0.15, 0.15), highlights: rand(-0.15, 0.15), shadows: rand(-0.1, 0.15), blacks: rand(-0.03, 0.05), whites: rand(-0.03, 0.05) };
+      case EFFECT_TYPES.VIBRANCE:
+        return { vibrance: rand(-0.1, 0.3), saturation: rand(-0.1, 0.1) };
+      case EFFECT_TYPES.DOT_DITHER:
+        return { scale: rand(1.0, 2.5), threshold: rand(0.35, 0.65), animated: false, animationSpeed: 1.0, invert: false };
+      case EFFECT_TYPES.EDGE:
+        return { strength: rand(0.5, 1.2), threshold: rand(0.03, 0.08), invert: false, colorize: Math.random() > 0.5 };
+      case EFFECT_TYPES.PIXELATE:
+        return { size: Math.floor(rand(4, 8)), maintainAspect: true };
+      case EFFECT_TYPES.BLUR:
+        return { radius: rand(0.5, 2), type: "gaussian", angle: 0 };
+      case EFFECT_TYPES.DISTORTION:
+        return { type: pick(["wave","bulge"]), amplitude: rand(2, 5), frequency: rand(3, 7), centerX: 0.5, centerY: 0.5 };
+      case EFFECT_TYPES.CRT:
+        return { curvature: rand(0.05, 0.2), scanlineIntensity: rand(0.1, 0.25), scanlineCount: Math.floor(rand(200, 350)), vignetteIntensity: rand(0.2, 0.35), brightness: rand(1.0, 1.1), rgbOffset: rand(0.001, 0.003), flickerIntensity: rand(0.01, 0.03), staticNoise: rand(0.02, 0.05) };
+      case EFFECT_TYPES.KUWAHARA:
+        return { radius: Math.floor(rand(2, 4)), sharpness: rand(0.4, 0.6) };
+      case EFFECT_TYPES.BARREL:
+        return { amount: rand(0.1, 0.25), centerX: 0.5, centerY: 0.5, zoom: 1.0 };
+      case EFFECT_TYPES.RIPPLE:
+        return { amplitude: rand(0.005, 0.015), wavelength: rand(30, 70), speed: rand(0.5, 1.2), centerX: 0.5, centerY: 0.5, damping: rand(0.4, 0.7) };
+      case EFFECT_TYPES.BLOOM:
+        return { radius: rand(3, 5), intensity: rand(0.4, 0.8), threshold: rand(0.45, 0.65), softThreshold: rand(0.3, 0.5), blendMode: BLEND_MODES.SCREEN };
+      case EFFECT_TYPES.RADIAL_BLUR:
+        return { intensity: rand(0.1, 0.2), centerX: 0.5, centerY: 0.5, samples: 24, zoom: true };
+      case EFFECT_TYPES.MOSAIC:
+        return { cellSize: Math.floor(rand(15, 28)), irregularity: rand(0.3, 0.6), edgeThickness: rand(0.02, 0.04), edgeColor: "#1a1a1a", colorVariation: rand(0.02, 0.06) };
+      case EFFECT_TYPES.TILT_SHIFT:
+        return { focusPosition: rand(0.35, 0.65), focusWidth: rand(0.15, 0.28), blurRadius: rand(4, 6), angle: rand(-8, 8), gradientSmooth: rand(0.2, 0.35) };
+      default:
+        return {};
+    }
+  }
+
+  // ─── Wide params (used when re-randomizing params on section switch) ──────────
+
+  function wideParams(type: string): Record<string, any> {
+    switch (type) {
+      case EFFECT_TYPES.NOISE:
+        return { intensity: rand(0.05, 0.4), scale: rand(0.5, 2.0), monochrome: Math.random() > 0.3, blendMode: pick([BLEND_MODES.OVERLAY, BLEND_MODES.SOFT_LIGHT, BLEND_MODES.MULTIPLY, BLEND_MODES.SCREEN]) };
+      case EFFECT_TYPES.CHROMATIC:
+        return { intensity: rand(0.002, 0.02), angle: rand(0, 360), radial: Math.random() > 0.3 };
+      case EFFECT_TYPES.VIGNETTE:
+        return { intensity: rand(0.2, 0.9), size: rand(0.25, 0.7), softness: rand(0.3, 1.0), color: Math.random() > 0.7 ? `#${Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0")}` : "#000000" };
+      case EFFECT_TYPES.SCANLINES:
+        return { spacing: rand(2, 8), thickness: rand(0.5, 3), opacity: rand(0.05, 0.5), horizontal: Math.random() > 0.3, offset: rand(0, 10) };
+      case EFFECT_TYPES.GRAIN:
+        return { intensity: rand(0.05, 0.35), size: rand(0.8, 3.0), luminanceResponse: rand(0.1, 0.9), colored: Math.random() > 0.5 };
+      case EFFECT_TYPES.COLOR_GRADE:
+        return { brightness: rand(-0.2, 0.2), contrast: rand(-0.2, 0.3), saturation: rand(-0.5, 0.4), temperature: rand(-0.3, 0.3), tint: rand(-0.1, 0.1), shadows: "#000000", highlights: "#ffffff", shadowInfluence: rand(0, 0.3), highlightInfluence: rand(0, 0.3) };
+      case EFFECT_TYPES.GLITCH:
+        return { intensity: rand(0.1, 0.6), sliceCount: Math.floor(rand(3, 20)), rgbShift: rand(0.005, 0.03), angle: rand(0, 360), seed: Math.floor(rand(0, 10000)), blockSize: rand(0.03, 0.2), colorShift: Math.random() > 0.2 };
+      case EFFECT_TYPES.DUOTONE:
+        return { shadowColor: `#${Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0")}`, highlightColor: `#${Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0")}`, contrast: rand(0.7, 1.5), intensity: rand(0.5, 1.0) };
+      case EFFECT_TYPES.DITHER:
+        return { method: pick(["bayer2x2","bayer4x4","bayer8x8"]), levels: Math.floor(rand(2, 8)), threshold: rand(0.3, 0.8), scale: rand(0.5, 2.5) };
+      case EFFECT_TYPES.HALFTONE:
+        return { gridSize: Math.floor(rand(3, 14)), dotScale: rand(0.5, 1.4), angle: rand(0, 180), shape: pick(["circle","square","diamond","line","ellipse","cross","ring"]), softness: rand(0.1, 0.9), contrast: rand(0, 0.4), invert: Math.random() > 0.7, colorMode: pick(["original","monochrome","duotone","cmyk"]), dotColor: "#000000", backgroundColor: "#ffffff", mixOriginal: rand(0, 0.4) };
+      case EFFECT_TYPES.POSTERIZE:
+        return { levels: Math.floor(rand(2, 10)), preserveHue: Math.random() > 0.4 };
+      case EFFECT_TYPES.LIGHT_LEAK:
+        return { color1: `#${Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0")}`, color2: `#${Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0")}`, position: rand(0.1, 0.9), angle: rand(0, 360), size: rand(0.3, 1.0), intensity: rand(0.2, 0.8), softness: rand(0.4, 1.0), blendMode: pick([BLEND_MODES.SCREEN, BLEND_MODES.OVERLAY, BLEND_MODES.SOFT_LIGHT]) };
+      case EFFECT_TYPES.EXPOSURE:
+        return { exposure: rand(-0.5, 0.5), highlights: rand(-0.4, 0.4), shadows: rand(-0.3, 0.4), blacks: rand(-0.1, 0.2), whites: rand(-0.1, 0.2) };
+      case EFFECT_TYPES.VIBRANCE:
+        return { vibrance: rand(-0.5, 0.8), saturation: rand(-0.3, 0.3) };
+      case EFFECT_TYPES.DOT_DITHER:
+        return { scale: rand(0.8, 4.0), threshold: rand(0.2, 0.8), animated: false, animationSpeed: 1.0, invert: Math.random() > 0.5 };
+      case EFFECT_TYPES.EDGE:
+        return { strength: rand(0.3, 2.0), threshold: rand(0.01, 0.15), invert: Math.random() > 0.5, colorize: Math.random() > 0.4 };
+      case EFFECT_TYPES.PIXELATE:
+        return { size: Math.floor(rand(2, 12)), maintainAspect: Math.random() > 0.3 };
+      case EFFECT_TYPES.BLUR:
+        return { radius: rand(1, 8), type: pick(["gaussian","radial","motion"]), angle: rand(0, 360) };
+      case EFFECT_TYPES.DISTORTION:
+        return { type: pick(["wave","swirl","bulge"]), amplitude: rand(2, 12), frequency: rand(2, 12), centerX: rand(0.3, 0.7), centerY: rand(0.3, 0.7) };
+      case EFFECT_TYPES.CRT:
+        return { curvature: rand(0.05, 0.5), scanlineIntensity: rand(0.1, 0.5), scanlineCount: Math.floor(rand(150, 500)), vignetteIntensity: rand(0.1, 0.6), brightness: rand(0.9, 1.3), rgbOffset: rand(0.001, 0.006), flickerIntensity: rand(0.01, 0.08), staticNoise: rand(0.01, 0.1) };
+      case EFFECT_TYPES.KUWAHARA:
+        return { radius: Math.floor(rand(2, 5)), sharpness: rand(0.2, 0.8) };
+      case EFFECT_TYPES.BARREL:
+        return { amount: rand(0.05, 0.5), centerX: rand(0.3, 0.7), centerY: rand(0.3, 0.7), zoom: rand(0.9, 1.1) };
+      case EFFECT_TYPES.RIPPLE:
+        return { amplitude: rand(0.005, 0.04), wavelength: rand(20, 100), speed: rand(0.3, 2.0), centerX: rand(0.2, 0.8), centerY: rand(0.2, 0.8), damping: rand(0.2, 0.8) };
+      case EFFECT_TYPES.BLOOM:
+        return { radius: rand(2, 8), intensity: rand(0.3, 1.5), threshold: rand(0.3, 0.8), softThreshold: rand(0.2, 0.7), blendMode: pick([BLEND_MODES.SCREEN, BLEND_MODES.OVERLAY, BLEND_MODES.SOFT_LIGHT]) };
+      case EFFECT_TYPES.RADIAL_BLUR:
+        return { intensity: rand(0.05, 0.4), centerX: rand(0.2, 0.8), centerY: rand(0.2, 0.8), samples: Math.floor(rand(16, 48)), zoom: Math.random() > 0.5 };
+      case EFFECT_TYPES.MOSAIC:
+        return { cellSize: Math.floor(rand(10, 40)), irregularity: rand(0.1, 0.9), edgeThickness: rand(0.01, 0.08), edgeColor: `#${Math.floor(Math.random()*0x333333).toString(16).padStart(6,"0")}`, colorVariation: rand(0.01, 0.15) };
+      case EFFECT_TYPES.TILT_SHIFT:
+        return { focusPosition: rand(0.2, 0.8), focusWidth: rand(0.1, 0.4), blurRadius: rand(3, 10), angle: rand(-20, 20), gradientSmooth: rand(0.1, 0.5) };
+      default:
+        return {};
+    }
+  }
+
+  // ─── randomizeEffects: pick new effect combo with conservative params ─────────
+
+  function randomizeEffects(): { types: string[]; effects: any[] } {
+    const count = weightedCount();
+    const shuffled = [...EFFECT_POOL].sort(() => Math.random() - 0.5);
+    const types = shuffled.slice(0, count);
+    const effects = types.map((type) => ({
+      ...createEffect(type),
+      params: conservativeParams(type),
+    }));
+    return { types, effects };
+  }
+
+  // ─── randomizeParams: keep same effect types, re-roll with wide params ────────
+
+  function randomizeParams(types: string[]): any[] {
+    return types.map((type) => ({
+      ...createEffect(type),
+      params: wideParams(type),
+    }));
+  }
+
+  // ─── Per-section state ────────────────────────────────────────────────────────
+
+  type SectionState = { types: string[]; effects: any[]; name: string };
+
+  function makeLabel(types: string[]) {
+    return types.map((t) => t.replace(/-/g, " ")).join(" · ");
+  }
+
+  // On load: pick effect combos for each section
+  const sectionStates: SectionState[] = Array.from(sections).map(() => {
+    const { types, effects } = randomizeEffects();
+    return { types, effects, name: makeLabel(types) };
+  });
+
+  let effectsA = sectionStates[0].effects;
+  let effectsB: any[] = [];
+  currentEffectEl.textContent = sectionStates[0].name;
+
+  // isCrossfading: true during the CSS transition window, both canvases render
+  let isCrossfading = false;
+  // CSS transition duration must match this value
+  const TRANSITION_MS = 1200;
+
+  // ─── Image + render loop ──────────────────────────────────────────────────────
+
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    rendererA.setImage(img);
+    rendererB.setImage(img);
+    startRenderLoop();
+    observeSections();
+  };
+  img.src = "/mesh.webp";
+
+  // Effects that use seed for animation — everything else is static
+  const ANIMATED_TYPES = new Set([
+    EFFECT_TYPES.NOISE,
+    EFFECT_TYPES.GRAIN,
+    EFFECT_TYPES.GLITCH,
+    EFFECT_TYPES.RIPPLE,
+    EFFECT_TYPES.CRT,
+    EFFECT_TYPES.DOT_DITHER,
+  ]);
+
+  function isAnimated(effects: any[]): boolean {
+    return effects.some((e) => e.enabled && ANIMATED_TYPES.has(e.type));
+  }
+
+  // Cap DPR at 1.5 — background texture doesn't need full Retina resolution
+  const RENDER_DPR = Math.min(window.devicePixelRatio, 1.5);
+
+  function startRenderLoop() {
+    const w = canvasA.clientWidth * RENDER_DPR;
+    const h = canvasA.clientHeight * RENDER_DPR;
+
+    let rafId = 0;
+    let staticTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function renderActive() {
+      seed += 0.3;
+      if (activeCanvas === "a") {
+        rendererA.render(effectsA, seed, w, h);
+        if (isCrossfading) rendererB.render(effectsB, seed, w, h);
+      } else {
+        rendererB.render(effectsB, seed, w, h);
+        if (isCrossfading) rendererA.render(effectsA, seed, w, h);
+      }
+    }
+
+    function scheduleNext() {
+      const animated = isAnimated(activeCanvas === "a" ? effectsA : effectsB);
+
+      if (animated || isCrossfading) {
+        // Full 60fps for animated effects or during crossfade
+        rafId = requestAnimationFrame(() => {
+          renderActive();
+          scheduleNext();
+        });
+      } else {
+        // Static effects: render once now, then poll at ~10fps to catch crossfade start
+        renderActive();
+        staticTimer = setTimeout(() => {
+          scheduleNext();
+        }, 100);
+      }
+    }
+
+    scheduleNext();
+  }
+
+  // ─── Crossfade ────────────────────────────────────────────────────────────────
+
+  function crossfadeTo(newEffects: any[], label: string) {
+    currentEffectEl.textContent = label;
+    seed = Math.floor(Math.random() * 100000);
+    isCrossfading = true;
+
+    if (activeCanvas === "a") {
+      effectsB = newEffects;
+      canvasB.classList.add("active");
+      canvasA.classList.remove("active");
+      activeCanvas = "b";
+    } else {
+      effectsA = newEffects;
+      canvasA.classList.add("active");
+      canvasB.classList.remove("active");
+      activeCanvas = "a";
+    }
+
+    setTimeout(() => { isCrossfading = false; }, TRANSITION_MS);
+  }
+
+  // ─── Section observer with debounce ──────────────────────────────────────────
+
+  function observeSections() {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const idx = Number(entry.target.getAttribute("data-section"));
+          if (idx === currentSectionIndex) continue;
+
+          currentSectionIndex = idx;
+
+          if (debounceTimer) clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            const state = sectionStates[idx];
+            // Re-randomize params (wide range) for this section on each visit
+            const newEffects = randomizeParams(state.types);
+            sectionStates[idx].effects = newEffects;
+            crossfadeTo(newEffects, state.name);
+          }, 300);
+        }
+      },
+      { threshold: 0.5 }
+    );
+    sections.forEach((s) => observer.observe(s));
+  }
+
+  // ─── Button: re-pick effect combos for all sections ──────────────────────────
+
+  btnRandomizeEffects.addEventListener("click", () => {
+    for (let i = 0; i < sectionStates.length; i++) {
+      const { types, effects } = randomizeEffects();
+      sectionStates[i] = { types, effects, name: makeLabel(types) };
+    }
+    const current = sectionStates[currentSectionIndex];
+    crossfadeTo(current.effects, current.name);
+  });
+</script>
+
+<style>
+  .texture-lab-demo {
+    position: relative;
+    width: 100%;
+  }
+
+  .texture-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 1.2s ease-in-out;
+  }
+
+  .texture-canvas.active {
+    opacity: 1;
+  }
+
+  .section {
+    position: relative;
+    z-index: 1;
+    height: calc(100vh - 4rem);
+    margin: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .section:nth-child(3) { background: rgba(245, 245, 245, 0.95); }
+  .section:nth-child(4) { background: rgba(250, 250, 250, 0.95); }
+  .section:nth-child(5) { background: rgba(240, 242, 245, 0.95); }
+
+  .section-content {
+    text-align: center;
+    color: rgba(0, 0, 0, 0.7);
+    font-family: monospace;
+  }
+
+  .section-content h1 {
+    font-size: 3rem;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  .section-content p {
+    margin-top: 1rem;
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+
+  .hud {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    background: rgba(0, 0, 0, 0.45);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+  }
+
+  #btn-randomize-effects {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+
+  #btn-randomize-effects:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+</style>

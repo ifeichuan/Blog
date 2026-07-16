@@ -1,6 +1,6 @@
 ---
 import "@/styles/tailwind.css";
-import HomeIntro from "@/components/HomeIntro.astro";
+import Intro from "@/components/layout/Intro.astro";
 import StaggeredMenu from "@/components/homepage/StaggeredMenu.astro";
 
 const isDev = import.meta.env.DEV;
@@ -38,7 +38,7 @@ const socialItems = [
     }
   </head>
   <body>
-    <HomeIntro />
+    <Intro />
     <StaggeredMenu
       position="right"
       items={menuItems}
@@ -49,7 +49,7 @@ const socialItems = [
       openMenuButtonColor="#141413"
       logoUrl="/feichuan-logo.svg"
     />
-    <div id="homepage-root"></div>
+    <div id="homepage-root" class="homepage-intro-slot"></div>
 
     <script>
       const target = document.getElementById("homepage-root");
@@ -87,5 +87,30 @@ const socialItems = [
     color: #141413;
     background: #f5f4ed;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .homepage-intro-slot {
+    --clip-top: 50%;
+    --clip-right: 38%;
+    --clip-bottom: 50%;
+    --clip-left: 38%;
+    --clip-height: 100vh;
+    --clip-width: 100%;
+    width: var(--clip-width);
+    height: var(--clip-height);
+    clip-path: inset(
+      var(--clip-top) var(--clip-right) var(--clip-bottom) var(--clip-left)
+    );
+  }
+
+  html[data-intro-active="true"] .homepage-intro-slot {
+    position: relative;
+    z-index: 1002;
+  }
+
+  @supports (height: 100dvh) {
+    .homepage-intro-slot {
+      --clip-height: 100dvh;
+    }
   }
 </style>
