@@ -1,72 +1,56 @@
 ---
 import BaseHead from "@/components/layout/BaseHead.astro";
 import ParticleAvatar from "@/components/about/ParticleAvatar.astro";
-import StaggeredMenu from "@/components/homepage/StaggeredMenu.astro";
+import SiteMenu from "@/components/layout/SiteMenu.astro";
 import "@/styles/tailwind.css";
 
-const menuItems = [
-  { label: "Home", link: "/", ariaLabel: "Go to Home" },
-  { label: "Posts", link: "/blogs", ariaLabel: "Go to Posts" },
-  { label: "Labs", link: "/labs", ariaLabel: "Go to Labs" },
-];
-const socialItems = [
-  { label: "GitHub", link: "https://github.com" },
-  { label: "Email", link: "mailto:hi@feichuan.dev" },
-];
 const posts = [
-  { title: "A note about building interfaces", description: "Details, constraints, and the work between states." },
-  { title: "Working with AI agents", description: "Notes from designing and building agent products." },
-  { title: "Experiments in motion", description: "Small studies in interaction, graphics, and feel." },
+  { title: "被 AI 逼疯的前端", description: "从流式打字机到浏览器端跑 React。" },
+  { title: "让界面有感觉的细节", description: "把设计判断落到状态、反馈和节奏里。" },
+  { title: "OpenClaw 架构解析", description: "从事件、工具到 Session 的 Agent 系统。" },
 ];
 const experience = [
-  { date: "2024 - Current", company: "Company One", role: "Senior Frontend Engineer", description: "Led a product area from interaction model and interface system through implementation and release. Worked closely with design and engineering to make complex workflows feel clear and dependable." },
-  { date: "2022 - 2024", company: "Company Two", role: "Frontend Engineer", description: "Built user-facing workflows and reusable foundations for a growing product team. Improved consistency across the interface while keeping delivery practical and maintainable." },
+  { date: "2026 - Now", company: "Beijing Zhijingling Technology", role: "Agent Frontend Developer", description: "参与 Aurora AI 开发平台建设，负责多会话实时同步、Agent 代码门禁，以及代码编辑、HTML 预览和协作画布等工作区能力。" },
+  { date: "2025/06 - 2026/01", company: "Shanghai Deyimen Technology Education", role: "Frontend Developer", description: "负责求职服务小程序与 Web 系统，交付 PDF 题库标注、AI 求职助手、简历编辑和 PDF 导出等功能。" },
+  { date: "2025/03 - 2025/06", company: "Hubei Yintu Technology", role: "Frontend Developer", description: "优化 SWC 编译链和 IM 长列表，降低 HMR 与生产构建耗时，并支持万级消息快速定位。" },
 ];
 const stack = [
-  { label: "Frontend", items: "TypeScript / React / Astro / Vue / Tailwind CSS" },
-  { label: "Interaction", items: "Motion / GSAP / Three.js / WebGL" },
-  { label: "Backend", items: "Node.js / Cloudflare / PostgreSQL / Docker" },
-  { label: "Workflow", items: "Figma / GitHub / Claude / Codex / Obsidian" },
+  { label: "Frontend", items: "TypeScript / Vue 3 / React / Astro" },
+  { label: "Agent", items: "AI SDK / LangGraph / MCP / Streaming UI" },
+  { label: "Interaction", items: "GSAP / Three.js / WebGL / Canvas" },
+  { label: "Runtime", items: "Node.js / Electron / Tauri / Rust / Cloudflare" },
 ];
 const projects = [
-  { title: "Project Alpha", description: "A product interface built for a complex workflow." },
-  { title: "Project Beta", description: "A design system shared across several product surfaces." },
-  { title: "Project Gamma", description: "A technical experiment turned into a useful tool." },
+  { title: "Aurora AI Workbench", description: "Agent 代码生成、沙箱预览与实时发布工作区。", link: "/labs" },
+  { title: "speakMore", description: "基于 Tauri、Rust 与 React 的桌面语音和 Agent 工具。", link: "https://github.com/feichuans/speakMore" },
+  { title: "OpenViking Web Studio", description: "参与 Console Workspace 前端和类型契约建设。", link: "https://github.com/volcengine/OpenViking" },
 ];
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <BaseHead title="About" description="About and selected work." ogType="website" />
+    <BaseHead title="About" description="Feichuan 的个人介绍、技术方向与项目经历。" ogType="website" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:wght@400;500;600&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <StaggeredMenu
-      position="right"
-      items={menuItems}
-      socialItems={socialItems}
-      colors={["#C4A882", "#A68B6B"]}
-      accentColor="#DA702C"
-      menuButtonColor="#111111"
-      openMenuButtonColor="#111111"
-      logoUrl="/feichuan-logo.svg"
-    />
+    <SiteMenu />
 
     <main>
       <div class="paper-container">
         <div class="about-heading">
-          <h1>Hi, I'm Your Name <span>👋🏻</span></h1>
+          <h1>Hi, I'm Feichuan <span>👋🏻</span></h1>
           <ParticleAvatar />
         </div>
         <div class="paper-flow">
           <section class="intro-section">
             <article>
-              <p>I am a design-minded frontend engineer focused on building clear, responsive, and carefully crafted digital products. I enjoy the space where engineering, interaction, and emerging technology meet.</p>
-              <p>My work moves between product interfaces, design systems, creative coding, and AI experiences. I care about how software looks, feels, behaves, and recovers when things do not go as planned.</p>
-              <p>This page is a concise introduction and an online resume. You can browse the work below or <a href="mailto:hi@feichuan.dev">get in touch</a>.</p>
+              <p>我叫 feichuan，是一名专注于 AI Agent 与前端交互的开发者，也是一名 2027 届计算机科学与技术本科生。</p>
+              <p>我在 TypeScript、Vue 3、React 和 Astro 之间工作，参与过 AI IDE、流式 Session UI、实时协作和桌面 Agent 工具的建设。</p>
+              <p>我关心的不只是把功能做出来，也关心系统如何组织、交互如何被感知，以及设计如何真正进入代码和工作流。</p>
+              <p>目前 Blog 还在开发中，所以一切不和谐的 UI 请见谅 :)</p>
             </article>
           </section>
 
@@ -109,13 +93,13 @@ const projects = [
 
           <section class="paper-section" aria-labelledby="projects-title">
             <div class="section-heading"><h2 id="projects-title">Recent projects</h2><a href="/labs">See all projects</a></div>
-            <ul class="arrow-list">{projects.map((project) => <li><a class="arrow-card" href="/labs"><span><strong>{project.title}</strong><small>{project.description}</small></span><b aria-hidden="true">›</b></a></li>)}</ul>
+            <ul class="arrow-list">{projects.map((project) => <li><a class="arrow-card" href={project.link}><span><strong>{project.title}</strong><small>{project.description}</small></span><b aria-hidden="true">›</b></a></li>)}</ul>
           </section>
 
           <section class="connect-section" aria-labelledby="connect-title">
             <h2 id="connect-title">Let's Connect</h2>
-            <article><p>If you want to get in touch about something or just say hi, reach out on social media or send me an email.</p></article>
-            <ul class="connect-links"><li><a href="https://github.com">github</a><span>/</span></li><li><a href="#">linkedin</a><span>/</span></li><li><a href="#">twitter</a><span>/</span></li><li><a href="mailto:hi@feichuan.dev">hi@feichuan.dev</a></li></ul>
+            <article><p>如果你想聊聊前端、Agent、设计工程或真实可运行的产品，欢迎通过 GitHub 或邮件联系我。</p></article>
+            <ul class="connect-links"><li><a href="https://github.com/feichuans">github</a><span>/</span></li><li><a href="mailto:feichuan05@gmail.com">feichuan05@gmail.com</a></li></ul>
           </section>
         </div>
       </div>

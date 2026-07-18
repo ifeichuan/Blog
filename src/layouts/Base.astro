@@ -2,7 +2,7 @@
 import BaseHead from "../components/layout/BaseHead.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
 import Mouse from "../components/layout/Mouse.astro";
-import Nav from "@/components/layout/Nav.astro";
+import SiteMenu from "@/components/layout/SiteMenu.astro";
 import OnDevMode from "@/components/layout/OnDevMode.astro";
 import Footer from "@/components/layout/Footer.astro";
 
@@ -33,7 +33,7 @@ const {
     <slot name="intro" />
     <OnDevMode />
     <Mouse />
-    <Nav />
+    <SiteMenu />
 
     <div class:list={["smooth-wrapper", enableIntro && "slot"]}>
       <div
@@ -46,7 +46,7 @@ const {
 
     <script define:vars={{ enableIntro }}>
       if (!enableIntro) {
-        // 等 DOM ready，确保 Nav 的模块脚本已执行并注册了监听器
+        // 等 DOM ready，确保菜单模块脚本已执行并注册了监听器
         if (document.readyState === "loading") {
           document.addEventListener("DOMContentLoaded", function () {
             window.dispatchEvent(new Event("Intro:end"));
@@ -112,7 +112,7 @@ const {
 
       // 同步 Lenis 滚动与 GSAP ScrollTrigger
       lenis.on("scroll", ({ scroll, limit }) => {
-        // 发送自定义事件给 Nav 组件
+        // 发送自定义事件给菜单组件
         window.dispatchEvent(
           new CustomEvent("lenis-scroll", {
             detail: { scroll, limit },

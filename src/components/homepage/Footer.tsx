@@ -25,8 +25,8 @@ export function Footer() {
         </div>
         <p className="text-sm text-[--tx2] mt-6 mb-6">最近在给字节开源的 OpenViking（Agent 数据库）做前端和网页 Agent 部分的贡献。</p>
         <div className="flex gap-3.5 flex-wrap">
-          <a href="#" className="text-sm border border-[--line] px-5 py-3 rounded-xl hover:border-[--orange] hover:text-[--orange] transition-colors">GitHub</a>
-          <a href="#" className="text-sm border border-[--line] px-5 py-3 rounded-xl hover:border-[--orange] hover:text-[--orange] transition-colors">邮箱</a>
+          <a href="https://github.com/feichuans" className="text-sm border border-[--line] px-5 py-3 rounded-xl hover:border-[--orange] hover:text-[--orange] transition-colors">GitHub</a>
+          <a href="mailto:feichuan05@gmail.com" className="text-sm border border-[--line] px-5 py-3 rounded-xl hover:border-[--orange] hover:text-[--orange] transition-colors">邮箱</a>
         </div>
       </div>
     </section>

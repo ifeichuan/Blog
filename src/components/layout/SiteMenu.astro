@@ -1,0 +1,25 @@
+---
+import StaggeredMenu from "@/components/homepage/StaggeredMenu.astro";
+
+const menuItems = [
+  { label: "About", link: "/about", ariaLabel: "Go to About" },
+  { label: "Posts", link: "/blogs", ariaLabel: "Go to Posts" },
+  { label: "Labs", link: "/labs", ariaLabel: "Go to Labs" },
+];
+
+const socialItems = [
+  { label: "GitHub", link: "https://github.com/feichuans" },
+  { label: "Email", link: "mailto:feichuan05@gmail.com" },
+];
+---
+
+<StaggeredMenu
+  position="right"
+  items={menuItems}
+  socialItems={socialItems}
+  colors={["#DA702C", "#4385BE"]}
+  accentColor="#DA702C"
+  menuButtonColor="#141413"
+  openMenuButtonColor="#141413"
+  logoUrl="/feichuan-logo.svg"
+/>

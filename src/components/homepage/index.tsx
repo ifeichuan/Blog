@@ -15,13 +15,14 @@ import { Footer } from './Footer'
 import { CustomCursor, ClickSpark } from './Cursor'
 
 const menuItems = [
+  { label: 'About', link: '/about', ariaLabel: 'Go to About' },
   { label: 'Posts', link: '/blogs', ariaLabel: 'Go to Posts' },
   { label: 'Labs', link: '/labs', ariaLabel: 'Go to Labs' },
 ]
 
 const socialItems = [
-  { label: 'GitHub', link: 'https://github.com' },
-  { label: 'Email', link: 'mailto:hi@feichuan.dev' },
+  { label: 'GitHub', link: 'https://github.com/feichuans' },
+  { label: 'Email', link: 'mailto:feichuan05@gmail.com' },
 ]
 
 export function Homepage() {
