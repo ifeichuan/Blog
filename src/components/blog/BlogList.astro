@@ -148,6 +148,8 @@ const viewsByPath = new Map(views.map((item) => [item.path, item]));
   import { ScrollTrigger } from "gsap/ScrollTrigger";
   gsap.registerPlugin(ScrollTrigger);
 
+  let initializationTimer;
+
   function initScrollAnimations() {
     const blogItems = document.querySelectorAll(".blog-item");
     const scroller = document.querySelector(".smooth-wrapper");
@@ -156,6 +158,12 @@ const viewsByPath = new Map(views.map((item) => [item.path, item]));
       setTimeout(initScrollAnimations, 100);
       return;
     }
+
+    ScrollTrigger.getAll().forEach((st) => {
+      if (typeof st.vars.id === "string" && st.vars.id.startsWith("blog-item-")) {
+        st.kill();
+      }
+    });
 
     blogItems.forEach((item, index) => {
       gsap.set(item, {
@@ -184,12 +192,16 @@ const viewsByPath = new Map(views.map((item) => [item.path, item]));
     ScrollTrigger.refresh();
   }
 
+  function scheduleScrollAnimations() {
+    if (initializationTimer) window.clearTimeout(initializationTimer);
+    initializationTimer = window.setTimeout(initScrollAnimations, 500);
+  }
+
   window.addEventListener("load", () => {
-    setTimeout(initScrollAnimations, 500);
+    scheduleScrollAnimations();
   });
 
   document.addEventListener("astro:page-load", () => {
-    ScrollTrigger.getAll().forEach((st) => st.kill());
-    setTimeout(initScrollAnimations, 500);
+    scheduleScrollAnimations();
   });
 </script>
