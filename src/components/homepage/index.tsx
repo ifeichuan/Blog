@@ -17,7 +17,6 @@ import { CustomCursor, ClickSpark } from './Cursor'
 const menuItems = [
   { label: 'Posts', link: '/blogs', ariaLabel: 'Go to Posts' },
   { label: 'Labs', link: '/labs', ariaLabel: 'Go to Labs' },
-  { label: 'Resumes', link: '/resumes', ariaLabel: 'Go to Resumes' },
 ]
 
 const socialItems = [

@@ -348,9 +348,14 @@ const offscreen = position === "left" ? "-100%" : "100%";
     flex-direction: column;
     padding: 6rem 2rem 2rem;
     overflow-y: auto;
-    background: white;
+    background: #f5f4ed;
     backdrop-filter: blur(12px);
     border-radius: 1rem 0 0 1rem;
+    box-shadow:
+      -2px 0 4px rgba(0, 0, 0, 0.02),
+      -6px 0 12px rgba(0, 0, 0, 0.03),
+      -16px 0 32px rgba(0, 0, 0, 0.04),
+      -40px 0 80px rgba(0, 0, 0, 0.05);
     opacity: 1;
     pointer-events: auto;
   }
@@ -491,6 +496,7 @@ const offscreen = position === "left" ? "-100%" : "100%";
     background: var(--sm-mesh) center bottom / cover no-repeat;
     border-radius: 0 0 0 1rem;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+    filter: sepia(0.3) saturate(0.8) hue-rotate(-10deg) brightness(1.05);
     pointer-events: none;
   }
 
