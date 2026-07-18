@@ -1310,8 +1310,14 @@ html&gt;body{padding:0}&lt;/style&gt;
 
       function drawCanvas(time) {
         const size = resizeCanvas(canvas, canvasCtx);
-        resizeCanvas(mask, maskCtx);
-        resizeCanvas(blurred, blurCtx);
+        if (mask.width !== canvas.width || mask.height !== canvas.height) {
+          mask.width = canvas.width;
+          mask.height = canvas.height;
+        }
+        if (blurred.width !== canvas.width || blurred.height !== canvas.height) {
+          blurred.width = canvas.width;
+          blurred.height = canvas.height;
+        }
         maskCtx.clearRect(0, 0, size.width, size.height);
         maskCtx.save();
         maskCtx.globalCompositeOperation = &quot;lighter&quot;;
