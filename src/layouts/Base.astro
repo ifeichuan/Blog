@@ -13,6 +13,10 @@ export type Props = {
   banner?: ImageMetadata;
   enableIntro?: boolean;
   ogType?: "website" | "article";
+  showMouse?: boolean;
+  showDev?: boolean;
+  showFooter?: boolean;
+  showMenu?: boolean;
 };
 
 const {
@@ -21,6 +25,10 @@ const {
   banner,
   enableIntro = false,
   ogType = "website",
+  showMouse = true,
+  showDev = true,
+  showFooter = true,
+  showMenu = true,
 }: Props = Astro.props;
 ---
 
@@ -31,16 +39,16 @@ const {
   </head>
   <body>
     <slot name="intro" />
-    <OnDevMode />
-    <Mouse />
-    <SiteMenu />
+    {showDev && <OnDevMode />}
+    {showMouse && <Mouse />}
+    {showMenu && <SiteMenu />}
 
     <div class:list={["smooth-wrapper", enableIntro && "slot"]}>
       <div
         class="background w-screen smooth-content"
       >
         <slot />
-        <Footer />
+        {showFooter && <Footer />}
       </div>
     </div>
 
