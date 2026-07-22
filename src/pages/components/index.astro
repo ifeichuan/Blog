@@ -1,0 +1,20 @@
+---
+import Base from "@/layouts/Base.astro";
+import ComponentsShowcase from "@/components/components-showcase/ComponentsShowcase";
+
+const title = "Components · Rare UI";
+const description =
+  "Rare UI 组件展示页：Composer、Liquid Connector、Interaction Tickets、Sticker Forge。";
+---
+
+<Base
+  title={title}
+  description={description}
+  enableIntro={false}
+  ogType="website"
+  showMouse={false}
+  showDev={false}
+  showFooter={false}
+>
+  <ComponentsShowcase client:only="react" />
+</Base>
