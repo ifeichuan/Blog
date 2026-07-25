@@ -17,7 +17,14 @@ const navHeadings = headings.filter((h) => h.depth <= 3);
 <div class="scroll-island-container">
   <div class="scroll-island" data-scroll-island="closed">
     <div class="island-top">
-      <p class="island-title">{title}</p>
+      <div class="island-title-wrapper">
+        <div class="island-title-track" data-island-title-track>
+          <p class="island-title-item" data-island-title-idx="0">{title}</p>
+          {navHeadings.map((h, i) => (
+            <p class="island-title-item" data-island-title-idx={i + 1}>{h.text}</p>
+          ))}
+        </div>
+      </div>
       <div class="island-progress">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <circle
@@ -120,7 +127,21 @@ const navHeadings = headings.filter((h) => h.depth <= 3);
     gap: 0.5rem;
   }
 
-  .island-title {
+  .island-title-wrapper {
+    flex: 1;
+    min-width: 0;
+    height: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .island-title-track {
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .island-title-item {
     margin: 0;
     font-size: 12px;
     font-weight: 500;
@@ -130,6 +151,8 @@ const navHeadings = headings.filter((h) => h.depth <= 3);
     text-overflow: ellipsis;
     user-select: none;
     padding-left: 4px;
+    height: 20px;
+    line-height: 20px;
   }
 
   .island-progress {
@@ -263,6 +286,8 @@ const navHeadings = headings.filter((h) => h.depth <= 3);
   }
 
   // Active heading detection
+  const titleTrack = document.querySelector("[data-island-title-track]") as HTMLElement;
+
   if (navLinks.length > 0 && navIndicator) {
     const headingEls: HTMLElement[] = [];
     navLinks.forEach((link) => {
@@ -279,6 +304,11 @@ const navHeadings = headings.filter((h) => h.depth <= 3);
 
       const idx = Array.from(navLinks).indexOf(activeLink);
       navIndicator.style.transform = `translateY(${idx * 28}px)`;
+
+      // Scroll the title track (idx+1 because index 0 is the article title)
+      if (titleTrack) {
+        titleTrack.style.transform = `translateY(-${(idx + 1) * 20}px)`;
+      }
     };
 
     const observer = new IntersectionObserver(
