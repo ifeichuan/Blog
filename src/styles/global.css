@@ -57,7 +57,7 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 @theme {
-  --font-serif: "Times New Roman", Noto Serif SC, "Georgia", serif;
+  --font-serif: "Maple Mono NF CN", system-ui, sans-serif;
 }
 body {
   /* cursor: none !important; */

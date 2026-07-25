@@ -16,6 +16,19 @@ const isDev = import.meta.env.DEV;
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#f5f4ed" />
+    <link
+      href="https://fontsapi.zeoseven.com/442/main/result.css"
+      onload="this.rel='stylesheet'"
+      rel="preload"
+      as="style"
+      crossorigin
+    />
+    <noscript><link rel="stylesheet" href="https://fontsapi.zeoseven.com/442/main/result.css" /></noscript>
+    <style>
+      body {
+        font-family: "Maple Mono NF CN", system-ui, sans-serif;
+      }
+    </style>
     {
       isDev && (
         <script is:inline type="module">

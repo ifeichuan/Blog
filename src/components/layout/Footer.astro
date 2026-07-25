@@ -19,24 +19,24 @@ const yearsRunning = currentYear - startYear;
     <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
       <!-- 左侧：Logo 和简介 -->
       <div class="footer-brand space-y-4">
-        <h3 class="text-4xl font-serif font-bold mix-blend-overlay">
+        <h3 class="text-4xl font-bold mix-blend-overlay">
           {SITE_TITLE}
         </h3>
-        <p class="text-lg opacity-80 mix-blend-overlay font-serif leading-relaxed">
+        <p class="text-lg opacity-80 mix-blend-overlay leading-relaxed">
           A newbie Frontend developer who loves designing and coding.
         </p>
       </div>
       
       <!-- 中间：运行状态 -->
       <div class="footer-links space-y-4">
-        <h4 class="text-xl font-serif font-semibold mix-blend-overlay mb-6">
+        <h4 class="text-xl font-semibold mix-blend-overlay mb-6">
           Status
         </h4>
         <div class="flex flex-col space-y-3">
           <p class="text-lg font-mono mix-blend-overlay">
             🟢 Stable for {yearsRunning > 0 ? `${yearsRunning} ${yearsRunning === 1 ? 'year' : 'years'}` : 'less than a year'}
           </p>
-          <a href="/rss.xml" class="footer-link text-lg font-serif mix-blend-overlay hover:translate-x-2 transition-transform duration-300">
+          <a href="/rss.xml" class="footer-link text-lg mix-blend-overlay hover:translate-x-2 transition-transform duration-300">
             RSS Feed
           </a>
         </div>
@@ -44,7 +44,7 @@ const yearsRunning = currentYear - startYear;
       
       <!-- 右侧：GitHub 链接 -->
       <div class="footer-social space-y-4">
-        <h4 class="text-xl font-serif font-semibold mix-blend-overlay mb-6">
+        <h4 class="text-xl font-semibold mix-blend-overlay mb-6">
           Source Code
         </h4>
         <a

@@ -26,7 +26,7 @@ const IndexTypeSequence = ({
     <>
       <BlurText
         text={title}
-        className="text-[16rem] font-serif"
+        className="text-[16rem]"
         as="h1"
         animateBy="letters"
         delay={70}
@@ -38,7 +38,7 @@ const IndexTypeSequence = ({
       {step >= 1 && (
         <BlurText
           text={description}
-          className="text-[4rem] font-serif text-center px-10"
+          className="text-[4rem] text-center px-10"
           as="h2"
           animateBy="letters"
           delay={34}

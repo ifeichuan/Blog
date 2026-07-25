@@ -1,143 +1,110 @@
 ---
 import { getCollection } from "astro:content";
-import { umami } from "@/actions/umami";
 
 const posts = (await getCollection("blog")).sort(
   (a, b) => b.data.dateCreated.valueOf() - a.data.dateCreated.valueOf(),
 );
 
-const paths = posts.map((post) => `/blogs/${post.id}`);
-const [activeVisitors, views] = await Promise.all([
-  umami.getActiveVisitors(),
-  umami.getVisitorsBatch(paths),
-]);
-
-const viewsByPath = new Map(views.map((item) => [item.path, item]));
+function formatDate(date: Date) {
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 ---
 
-<div class="blog-list w-full">
-  <div class="visitor-count">
-    当前 <span>{activeVisitors}</span> 人正在看
-  </div>
-  <div class="post-list">
-    {
-      posts.map((p) => {
-        const path = `/blogs/${p.id}`;
-        const stats = viewsByPath.get(path);
-        return (
-          <article class="blog-item">
-            <a href={path} class="post-row" data-astro-prefetch>
-              <time datetime={p.data.dateCreated.toISOString()}>
-                {p.data.dateCreated.toLocaleDateString()}
-              </time>
-              <h2 class="post-title">{p.data.title}</h2>
-              <span class="post-meta">
-                <i class="fa-regular fa-eye fa-sm" aria-hidden="true" />
-                <span>{stats?.totalVisitors ?? 0} 人看过</span>
-              </span>
-              <span class="post-arrow" aria-hidden="true">↗</span>
-            </a>
-          </article>
-        );
-      })
-    }
-  </div>
+<div class="blog-list">
+  {
+    posts.map((p) => {
+      const path = `/blogs/${p.id}`;
+      return (
+        <article class="blog-item">
+          <a href={path} class="post-link" data-astro-prefetch>
+            <time datetime={p.data.dateCreated.toISOString()}>
+              {formatDate(p.data.dateCreated)}
+            </time>
+            <h2 class="post-title">{p.data.title}</h2>
+            {p.data.description && (
+              <p class="post-desc">{p.data.description}</p>
+            )}
+          </a>
+        </article>
+      );
+    })
+  }
 </div>
 
 <style>
-  .visitor-count {
-    margin-bottom: 1.5rem;
-    color: color-mix(in srgb, currentColor 58%, transparent);
-    font-size: 0.75rem;
-    letter-spacing: 0.04em;
-    text-align: right;
+  .blog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
   }
 
-  .visitor-count span {
-    color: currentColor;
-    font-variant-numeric: tabular-nums;
+  .blog-item {
+    border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
   }
 
-  .post-list {
-    border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  .blog-item:first-child {
+    border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
   }
 
-  .post-row {
-    display: grid;
-    grid-template-columns: minmax(6rem, auto) minmax(0, 1fr) auto auto;
-    align-items: center;
-    gap: 1rem;
-    min-height: 4.25rem;
-    padding: 0.75rem 0.25rem;
-    border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  .post-link {
+    display: block;
+    padding: 1.75rem 0;
     color: inherit;
     text-decoration: none;
-    transition: background-color 180ms ease, color 180ms ease;
+    transition: padding-left 280ms cubic-bezier(0.23, 1, 0.32, 1);
   }
 
-  .post-row:hover {
-    background: color-mix(in srgb, currentColor 6%, transparent);
+  .post-link:hover {
+    padding-left: 0.75rem;
   }
 
-  .post-row:focus-visible {
+  .post-link:focus-visible {
     outline: 2px solid currentColor;
-    outline-offset: -2px;
+    outline-offset: 4px;
+    border-radius: 2px;
   }
 
-  .post-row time,
-  .post-meta {
-    color: color-mix(in srgb, currentColor 58%, transparent);
-    font-size: 0.75rem;
-    white-space: nowrap;
-  }
-
-  .post-row time {
+  .post-link time {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: color-mix(in srgb, currentColor 40%, transparent);
     font-variant-numeric: tabular-nums;
-  }
-
-  .post-meta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
+    margin-bottom: 0.5rem;
   }
 
   .post-title {
-    min-width: 0;
     margin: 0;
-    overflow: hidden;
-    color: currentColor;
-    font-family: var(--font-serif);
-    font-size: clamp(1rem, 1.5vw, 1.2rem);
+    font-size: clamp(1.1rem, 2vw, 1.35rem);
     font-weight: 600;
-    line-height: 1.3;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
   }
 
-  .post-arrow {
-    font-size: 1.1rem;
-    line-height: 1;
-    transition: transform 180ms ease;
-  }
-
-  .post-row:hover .post-arrow {
-    transform: translate(0.15rem, -0.15rem);
+  .post-desc {
+    margin: 0.5rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: color-mix(in srgb, currentColor 55%, transparent);
+    max-width: 560px;
   }
 
   @media (max-width: 640px) {
-    .post-row {
-      grid-template-columns: 4.75rem minmax(0, 1fr) auto;
-      gap: 0.75rem;
+    .post-link {
+      padding: 1.25rem 0;
     }
 
-    .post-meta {
-      display: none;
+    .post-link:hover {
+      padding-left: 0.5rem;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .post-row,
-    .post-arrow {
+    .post-link {
       transition: none;
     }
   }
@@ -167,22 +134,20 @@ const viewsByPath = new Map(views.map((item) => [item.path, item]));
 
     blogItems.forEach((item, index) => {
       gsap.set(item, {
-        y: 100,
-        opacity: 0.8,
-        filter: "blur(5px)",
+        y: 40,
+        opacity: 0,
       });
 
       gsap.to(item, {
         y: 0,
-        filter: "blur(0px)",
         opacity: 1,
-        duration: 1,
-        ease: "power3.out",
+        duration: 0.7,
+        delay: index * 0.05,
+        ease: "power2.out",
         scrollTrigger: {
           trigger: item,
           scroller: ".smooth-wrapper",
-          start: "top bottom",
-          end: "top center",
+          start: "top 90%",
           toggleActions: "play none none none",
           id: `blog-item-${index}`,
         },

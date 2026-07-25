@@ -6,52 +6,52 @@ import BlogList from "@/components/blog/BlogList.astro";
 ---
 
 <Base title="Posts">
-  <main class="blogs-page min-h-screen pt-32 pb-20">
-    <section class="blogs-hero px-6 py-6 text-white mix-blend-difference">
-      <h2 class="blogs-title">文章列表</h2>
-    </section>
+  <main class="blogs-page">
+    <header class="blogs-header">
+      <h1 class="blogs-title">Writing</h1>
+      <p class="blogs-subtitle">记录思考与实践</p>
+    </header>
 
-    <section class="content w-full p-4">
-      <div class="left"></div>
-      <div class="center">
-        <BlogList />
-      </div>
-      <div class="right"></div>
+    <section class="blogs-content">
+      <BlogList />
     </section>
   </main>
 </Base>
 
 <style>
-  .blogs-hero {
-    display: flex;
-    justify-content: center;
+  .blogs-page {
+    min-height: 100vh;
+    padding: 10rem 1.5rem 6rem;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .blogs-header {
+    margin-bottom: 4rem;
   }
 
   .blogs-title {
-    font-size: clamp(1.25rem, 2vw, 1.5rem);
-    line-height: 1.1;
-    font-family: serif;
-    text-align: center;
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin: 0;
   }
 
-  .content {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    scrollbar-width: none;
+  .blogs-subtitle {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    color: color-mix(in srgb, currentColor 45%, transparent);
   }
 
-  .content > div {
-    min-width: 0;
-  }
-
-  @media (max-width: 768px) {
-    .content {
-      display: block;
+  @media (max-width: 640px) {
+    .blogs-page {
+      padding: 7rem 1.25rem 4rem;
     }
 
-    .content > .left,
-    .content > .right {
-      display: none;
+    .blogs-header {
+      margin-bottom: 3rem;
     }
   }
 </style>
