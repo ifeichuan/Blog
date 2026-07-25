@@ -3,13 +3,16 @@ import { type CollectionEntry, getCollection, render } from "astro:content";
 import FormattedDate from "../components/blog/FormattedDate.astro";
 import Base from "./Base.astro";
 import ReaderControls from "@/components/blog/ReaderControls";
+import ScrollIsland from "@/components/blog/ScrollIsland.astro";
 import { HoverLinkEnhancer } from "@/components/ui/HoverPreview";
 
 import "../styles/reader-themes.css";
 
-type Props = CollectionEntry<"blog">["data"];
+type Props = CollectionEntry<"blog">["data"] & {
+  headings?: { depth: number; slug: string; text: string }[];
+};
 
-const { title, description, banner, dateCreated, dateModified, isPub, tags } =
+const { title, description, banner, dateCreated, dateModified, isPub, tags, headings = [] } =
   Astro.props;
 ---
 
@@ -103,14 +106,15 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags } =
         <HoverLinkEnhancer client:only="react" />
       </div>
 
-      {/* 右侧栏：设置 + 目录 */}
-      <aside class="sticky top-[124px] w-72 right-20 flex flex-col gap-4 pt-[124px] max-md:hidden">
+      {/* 右侧栏：设置 */}
+      <aside class="sticky top-[124px] w-16 flex flex-col gap-4 pt-[124px] max-md:hidden">
         <div class="flex justify-end pr-4">
           <ReaderControls client:load />
         </div>
-        <slot name="toc" />
       </aside>
     </div>
+
+    <ScrollIsland headings={headings} title={title} />
 
     {/* 评论 */}
     <div class="max-w-3xl mx-auto px-6 pb-20 g-not">

@@ -1,7 +1,6 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import BlogPost from "../../layouts/BlogPost.astro";
-import TOC from "@/components/blog/TOC.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
@@ -16,9 +15,8 @@ const post = Astro.props;
 const { Content, headings } = await render(post);
 ---
 
-<BlogPost {...post.data}>
+<BlogPost {...post.data} headings={headings}>
   <Content />
-  <TOC headings={headings} slot="toc" />
 </BlogPost>
 
 <style is:global>

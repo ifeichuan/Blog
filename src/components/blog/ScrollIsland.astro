@@ -1,0 +1,297 @@
+---
+interface MarkdownHeading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: MarkdownHeading[];
+  title: string;
+}
+
+const { headings, title } = Astro.props;
+const navHeadings = headings.filter((h) => h.depth <= 3);
+---
+
+<div class="scroll-island-container">
+  <div class="scroll-island" data-scroll-island="closed">
+    <div class="island-top">
+      <p class="island-title">{title}</p>
+      <div class="island-progress">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle
+            cx="12"
+            cy="12"
+            r="9"
+            stroke="rgba(255,255,255,0.2)"
+            stroke-width="2.5"
+            fill="none"
+          />
+          <circle
+            data-scroll-indicator
+            cx="12"
+            cy="12"
+            r="9"
+            stroke="white"
+            stroke-width="2.5"
+            fill="none"
+            stroke-dasharray="56.549"
+            stroke-dashoffset="56.549"
+            stroke-linecap="round"
+            transform="rotate(-90 12 12)"
+          />
+        </svg>
+      </div>
+    </div>
+
+    <div class="island-nav">
+      <div class="island-nav-inner" data-lenis-prevent>
+        {navHeadings.map((h) => (
+          <a
+            href={`#${h.slug}`}
+            class="island-nav-item"
+            data-island-link={h.slug}
+            style={`--depth: ${h.depth - 2}`}
+          >
+            {h.text}
+          </a>
+        ))}
+        <div class="island-nav-indicator" data-island-nav-indicator></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .scroll-island-container {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 40;
+    padding-inline: 1rem;
+    pointer-events: none;
+  }
+
+  .scroll-island {
+    pointer-events: auto;
+    width: 280px;
+    height: 44px;
+    overflow: hidden;
+    cursor: pointer;
+    padding: 0.6em 0.8em;
+    background-color: #1a1a1a;
+    border-radius: 40px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  [data-scroll-island="open"] {
+    --elastic: linear(0, 0.0131, 0.0497, 0.1056, 0.1766, 0.2588, 0.3486,
+      0.4426, 0.5378, 0.6316, 0.7218, 0.8066, 0.8846, 0.9547, 1.0162,
+      1.0687, 1.1122, 1.1468, 1.1728, 1.1907, 1.2013, 1.2053, 1.2034,
+      1.1966, 1.1857, 1.1716, 1.155, 1.1367, 1.1175, 1.098, 1.0786, 1.06,
+      1.0424, 1.0261, 1.0115, 0.9985, 0.9875, 0.9782, 0.9709, 0.9653,
+      0.9613, 0.9589, 0.9579, 0.9581, 0.9594, 0.9615, 0.9643, 0.9676,
+      0.9713, 0.9752, 0.9792, 0.9832, 0.9871, 0.9907, 0.9941, 0.9972,
+      0.9999, 1.0022, 1.0042, 1.0058, 1.007, 1.0078, 1.0084, 1.0086,
+      1.0086, 1.0084, 1.008, 1.0074, 1.0068, 1.006, 1.0052, 1.0044,
+      1.0036, 1.0028, 1.002, 1.0013, 1.0007, 1.0001, 0.9996, 0.9992,
+      0.9989, 0.9986, 0.9984, 0.9983, 0.9982, 0.9982, 0.9983, 0.9983,
+      0.9985, 0.9986, 0.9987, 0.9989, 0.9991, 0.9992, 0.9994, 0.9996,
+      0.9997, 0.9998, 1, 1.0001, 1);
+    transition: all 1s var(--elastic);
+    height: 300px;
+    width: 320px;
+    padding: 1.1em 1em;
+    border-radius: 24px;
+  }
+
+  [data-scroll-island="closed"] {
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .island-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .island-title {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+    padding-left: 4px;
+  }
+
+  .island-progress {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+  }
+
+  .island-nav {
+    padding-top: 1.25rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  [data-scroll-island="open"] .island-nav {
+    opacity: 1;
+    transition: opacity 0.3s 0.15s ease;
+  }
+
+  .island-nav-inner {
+    position: relative;
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .island-nav-item {
+    display: block;
+    padding: 0.4em 0.7em;
+    padding-left: calc(0.7em + var(--depth, 0) * 0.75em);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 11.5px;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    z-index: 1;
+    transition: color 0.2s ease;
+  }
+
+  .island-nav-item:hover {
+    color: white;
+  }
+
+  .island-nav-item.is-active {
+    color: white;
+  }
+
+  .island-nav-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    pointer-events: none;
+  }
+
+  @media (max-width: 640px) {
+    .scroll-island {
+      width: 240px;
+    }
+
+    [data-scroll-island="open"] {
+      width: 290px;
+      height: 280px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-island,
+    [data-scroll-island="open"],
+    [data-scroll-island="closed"],
+    .island-nav,
+    .island-nav-indicator {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const island = document.querySelector("[data-scroll-island]") as HTMLElement;
+  const indicator = document.querySelector("[data-scroll-indicator]") as SVGCircleElement;
+  const navIndicator = document.querySelector("[data-island-nav-indicator]") as HTMLElement;
+  const navLinks = document.querySelectorAll("[data-island-link]");
+
+  if (island) {
+    island.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const state = island.getAttribute("data-scroll-island");
+      island.setAttribute("data-scroll-island", state === "open" ? "closed" : "open");
+    });
+
+    document.body.addEventListener("click", (e) => {
+      if (!island.contains(e.target as Node)) {
+        island.setAttribute("data-scroll-island", "closed");
+      }
+    });
+
+    // Navigate on link click
+    navLinks.forEach((link) => {
+      link.addEventListener("click", (e) => {
+        e.stopPropagation();
+        island.setAttribute("data-scroll-island", "closed");
+      });
+    });
+  }
+
+  // Scroll progress via lenis-scroll event
+  if (indicator) {
+    const circumference = 56.549;
+
+    const updateProgress = (scroll: number, limit: number) => {
+      const progress = limit > 0 ? Math.min(1, Math.max(0, scroll / limit)) : 0;
+      indicator.style.strokeDashoffset = String(circumference * (1 - progress));
+    };
+
+    window.addEventListener("lenis-scroll", (e: Event) => {
+      const { scroll, limit } = (e as CustomEvent).detail;
+      updateProgress(scroll, limit);
+    });
+
+    window.addEventListener("scroll", () => {
+      const scroll = window.scrollY;
+      const limit = document.documentElement.scrollHeight - window.innerHeight;
+      updateProgress(scroll, limit);
+    });
+  }
+
+  // Active heading detection
+  if (navLinks.length > 0 && navIndicator) {
+    const headingEls: HTMLElement[] = [];
+    navLinks.forEach((link) => {
+      const id = link.getAttribute("data-island-link")!;
+      const el = document.getElementById(id);
+      if (el) headingEls.push(el);
+    });
+
+    const setActive = (slug: string) => {
+      navLinks.forEach((l) => l.classList.remove("is-active"));
+      const activeLink = document.querySelector(`[data-island-link="${slug}"]`) as HTMLElement;
+      if (!activeLink) return;
+      activeLink.classList.add("is-active");
+
+      const idx = Array.from(navLinks).indexOf(activeLink);
+      navIndicator.style.transform = `translateY(${idx * 28}px)`;
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const id = entry.target.getAttribute("id");
+          if (id) setActive(id);
+        });
+      },
+      { rootMargin: "-80px 0px -75% 0px", threshold: 0 },
+    );
+
+    headingEls.forEach((h) => observer.observe(h));
+  }
+</script>
