@@ -8,7 +8,7 @@
 
   main {
     position: relative;
-    background-color: var(--color-parchment);
+    background-color: var(--fc-surface-page);
   }
 
   main::after {
@@ -28,24 +28,38 @@
   }
 }
 
-@theme {
-  --color-parchment: #f5f4ed;
-  --color-ivory: #faf9f5;
-  --color-warm-sand: #e8e6dc;
-  --color-deep-dark: #141413;
+/* 品牌色名保留为 @feichuan/tokens 的别名。
+ *
+ * 这些名字（parchment / near-black / …）是材质名，属于 primitive 层，
+ * 本不该被业务代码直接消费。保留它们只为兼容既有的 bg-parchment /
+ * text-near-black 三处用法；新代码请用语义名（bg-surface-page / text-ink），
+ * 见 tailwind-v4.css 生成的那批 utility。
+ *
+ * `@theme inline` 而非 `@theme`：inline 让 Tailwind 生成 utility 时保留
+ * var() 引用，而不是把当前值烧进 class —— 这样切主题无需重新生成 CSS。
+ */
+@theme inline {
+  --color-parchment: var(--fc-surface-page);
+  --color-ivory: var(--fc-surface-raised);
+  --color-warm-sand: var(--fc-surface-inset);
+  --color-deep-dark: var(--fc-ink);
 
-  --color-ink-blue: #1b365d;
-  --color-ink-light: #2d5a8a;
-  --color-dark-surface: #30302e;
-  --color-error: #b53333;
+  --color-ink-blue: var(--fc-accent);
+  --color-ink-light: var(--fc-accent-hover);
+  --color-dark-surface: var(--fc-ink-2);
+  --color-error: var(--fc-danger);
 
-  --color-near-black: #141413;
-  --color-dark-warm: #3d3d3a;
-  --color-olive: #504e49;
-  --color-stone: #6b6a64;
+  --color-near-black: var(--fc-ink);
+  --color-dark-warm: var(--fc-ink-2);
+  --color-olive: var(--fc-ink-muted);
+  --color-stone: var(--fc-ink-meta);
 
-  --color-tag-light: #eef2f7;
-  --color-tag: #e4ecf5;
-  --color-tag-medium: #d0dce9;
-  --color-tag-strong: #d6e1ee;
+  /* 原本是 ink-blue 在纸面上的四级预混（0.08 / 0.18 / 0.22 / 0.30 alpha），
+   * 那是 kami 为印刷渲染器不能重复叠加 alpha 而做的妥协。Web 上不需要，
+   * 所以四级压成一个 accent-soft。这四个名字目前零消费点，压掉无风险；
+   * 真需要多级标签底时用 color-mix() 现算，别再回到预混。 */
+  --color-tag-light: var(--fc-accent-soft);
+  --color-tag: var(--fc-accent-soft);
+  --color-tag-medium: var(--fc-accent-soft);
+  --color-tag-strong: var(--fc-accent-soft);
 }

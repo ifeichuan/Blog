@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* 必须在 new.css 之前 —— 后者的 @theme inline 引用 --fc-*。
+   tailwind-v4.css 自身已 @import tokens.css，无需再引一次。 */
+@import "@feichuan/tokens/tailwind";
 @import "./new.css";
 @plugin "@tailwindcss/typography";
 

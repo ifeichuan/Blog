@@ -23,6 +23,13 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags, head
         var s = JSON.parse(localStorage.getItem("blog-reader-settings") || "{}");
         var root = document.getElementById("reader-root");
         if (root && s.theme) root.setAttribute("data-reader-theme", s.theme);
+        // 与 ReaderControls 的 applyToDOM 保持一致：把明暗意图同步到 <html>，
+        // 让 token 的 --fc-* palette 跟着切。放在内联脚本里是为了首帧就正确，
+        // 等 React 挂载再切会闪一下。
+        if (s.theme) {
+          document.documentElement.dataset.fcTheme =
+            s.theme === "dark" || s.theme === "night" ? "dark" : "light";
+        }
         var article = root && root.querySelector(".reader-article");
         if (article) {
           if (s.fontSize) article.style.fontSize = s.fontSize + "px";

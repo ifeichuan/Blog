@@ -3,38 +3,53 @@
    4 themes: light, sepia, dark, night
    ======================================== */
 
-/* --- Light --- */
+/* --- Light --- 引用 @feichuan/tokens 亮色 palette
+ *
+ * light 与 dark 是「品牌态」，值一律引用 --fc-*，不再手写。
+ * sepia 与 night 是「阅读皮肤」，保留各自手写配色（见下方各自注释）。
+ *
+ * 三类变量保留手写值，因为它们不是 semantic 的同义词：
+ *   --reader-pre-*   代码高亮主题（One Dark）的一部分，刻意与品牌 palette 脱钩
+ *   --reader-mark-*  高亮笔，需要与正文形成反差，走 accent 会和链接混淆
+ *   *-stripe         斑马纹靠 alpha 叠加，不是独立色值
+ */
 [data-reader-theme="light"] {
-  --reader-bg: #f8f5ec;
-  --reader-text: #2c2c2c;
-  --reader-secondary: #666;
-  --reader-border: #e8e2d4;
-  --reader-surface: #fff9f0;
-  --reader-link: #b8860b;
-  --reader-link-hover: #996515;
-  --reader-code-bg: rgba(0, 0, 0, 0.04);
-  --reader-code-text: #b8860b;
+  --reader-bg: var(--fc-surface-page);
+  --reader-text: var(--fc-ink-2);
+  --reader-secondary: var(--fc-ink-meta);
+  --reader-border: var(--fc-border);
+  --reader-surface: var(--fc-surface-raised);
+  --reader-link: var(--fc-accent);
+  --reader-link-hover: var(--fc-accent-hover);
+  --reader-code-bg: var(--fc-surface-sunken);
+  --reader-code-text: var(--fc-accent);
+  /* One Dark，与页面 palette 无关 */
   --reader-pre-bg: #282c34;
   --reader-pre-text: #abb2bf;
-  --reader-blockquote-bg: rgba(0, 0, 0, 0.02);
-  --reader-blockquote-border: rgba(0, 0, 0, 0.08);
-  --reader-hr: rgba(0, 0, 0, 0.06);
-  --reader-table-header: rgba(0, 0, 0, 0.02);
-  --reader-table-stripe: rgba(0, 0, 0, 0.015);
-  --reader-table-border: rgba(0, 0, 0, 0.06);
-  --reader-strong: #1a1a1a;
-  --reader-heading: #1a1a1a;
-  --reader-mark-bg: rgba(184, 134, 11, 0.15);
-  --reader-mark-text: #6b4c00;
-  --reader-toc-text: #555;
-  --reader-toc-active: #b8860b;
-  --reader-ctrl-bg: rgba(255, 249, 240, 0.95);
-  --reader-ctrl-hover: rgba(0, 0, 0, 0.05);
-  --reader-ctrl-text: #555;
-  --reader-ctrl-border: #e8e2d4;
+  --reader-blockquote-bg: var(--fc-surface-raised);
+  --reader-blockquote-border: var(--fc-border-strong);
+  --reader-hr: var(--fc-border);
+  --reader-table-header: var(--fc-surface-inset);
+  --reader-table-stripe: color-mix(in oklab, var(--fc-ink) 3%, transparent);
+  --reader-table-border: var(--fc-border);
+  --reader-strong: var(--fc-ink);
+  --reader-heading: var(--fc-ink);
+  /* 高亮笔：暖黄，与蓝色链接拉开区别 */
+  --reader-mark-bg: color-mix(in oklab, var(--fc-warn) 22%, transparent);
+  --reader-mark-text: var(--fc-ink);
+  --reader-toc-text: var(--fc-ink-muted);
+  --reader-toc-active: var(--fc-accent);
+  --reader-ctrl-bg: color-mix(in oklab, var(--fc-surface-raised) 95%, transparent);
+  --reader-ctrl-hover: var(--fc-surface-inset);
+  --reader-ctrl-text: var(--fc-ink-muted);
+  --reader-ctrl-border: var(--fc-border);
 }
 
-/* --- Sepia --- */
+/* --- Sepia --- 阅读皮肤，刻意不接 token
+ *
+ * 这是一套独立的暖调阅读氛围（羊皮纸 + 金褐链接），不是品牌态的变体。
+ * 接入 token 会把它拉回品牌蓝，那就失去了提供这个选项的意义。
+ * 手写值在此是正确的 —— 它表达的是「换一种读的心情」，而非「同一品牌换个亮度」。 */
 [data-reader-theme="sepia"] {
   --reader-bg: #f4ecd8;
   --reader-text: #3d3229;
@@ -66,37 +81,47 @@
 }
 
 /* --- Dark --- */
+/* --- Dark --- 引用 @feichuan/tokens 暗色 palette
+ *
+ * 选中此主题时 ReaderControls 会把 <html data-fc-theme="dark"> 打开，
+ * 于是下面这些 --fc-* 自动解析到暗色值 —— 不需要在这里再手写一套。
+ * 这是「一份契约、两个 palette」的实际收益：加一套阅读主题不必复制 27 个值。
+ */
 [data-reader-theme="dark"] {
-  --reader-bg: #1a1a1a;
-  --reader-text: #c9c9c9;
-  --reader-secondary: #888;
-  --reader-border: #333;
-  --reader-surface: #242424;
-  --reader-link: #fbbf24;
-  --reader-link-hover: #fcd34d;
-  --reader-code-bg: rgba(255, 255, 255, 0.08);
-  --reader-code-text: #fbbf24;
-  --reader-pre-bg: rgba(255, 255, 255, 0.04);
+  --reader-bg: var(--fc-surface-page);
+  --reader-text: var(--fc-ink);
+  --reader-secondary: var(--fc-ink-meta);
+  --reader-border: var(--fc-border);
+  --reader-surface: var(--fc-surface-raised);
+  --reader-link: var(--fc-accent);
+  --reader-link-hover: var(--fc-accent-hover);
+  --reader-code-bg: var(--fc-surface-sunken);
+  --reader-code-text: var(--fc-accent);
+  --reader-pre-bg: var(--fc-surface-sunken);
   --reader-pre-text: #abb2bf;
-  --reader-blockquote-bg: rgba(255, 255, 255, 0.03);
-  --reader-blockquote-border: rgba(255, 255, 255, 0.1);
-  --reader-hr: rgba(255, 255, 255, 0.06);
-  --reader-table-header: rgba(255, 255, 255, 0.03);
-  --reader-table-stripe: rgba(255, 255, 255, 0.02);
-  --reader-table-border: rgba(255, 255, 255, 0.08);
-  --reader-strong: #e5e5e5;
-  --reader-heading: #e5e5e5;
-  --reader-mark-bg: rgba(251, 191, 36, 0.2);
-  --reader-mark-text: #fbbf24;
-  --reader-toc-text: #888;
-  --reader-toc-active: #fbbf24;
-  --reader-ctrl-bg: rgba(36, 36, 36, 0.95);
-  --reader-ctrl-hover: rgba(255, 255, 255, 0.08);
-  --reader-ctrl-text: #999;
-  --reader-ctrl-border: #333;
+  --reader-blockquote-bg: var(--fc-surface-raised);
+  --reader-blockquote-border: var(--fc-border-strong);
+  --reader-hr: var(--fc-border);
+  --reader-table-header: var(--fc-surface-inset);
+  --reader-table-stripe: color-mix(in oklab, var(--fc-ink) 4%, transparent);
+  --reader-table-border: var(--fc-border);
+  --reader-strong: var(--fc-ink);
+  --reader-heading: var(--fc-ink);
+  --reader-mark-bg: color-mix(in oklab, var(--fc-warn) 28%, transparent);
+  --reader-mark-text: var(--fc-ink);
+  --reader-toc-text: var(--fc-ink-meta);
+  --reader-toc-active: var(--fc-accent);
+  --reader-ctrl-bg: color-mix(in oklab, var(--fc-surface-raised) 95%, transparent);
+  --reader-ctrl-hover: var(--fc-surface-inset);
+  --reader-ctrl-text: var(--fc-ink-muted);
+  --reader-ctrl-border: var(--fc-border);
 }
 
-/* --- Night --- */
+/* --- Night --- 阅读皮肤，刻意不接 token
+ *
+ * 低蓝光深底，服务夜间长时间阅读。与 dark 的差别不是亮度而是色温取向，
+ * 所以同样保留手写值。注意它虽然是深色，仍会触发 data-fc-theme="dark" ——
+ * 那是为了让页面其余部分（非 reader 区域）跟着变暗。 */
 [data-reader-theme="night"] {
   --reader-bg: #0d1117;
   --reader-text: #b8bfc7;

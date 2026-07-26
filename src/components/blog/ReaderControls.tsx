@@ -59,10 +59,20 @@ function saveSettings(s: Settings) {
   } catch {}
 }
 
+/** 走暗色 token palette 的阅读主题。sepia 保持亮色底，night 是深底。 */
+const DARK_THEMES = new Set(["dark", "night"]);
+
 function applyToDOM(s: Settings) {
   const root = document.getElementById("reader-root");
   if (!root) return;
   root.setAttribute("data-reader-theme", s.theme);
+
+  // token 的 dark palette 挂在 :root[data-fc-theme='dark']，而 reader 主题挂在
+  // #reader-root 上 —— 两个作用域不重合。这里把 reader 的明暗意图同步到 <html>，
+  // 让 --fc-* 跟着切换，reader 主题就不必再手写一套暗色值。
+  document.documentElement.dataset.fcTheme = DARK_THEMES.has(s.theme)
+    ? "dark"
+    : "light";
 
   const article = root.querySelector(".reader-article") as HTMLElement | null;
   if (article) {

@@ -5,6 +5,10 @@
  */
 @import "tailwindcss";
 @import "tw-animate-css";
+/* @feichuan/tokens —— 品牌 token。tailwind-v4.css 自带 tokens.css。
+   global.css 与 tailwind.css 是两条独立引入链（前者供文章与多数页面，
+   后者供首页与 about），两边都要引，否则一半页面拿不到 --fc-*。 */
+@import "@feichuan/tokens/tailwind";
 @plugin "@tailwindcss/typography";
 
 /*
@@ -23,25 +27,34 @@
   font-display: fallback;
   box-sizing: border-box !important;
 
+  /* shadcn 语义变量 → @feichuan/tokens。
+   *
+   * 原值是 shadcn 默认的冷灰蓝（H≈250–265），与全站暖纸风格互相打架 ——
+   * 每个 shadcn 组件都像贴上去的补丁。改成引用 --fc-* 后，Button/Dialog
+   * 这些组件自动吃品牌色，且跟随 data-fc-theme 切换亮暗，无需 .dark class。
+   *
+   * 注意 shadcn 的 --accent 是「hover 弱底」语义（原值就是浅灰），
+   * 不是品牌 accent —— 映射到 surface-inset 而非 --fc-accent，否则
+   * 所有 hover 都会变成大块品牌蓝。 */
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --background: var(--fc-surface-page);
+  --foreground: var(--fc-ink);
+  --card: var(--fc-surface-raised);
+  --card-foreground: var(--fc-ink);
+  --popover: var(--fc-surface-raised);
+  --popover-foreground: var(--fc-ink);
+  --primary: var(--fc-accent);
+  --primary-foreground: var(--fc-ink-on-accent);
+  --secondary: var(--fc-surface-inset);
+  --secondary-foreground: var(--fc-ink-2);
+  --muted: var(--fc-surface-inset);
+  --muted-foreground: var(--fc-ink-muted);
+  --accent: var(--fc-surface-inset);
+  --accent-foreground: var(--fc-ink-2);
+  --destructive: var(--fc-danger);
+  --border: var(--fc-border);
+  --input: var(--fc-border);
+  --ring: var(--fc-border-focus);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -84,7 +97,7 @@ body {
 }
 
 .smooth-content {
-  background-color: #f5f4ed;
+  background-color: var(--fc-surface-page);
 }
 
 .smooth-content::before {
@@ -141,39 +154,15 @@ body {
 /*
   ---break---
  */
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
-}
+/* 原 shadcn 的 .dark 块已删除。
+ *
+ * 它是死代码 —— 全库没有任何地方挂 .dark class（上方 @custom-variant
+ * 也一直是注释状态）。暗色现在由 <html data-fc-theme="dark"> 驱动：
+ * :root 里的 shadcn 变量引用 --fc-*，而 --fc-* 在 tokens.css 里按
+ * data-fc-theme 切换，shadcn 组件因此自动跟随，无需第二套定义。
+ * 若未来引入依赖 .dark 的第三方样式，用
+ * `@custom-variant dark (&:is([data-fc-theme="dark"] *))` 桥接，
+ * 不要恢复这个手写块。 */
 /*
   ---break---
  */
