@@ -10,9 +10,11 @@ import "../styles/global.css";
 export type Props = {
   title?: string;
   description?: string;
-  banner?: ImageMetadata;
+  banner?: ImageMetadata | string;
   enableIntro?: boolean;
   ogType?: "website" | "article";
+  publishedTime?: Date;
+  modifiedTime?: Date;
   showMouse?: boolean;
   showDev?: boolean;
   showFooter?: boolean;
@@ -25,6 +27,8 @@ const {
   banner,
   enableIntro = false,
   ogType = "website",
+  publishedTime,
+  modifiedTime,
   showMouse = true,
   showDev = true,
   showFooter = true,
@@ -35,7 +39,14 @@ const {
 <!doctype html>
 <html lang="zh-cn">
   <head>
-    <BaseHead title={title} description={description} ogType={ogType} />
+    <BaseHead
+      title={title}
+      description={description}
+      image={banner}
+      ogType={ogType}
+      publishedTime={publishedTime}
+      modifiedTime={modifiedTime}
+    />
   </head>
   <body>
     <slot name="intro" />

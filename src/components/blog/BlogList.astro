@@ -1,7 +1,8 @@
 ---
 import { getCollection } from "astro:content";
+import { getPostDescription, getPublishedPosts } from "@/lib/blog";
 
-const posts = (await getCollection("blog")).sort(
+const posts = getPublishedPosts(await getCollection("blog")).sort(
   (a, b) => b.data.dateCreated.valueOf() - a.data.dateCreated.valueOf(),
 );
 
@@ -25,9 +26,7 @@ function formatDate(date: Date) {
               {formatDate(p.data.dateCreated)}
             </time>
             <h2 class="post-title">{p.data.title}</h2>
-            {p.data.description && (
-              <p class="post-desc">{p.data.description}</p>
-            )}
+            <p class="post-desc">{getPostDescription(p)}</p>
           </a>
         </article>
       );

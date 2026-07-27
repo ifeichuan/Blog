@@ -2,33 +2,16 @@
 import "@/styles/tailwind.css";
 import Intro from "@/components/layout/Intro.astro";
 import SiteMenu from "@/components/layout/SiteMenu.astro";
+import BaseHead from "@/components/layout/BaseHead.astro";
+import { SITE_DESCRIPTION } from "@/consts";
 
 const isDev = import.meta.env.DEV;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Feichuan</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <meta name="theme-color" content="#f5f4ed" />
-    <link
-      href="https://fontsapi.zeoseven.com/442/main/result.css"
-      onload="this.rel='stylesheet'"
-      rel="preload"
-      as="style"
-      crossorigin
-    />
-    <noscript><link rel="stylesheet" href="https://fontsapi.zeoseven.com/442/main/result.css" /></noscript>
-    <style>
-      body {
-        font-family: "Maple Mono NF CN", system-ui, sans-serif;
-      }
-    </style>
+    <BaseHead description={SITE_DESCRIPTION} ogType="website" />
     {
       isDev && (
         <script is:inline type="module">

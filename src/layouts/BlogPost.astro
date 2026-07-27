@@ -12,11 +12,19 @@ type Props = CollectionEntry<"blog">["data"] & {
   headings?: { depth: number; slug: string; text: string }[];
 };
 
-const { title, description, banner, dateCreated, dateModified, isPub, tags, headings = [] } =
+const { title, description, banner, dateCreated, dateModified, tags, headings = [] } =
   Astro.props;
+const bannerURL = typeof banner === "string" ? banner : banner?.src;
 ---
 
-<Base ogType="article" description={description} title={title}>
+<Base
+  ogType="article"
+  description={description ?? `${title} — Feichuan 的技术与实践记录。`}
+  title={title}
+  banner={banner}
+  publishedTime={dateCreated}
+  modifiedTime={dateModified}
+>
   <script is:inline>
     (function () {
       try {
@@ -101,9 +109,9 @@ const { title, description, banner, dateCreated, dateModified, isPub, tags, head
           </div>
 
           {/* 封面图（可选） */}
-          {banner && (
+          {bannerURL && (
             <div class="reader-cover">
-              <img src={banner.src} alt={title} class="reader-cover-img" loading="eager" />
+              <img src={bannerURL} alt={title} class="reader-cover-img" loading="eager" />
             </div>
           )}
 
