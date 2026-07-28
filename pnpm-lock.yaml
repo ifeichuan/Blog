@@ -30,8 +30,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0(@types/react@19.2.12)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@feichuan/tokens':
-        specifier: file:../feichuan-tokens
-        version: file:../feichuan-tokens
+        specifier: github:feichuans/feichuan-tokens
+        version: https://codeload.github.com/feichuans/feichuan-tokens/tar.gz/7a5888c166187091670fa08f382f7f9e21408aec
       '@gsap/react':
         specifier: ^2.1.2
         version: 2.1.2(gsap@3.14.2)(react@19.2.4)
@@ -993,8 +993,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@feichuan/tokens@file:../feichuan-tokens':
-    resolution: {directory: ../feichuan-tokens, type: directory}
+  '@feichuan/tokens@https://codeload.github.com/feichuans/feichuan-tokens/tar.gz/7a5888c166187091670fa08f382f7f9e21408aec':
+    resolution: {tarball: https://codeload.github.com/feichuans/feichuan-tokens/tar.gz/7a5888c166187091670fa08f382f7f9e21408aec}
+    version: 0.1.0
 
   '@floating-ui/core@1.8.0':
     resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
@@ -5413,7 +5414,7 @@ snapshots:
   '@esbuild/win32-x64@0.27.0':
     optional: true
 
-  '@feichuan/tokens@file:../feichuan-tokens': {}
+  '@feichuan/tokens@https://codeload.github.com/feichuans/feichuan-tokens/tar.gz/7a5888c166187091670fa08f382f7f9e21408aec': {}
 
   '@floating-ui/core@1.8.0':
     dependencies:
