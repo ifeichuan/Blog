@@ -572,9 +572,15 @@ export function mountStampField(
   const rects = new Float32Array(MAX_STAMPS * 4);
   const meta = new Float32Array(MAX_STAMPS * 4);
   const lift = new Float32Array(MAX_STAMPS * 4);
+  const tilt = new Float32Array(MAX_STAMPS * 4);
   const hovers = new Float32Array(MAX_STAMPS);
   const lifts = new Float32Array(MAX_STAMPS);
+  // 倾斜是低通跟随的，所以状态要留到下一帧；按 slot 存，不按绘制顺序
+  const tiltX = new Float32Array(MAX_STAMPS);
+  const tiltY = new Float32Array(MAX_STAMPS);
   const pointer = { x: -9999, y: -9999 };
+  // 避开光标：光标那一侧压下去。7° 是上限，再大就从"被按住"变成"翻过去"
+  const TILT_MAX = (7 * Math.PI) / 180;
 
   let dpr = 1;
   const resize = () => {
@@ -626,6 +632,7 @@ export function mountStampField(
     rects.fill(0);
     meta.fill(0);
     lift.fill(0);
+    tilt.fill(0);
 
     targets.forEach((el, i) => {
       const r = el.getBoundingClientRect();
@@ -648,9 +655,23 @@ export function mountStampField(
       const s = Math.sin(-rot);
       const lx = dx * c - dy * s;
       const ly = dx * s + dy * c;
-      const hot = Math.abs(lx) <= r.width * dpr * 0.5 && Math.abs(ly) <= r.height * dpr * 0.5;
+      const hw = r.width * dpr * 0.5;
+      const hh = r.height * dpr * 0.5;
+      const hot = Math.abs(lx) <= hw && Math.abs(ly) <= hh;
       hovers[slotKey] += ((hot ? 1 : 0) - hovers[slotKey]) * 0.14;
       el.dataset.hot = hot ? "true" : "false";
+
+      // 避开光标的倾斜：光标在票内的归一化位置直接当角度，符号取正 = 那一侧远离观者。
+      // 抬到中央后归零 —— 平视的票不该还在歪。
+      const nx = hot ? Math.max(-1, Math.min(1, lx / hw)) : 0;
+      const ny = hot ? Math.max(-1, Math.min(1, ly / hh)) : 0;
+      const k = 1 - lifts[slotKey];
+      const wantY = nx * TILT_MAX * k;
+      const wantX = -ny * TILT_MAX * k;
+      tiltY[slotKey] += (wantY - tiltY[slotKey]) * 0.14;
+      tiltX[slotKey] += (wantX - tiltX[slotKey]) * 0.14;
+      tilt[i * 4 + 0] = tiltX[slotKey];
+      tilt[i * 4 + 1] = tiltY[slotKey];
 
       // 抬起时旋转回正，就是"落下的票飞到中央变成平视"
       meta[i * 4 + 0] = rot * (1 - lifts[slotKey]);
@@ -665,11 +686,12 @@ export function mountStampField(
     });
 
     gl.uniform1f(uTime, (performance.now() - t0) / 1000);
-    gl.uniform2f(uPointer, pointer.x / canvas.width, pointer.y / canvas.height);
+    gl.uniform2f(uPointerPx, pointer.x, pointer.y);
     gl.uniform1i(uCount, targets.length);
     gl.uniform4fv(uRects, rects);
     gl.uniform4fv(uMeta, meta);
     gl.uniform4fv(uLift, lift);
+    gl.uniform4fv(uTilt, tilt);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     raf = requestAnimationFrame(frame);
   };
