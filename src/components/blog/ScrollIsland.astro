@@ -14,7 +14,13 @@ const { headings, title } = Astro.props;
 const navHeadings = headings.filter((h) => h.depth <= 3);
 ---
 
-<div class="scroll-island-container">
+<div
+  class="scroll-island-container"
+  data-scroll-island-container
+  data-island-presence="hidden"
+  aria-hidden="true"
+  inert
+>
   <div class="scroll-island" data-scroll-island="closed">
     <div class="island-top">
       <div class="island-title-wrapper">
@@ -80,6 +86,12 @@ const navHeadings = headings.filter((h) => h.depth <= 3);
     justify-content: center;
     z-index: 40;
     padding-inline: 1rem;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  .scroll-island-container[data-island-presence="hidden"] .scroll-island {
     pointer-events: none;
   }
 
@@ -238,10 +250,93 @@ const navHeadings = headings.filter((h) => h.depth <= 3);
 </style>
 
 <script>
+  import { animate } from "motion";
+
+  const islandContainer = document.querySelector(
+    "[data-scroll-island-container]",
+  ) as HTMLElement;
   const island = document.querySelector("[data-scroll-island]") as HTMLElement;
   const indicator = document.querySelector("[data-scroll-indicator]") as SVGCircleElement;
   const navIndicator = document.querySelector("[data-island-nav-indicator]") as HTMLElement;
   const navLinks = document.querySelectorAll("[data-island-link]");
+
+  const readerMeta = document.querySelector(".reader-meta");
+  if (islandContainer && readerMeta) {
+    const scrollRoot = document.querySelector(".smooth-wrapper");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let isVisible = false;
+    let presenceAnimations: ReturnType<typeof animate>[] = [];
+
+    const stopPresenceAnimations = () => {
+      presenceAnimations.forEach((animation) => animation.stop());
+      presenceAnimations = [];
+    };
+
+    const setPresence = (visible: boolean) => {
+      if (visible === isVisible) return;
+      isVisible = visible;
+
+      islandContainer.dataset.islandPresence = visible ? "visible" : "hidden";
+      islandContainer.setAttribute("aria-hidden", String(!visible));
+      islandContainer.toggleAttribute("inert", !visible);
+      stopPresenceAnimations();
+
+      if (!visible) {
+        island?.setAttribute("data-scroll-island", "closed");
+      }
+
+      if (reduceMotion.matches) {
+        islandContainer.style.transform = "translateY(0)";
+        presenceAnimations.push(
+          animate(
+            islandContainer,
+            { opacity: visible ? 1 : 0 },
+            { duration: 0.12, ease: [0.25, 1, 0.5, 1] },
+          ),
+        );
+        return;
+      }
+
+      if (visible) {
+        presenceAnimations.push(
+          animate(
+            islandContainer,
+            { y: 0 },
+            { type: "spring", stiffness: 420, damping: 36, mass: 0.8 },
+          ),
+          animate(
+            islandContainer,
+            { opacity: 1 },
+            { duration: 0.18, ease: [0.25, 1, 0.5, 1] },
+          ),
+        );
+      } else {
+        presenceAnimations.push(
+          animate(
+            islandContainer,
+            { y: 10, opacity: 0 },
+            { duration: 0.18, ease: [0.4, 0, 1, 1] },
+          ),
+        );
+      }
+    };
+
+    const presenceObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return;
+        const rootTop = entry.rootBounds?.top ?? 0;
+        const hasPassedTop = entry.boundingClientRect.bottom <= rootTop;
+        setPresence(!entry.isIntersecting && hasPassedTop);
+      },
+      {
+        root: scrollRoot,
+        rootMargin: "-28px 0px 0px 0px",
+        threshold: 0,
+      },
+    );
+
+    presenceObserver.observe(readerMeta);
+  }
 
   if (island) {
     island.addEventListener("click", (e) => {

@@ -1,0 +1,37 @@
+.ui-sound-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  color: #111;
+  background: transparent;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  opacity: 0.55;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: color 180ms ease, opacity 180ms ease;
+}
+
+.ui-sound-toggle svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 1.8;
+}
+
+.ui-sound-toggle:hover {
+  color: var(--sm-accent, currentColor);
+  opacity: 1;
+}
+
+.ui-sound-toggle:focus-visible {
+  color: var(--sm-accent, currentColor);
+  outline: 2px solid var(--sm-accent, currentColor);
+  outline-offset: 3px;
+  opacity: 1;
+}

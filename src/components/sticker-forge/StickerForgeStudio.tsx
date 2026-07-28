@@ -20,6 +20,7 @@ import type {
   StickerSource,
 } from "@/lib/sticker-forge";
 import { sanitizeSvgMarkup } from "@/lib/sticker-forge";
+import { useUiSound } from "@/hooks/use-ui-sound";
 
 type StickerController = StickerInstance;
 type SourceMode = "text" | "image";
@@ -467,6 +468,7 @@ function DropdownChevron() {
 }
 
 export function StickerForgeStudio() {
+  const { play: playSound } = useUiSound();
   const initialSource = useMemo(
     () => makeTextSource(DEFAULT_TEXT, DEFAULT_INK, DEFAULT_RICH_TEXT),
     [],
@@ -975,9 +977,11 @@ export function PeelSticker() {
     try {
       await navigator.clipboard.writeText(buildComponentSnippet());
       setCopied(true);
+      playSound("success");
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
       setSourceMessage(t.copyBlocked);
+      playSound("error");
     }
   };
 

@@ -1,5 +1,6 @@
 ---
 import meshPost from "@/assets/mesh-post.png";
+import { UiSoundToggle } from "@/components/ui/UiSoundToggle";
 
 type MenuItem = {
   label: string;
@@ -98,22 +99,27 @@ const offscreen = position === "left" ? "-100%" : "100%";
         }
       </ul>
 
-      {
-        displaySocials && socialItems.length > 0 && (
-          <div class="sm-socials" aria-label="Social links">
-            <h3 class="sm-socials-title" data-sm-social>Socials</h3>
-            <ul class="sm-socials-list" role="list">
-              {socialItems.map((item) => (
-                <li class="sm-socials-item">
-                  <a href={item.link} target="_blank" rel="noopener noreferrer" class="sm-socials-link" data-sm-social>
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )
-      }
+      <div class="sm-menu-footer">
+        {
+          displaySocials && socialItems.length > 0 && (
+            <div class="sm-socials" aria-label="Social links">
+              <h3 class="sm-socials-title" data-sm-social>Socials</h3>
+              <ul class="sm-socials-list" role="list">
+                {socialItems.map((item) => (
+                  <li class="sm-socials-item">
+                    <a href={item.link} target="_blank" rel="noopener noreferrer" class="sm-socials-link" data-sm-social>
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        }
+        <div class="sm-sound-control" data-sm-social>
+          <UiSoundToggle client:load />
+        </div>
+      </div>
     </div>
     <div class="sm-panel-mesh" aria-hidden="true" style={`--sm-mesh:url('${meshPost.src}')`} />
   </aside>
@@ -121,6 +127,9 @@ const offscreen = position === "left" ? "-100%" : "100%";
 
 <script>
   import { animate } from "motion";
+  import { initializeUiSound, playUiSound } from "@/lib/ui-sound";
+
+  initializeUiSound();
 
   const easeOut = [0.25, 1, 0.5, 1] as const;
   const easeIn = [0.5, 0, 0.75, 0] as const;
@@ -215,8 +224,17 @@ const offscreen = position === "left" ? "-100%" : "100%";
     };
 
     toggle.addEventListener("click", () => {
-      if (open) closeMenu();
-      else openMenu();
+      if (open) {
+        playUiSound("toggle-off");
+        closeMenu();
+      } else {
+        playUiSound("toggle-on");
+        openMenu();
+      }
+    });
+
+    wrapper.querySelectorAll<HTMLAnchorElement>(".sm-panel-item, .sm-socials-link").forEach((link) => {
+      link.addEventListener("click", () => playUiSound("click"));
     });
 
     if (wrapper.dataset.closeOnClickAway === "true") {
@@ -432,12 +450,18 @@ const offscreen = position === "left" ? "-100%" : "100%";
     user-select: none;
   }
 
+  .sm-menu-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: auto;
+    padding-top: 2rem;
+  }
+
   .sm-socials {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    margin-top: auto;
-    padding-top: 2rem;
   }
 
   .sm-socials-title {
@@ -454,9 +478,14 @@ const offscreen = position === "left" ? "-100%" : "100%";
   }
 
   .sm-socials-title,
-  .sm-socials-link {
+  .sm-socials-link,
+  .sm-sound-control {
     opacity: 0;
     transform: translateY(25px);
+  }
+
+  .sm-sound-control {
+    display: flex;
   }
 
   .sm-socials-link {

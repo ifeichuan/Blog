@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { useReducedMotion } from 'motion/react'
 import gsap from 'gsap'
 import { HeroContent } from './HeroContent'
+import { useUiSound } from '@/hooks/use-ui-sound'
 
 type HeroSectionProps = {
   play: boolean
@@ -13,6 +14,7 @@ export function HeroSection({ play, schemeName, onNextScheme }: HeroSectionProps
   const [contentPlay, setContentPlay] = useState(false)
   const reduced = useReducedMotion()
   const contentRef = useRef<HTMLDivElement>(null)
+  const { play: playSound } = useUiSound()
 
   useLayoutEffect(() => {
     const content = contentRef.current
@@ -45,7 +47,10 @@ export function HeroSection({ play, schemeName, onNextScheme }: HeroSectionProps
         <HeroContent play={contentPlay} />
       </div>
       <button
-        onClick={onNextScheme}
+        onClick={() => {
+          playSound('toggle-on')
+          onNextScheme()
+        }}
         className="absolute bottom-4 left-4 z-20 px-3 py-1.5 rounded-lg text-xs font-mono bg-white/60 backdrop-blur-sm border border-black/10 hover:bg-white/80 transition-colors"
       >
         {schemeName}

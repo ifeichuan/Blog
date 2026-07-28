@@ -27,6 +27,7 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@react-three/postprocessing": "^3.0.4",
+    "@rexa-developer/tiks": "^0.3.0",
     "@tailwindcss/vite": "^4.1.18",
     "@townhall-gg/marquee-react": "^0.2.1",
     "@types/react": "^19.2.8",

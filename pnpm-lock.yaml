@@ -59,6 +59,9 @@ importers:
       '@react-three/postprocessing':
         specifier: ^3.0.4
         version: 3.0.4(@react-three/fiber@9.6.1(@types/react@19.2.12)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.180.0))(@types/three@0.180.0)(react@19.2.4)(three@0.180.0)
+      '@rexa-developer/tiks':
+        specifier: ^0.3.0
+        version: 0.3.0(react@19.2.4)(vue@3.5.27(typescript@5.9.3))
       '@tailwindcss/vite':
         specifier: ^4.1.18
         version: 4.1.18(vite@6.4.1(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.97.3)(sass@1.97.3))
@@ -1589,6 +1592,17 @@ packages:
       '@react-three/fiber': ^9.0.0
       react: ^19.0
       three: '>= 0.156.0'
+
+  '@rexa-developer/tiks@0.3.0':
+    resolution: {integrity: sha512-7tW/lb53Nr8U0dn9ZlWOvDXtsZ7fK3dZN90Xvp/S4AkjruopuP8992+3KhFCrIQ7bXFEsaVFUZsm/+NC3ufA1w==}
+    peerDependencies:
+      react: '>=18.0.0'
+      vue: '>=3.0.0'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      vue:
+        optional: true
 
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
@@ -5921,6 +5935,11 @@ snapshots:
       three: 0.180.0
     transitivePeerDependencies:
       - '@types/three'
+
+  '@rexa-developer/tiks@0.3.0(react@19.2.4)(vue@3.5.27(typescript@5.9.3))':
+    optionalDependencies:
+      react: 19.2.4
+      vue: 3.5.27(typescript@5.9.3)
 
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 

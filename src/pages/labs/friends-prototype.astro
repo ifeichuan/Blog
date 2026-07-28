@@ -1,0 +1,645 @@
+---
+// PROTOTYPE — 一次性代码，选定后删除。
+// 问题：/friends 页在 About 的 paper 风格下该长什么样？
+// 四个变体，同一路由，用 ?variant=A|B|C|D 切换，底部浮动 bar 可点/左右方向键。
+// 每个变体下方附带「About 页里的入口 Section」预览，确认两处语言一致。
+import SiteMenu from "@/components/layout/SiteMenu.astro";
+
+const variant = (Astro.url.searchParams.get("variant") ?? "S1").toUpperCase();
+// S1/S2/S3 是邮票方向的三档质感（共享 canvas + shader）；A/B/C 是早先的排版对照组。
+const VARIANTS = [
+  { key: "S1", name: "邮票·米纸细砂微金" },
+  { key: "S2", name: "邮票·深色台面强反射" },
+  { key: "S3", name: "邮票·厚金箔墨边烫金" },
+  { key: "A", name: "对照 · Card grid" },
+  { key: "B", name: "对照 · 排印目录" },
+  { key: "C", name: "对照 · 悬停索引" },
+];
+const STAMP_KEYS = ["S1", "S2", "S3"];
+const LOOK_INDEX: Record<string, number> = { S1: 0, S2: 1, S3: 2 };
+
+type Site = { name: string; url: string; desc: string; featured?: boolean };
+
+const friends: Site[] = [
+  { name: "云游君", url: "yunyoujun.cn", desc: "一个想成为夏日和风的少年", featured: true },
+  { name: "Tw93", url: "tw93.fun", desc: "折腾一些有意思的开源小工具", featured: true },
+  { name: "Xuanwo", url: "xuanwo.io", desc: "通过开源和 Rust 实现数据自由", featured: true },
+  { name: "Anthony Fu", url: "antfu.me", desc: "Vue / Vite core team, 无数工具的作者", featured: true },
+  { name: "Innei", url: "innei.in", desc: "写代码，也写生活里的琐碎念头" },
+  { name: "Ovilia", url: "zhangwenli.com", desc: "数据可视化与创意编程" },
+  { name: "斜杠青年", url: "slashwithme.dev", desc: "在设计和工程之间来回横跳" },
+  { name: "苏卡卡", url: "sukaka.top", desc: "记录一些前端踩坑和阅读笔记" },
+];
+
+const reading: Site[] = [
+  { name: "Rauno Freiberg", url: "rauno.me", desc: "界面细节与交互质感的教科书" },
+  { name: "Josh W. Comeau", url: "joshwcomeau.com", desc: "把 CSS 讲透的交互式长文" },
+  { name: "Emil Kowalski", url: "emilkowal.ski", desc: "动效与组件设计的第一性思考" },
+];
+
+const featured = friends.filter((f) => f.featured).slice(0, 4);
+const hue = (i: number) => (i * 47 + 24) % 360;
+const initial = (s: string) => s.trim().charAt(0);
+
+// 俯视撒开的布局：手写死一组坐标（%），比随机可控，也方便反复微调。
+// 留白很大是刻意的 —— 参考图里票只占画面一小块，是"掉在桌上"而不是"排好的目录"。
+const SCATTER = [
+  { x: 18, y: 6, rot: -9, z: 3 },
+  { x: 47, y: 2, rot: 6, z: 5 },
+  { x: 74, y: 9, rot: -4, z: 2 },
+  { x: 8, y: 27, rot: 11, z: 4 },
+  { x: 38, y: 23, rot: -6, z: 6 },
+  { x: 63, y: 30, rot: 8, z: 1 },
+  { x: 86, y: 24, rot: -12, z: 3 },
+  { x: 24, y: 47, rot: 5, z: 5 },
+  { x: 52, y: 44, rot: -8, z: 2 },
+  { x: 78, y: 51, rot: 10, z: 4 },
+  { x: 12, y: 66, rot: -5, z: 1 },
+  { x: 44, y: 68, rot: 7, z: 3 },
+];
+const all: Site[] = [...friends, ...reading];
+const YEAR = "2026";
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Friends prototype · {variant}</title>
+  </head>
+  <body class={STAMP_KEYS.includes(variant) ? `stamp-mode look-${LOOK_INDEX[variant]}` : ""}>
+    {STAMP_KEYS.includes(variant) && <canvas id="stamp-field" aria-hidden="true"></canvas>}
+    <SiteMenu />
+
+    <main>
+      <div class="paper-container">
+        {/* ── A. Card grid 名片墙 ─────────────────────────── */}
+        {variant === "A" && (
+          <div class="paper-flow">
+            <header class="page-head">
+              <h1>Friends</h1>
+              <article><p>一些我常来常往的站点。都是真人在写的地方，不是内容农场。</p></article>
+            </header>
+
+            <section class="paper-section">
+              <div class="section-heading"><h2>友链</h2><span>{friends.length} sites</span></div>
+              <ul class="card-grid">
+                {friends.map((f, i) => (
+                  <li>
+                    <a class="friend-card" href={`https://${f.url}`} target="_blank" rel="noopener noreferrer">
+                      <span class="avatar" style={`--h:${hue(i)}`} aria-hidden="true">{initial(f.name)}</span>
+                      <span class="card-body">
+                        <strong>{f.name}</strong>
+                        <small>{f.desc}</small>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section class="paper-section">
+              <div class="section-heading"><h2>Reading</h2><span>不是互链，是我常看的</span></div>
+              <ul class="card-grid">
+                {reading.map((f, i) => (
+                  <li>
+                    <a class="friend-card" href={`https://${f.url}`} target="_blank" rel="noopener noreferrer">
+                      <span class="avatar" style={`--h:${hue(i + 5)}`} aria-hidden="true">{initial(f.name)}</span>
+                      <span class="card-body"><strong>{f.name}</strong><small>{f.desc}</small></span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+            <section class="paper-section">
+              <div class="section-heading"><h2>交换友链</h2></div>
+              <article><p>在下面留言，格式随意，把这四项说清就行。我看到会加上，也会回访。</p></article>
+              <div class="mysite-card">
+                <span class="avatar avatar-lg" style="--h:28" aria-hidden="true">F</span>
+                <dl class="mysite-dl">
+                  <div><dt>name</dt><dd>Feichuan</dd></div>
+                  <div><dt>url</dt><dd>https://feichuans.com</dd></div>
+                  <div><dt>avatar</dt><dd>https://feichuans.com/avatar.webp</dd></div>
+                  <div><dt>desc</dt><dd>专注 AI Agent 与前端交互的开发者</dd></div>
+                </dl>
+              </div>
+              <div class="comment-stub">Twikoo 评论区（原型占位）</div>
+            </section>
+
+            <section class="about-preview">
+              <p class="preview-tag">↓ About 页里的入口 Section 长这样</p>
+              <div class="section-heading"><h2>Friends</h2><a href="#">See all friends</a></div>
+              <ul class="card-grid">
+                {featured.map((f, i) => (
+                  <li>
+                    <a class="friend-card" href="#">
+                      <span class="avatar" style={`--h:${hue(i)}`} aria-hidden="true">{initial(f.name)}</span>
+                      <span class="card-body"><strong>{f.name}</strong><small>{f.desc}</small></span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+        )}
+        {/* ── B. Typographic index 排印目录 ───────────────── */}
+        {variant === "B" && (
+          <div class="paper-flow">
+            <header class="page-head page-head-b">
+              <h1>Friends</h1>
+              <article><p>一些我常来常往的站点，和一些我只是安静读着的站点。<br />前者互相知道，后者不一定。</p></article>
+            </header>
+
+            <section class="paper-section">
+              <div class="rule-heading"><h2>互链</h2><span>{String(friends.length).padStart(2, "0")}</span></div>
+              <ol class="index-list">
+                {friends.map((f, i) => (
+                  <li>
+                    <a href={`https://${f.url}`} target="_blank" rel="noopener noreferrer">
+                      <i class="idx" aria-hidden="true">{String(i + 1).padStart(2, "0")}</i>
+                      <span class="idx-name">{f.name}</span>
+                      <span class="idx-dots" aria-hidden="true"></span>
+                      <span class="idx-desc">{f.desc}</span>
+                      <span class="idx-url">{f.url}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            <section class="paper-section">
+              <div class="rule-heading"><h2>常读</h2><span>{String(reading.length).padStart(2, "0")}</span></div>
+              <ol class="index-list" style="--idx-start:9">
+                {reading.map((f, i) => (
+                  <li>
+                    <a href={`https://${f.url}`} target="_blank" rel="noopener noreferrer">
+                      <i class="idx" aria-hidden="true">{String(i + 9).padStart(2, "0")}</i>
+                      <span class="idx-name">{f.name}</span>
+                      <span class="idx-dots" aria-hidden="true"></span>
+                      <span class="idx-desc">{f.desc}</span>
+                      <span class="idx-url">{f.url}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            <section class="paper-section">
+              <div class="rule-heading"><h2>交换</h2></div>
+              <article><p>在下面留言就好。我的信息：</p></article>
+              <pre class="code-card"><code>{`name   Feichuan
+url    https://feichuans.com
+avatar https://feichuans.com/avatar.webp
+desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
+              <div class="comment-stub">Twikoo 评论区（原型占位）</div>
+            </section>
+
+            <section class="about-preview">
+              <p class="preview-tag">↓ About 页里的入口 Section 长这样</p>
+              <div class="section-heading"><h2>Friends</h2><a href="#">See all friends</a></div>
+              <ol class="index-list index-list-compact">
+                {featured.map((f, i) => (
+                  <li>
+                    <a href="#">
+                      <i class="idx" aria-hidden="true">{String(i + 1).padStart(2, "0")}</i>
+                      <span class="idx-name">{f.name}</span>
+                      <span class="idx-dots" aria-hidden="true"></span>
+                      <span class="idx-desc">{f.desc}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          </div>
+        )}
+        {/* ── C. Hover reveal 悬停索引 ─────────────────────── */}
+        {variant === "C" && (
+          <div class="reveal-page">
+            <header class="page-head">
+              <h1>Friends</h1>
+              <article><p>把鼠标放到名字上，或者用 Tab 走一遍。</p></article>
+            </header>
+
+            <div class="reveal-stage">
+              <ul class="reveal-list">
+                {[...friends, ...reading].map((f, i) => (
+                  <li>
+                    <a
+                      href={`https://${f.url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-desc={f.desc}
+                      data-url={f.url}
+                      data-kind={i < friends.length ? "互链" : "常读"}
+                    >{f.name}</a>
+                  </li>
+                ))}
+              </ul>
+              <aside class="reveal-panel" aria-hidden="true">
+                <p class="rp-kind"></p>
+                <p class="rp-desc">悬停查看简介</p>
+                <p class="rp-url"></p>
+              </aside>
+            </div>
+
+            <section class="paper-section reveal-foot">
+              <div class="section-heading"><h2>交换友链</h2></div>
+              <article><p>留言给我，四项信息：站名、地址、头像、一句话。我的是 Feichuan / feichuans.com。</p></article>
+              <div class="comment-stub">Twikoo 评论区（原型占位）</div>
+            </section>
+
+            <section class="about-preview">
+              <p class="preview-tag">↓ About 页里的入口 Section 长这样</p>
+              <div class="section-heading"><h2>Friends</h2><a href="#">See all friends</a></div>
+              <p class="inline-names">
+                {friends.map((f, i) => (
+                  <>
+                    {i > 0 && <span aria-hidden="true">·</span>}
+                    <a href="#">{f.name}</a>
+                  </>
+                ))}
+              </p>
+            </section>
+          </div>
+        )}
+        {/* ── S1/S2/S3 邮票墙：共享 canvas + shader ─────────── */}
+        {STAMP_KEYS.includes(variant) && (
+          <div class="paper-flow stamp-page" data-look={LOOK_INDEX[variant]}>
+            <header class="page-head">
+              <h1>Friends</h1>
+              <article><p>一版寄给彼此的邮票。鼠标扫过去看烫金，右侧读简介。</p></article>
+            </header>
+
+            <section class="stamp-section">
+              <div class="section-heading"><h2>互链</h2><span>{friends.length} sites · {reading.length} reading</span></div>
+              {/* 俯视撒开的一桌邮票。DOM 只是热区，票面（含文字）画在 canvas 里 */}
+              <div class="scatter" role="list">
+                {all.map((f, i) => {
+                  const s = SCATTER[i % SCATTER.length];
+                  return (
+                    <a
+                      class="stamp"
+                      role="listitem"
+                      href={`https://${f.url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={`left:${s.x}%;top:${s.y}%;z-index:${s.z};`}
+                      data-slot={i}
+                      data-rot={s.rot}
+                      data-seed={i * 1.37}
+                      data-name={f.name}
+                      data-desc={f.desc}
+                      data-url={f.url}
+                      data-kind={i < friends.length ? "互链" : "常读"}
+                    >
+                      <span class="sr-only">{f.name} — {f.desc}（{f.url}）</span>
+                    </a>
+                  );
+                })}
+              </div>
+              <aside class="stamp-readout" aria-live="polite">
+                <span class="ro-kind"></span>
+                <span class="ro-desc">点一张邮票，它会浮到中央</span>
+                <span class="ro-url"></span>
+              </aside>
+            </section>
+
+            <section class="paper-section">
+              <div class="section-heading"><h2>也想贴一张？</h2></div>
+              <article><p>留言把站名、地址、头像和一句话说清，我会寄一张回去。</p></article>
+              <pre class="code-card"><code>{`name   Feichuan
+url    https://feichuans.com
+avatar https://feichuans.com/avatar.webp
+desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
+              <div class="comment-stub">Twikoo 评论区（原型占位）</div>
+            </section>
+
+            <section class="about-preview">
+              <p class="preview-tag">↓ About 页里的入口 Section 长这样（只放 4 张）</p>
+              <div class="section-heading"><h2>Friends</h2><a href="#">See all friends</a></div>
+              <div class="scatter scatter-mini" role="list">
+                {featured.map((f, i) => (
+                  <a
+                    class="stamp"
+                    role="listitem"
+                    href="#"
+                    style={`left:${8 + i * 23}%;top:${i % 2 === 0 ? 8 : 26}%;z-index:${4 - i};`}
+                    data-slot={i}
+                    data-rot={[-7, 5, -3, 8][i]}
+                    data-seed={i * 1.37}
+                    data-name={f.name}
+                    data-desc={f.desc}
+                    data-url={f.url}
+                    data-kind="互链"
+                  >
+                    <span class="sr-only">{f.name} — {f.desc}</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+      </div>
+    </main>
+
+    {import.meta.env.DEV && (
+      <nav class="proto-bar" data-variants={VARIANTS.map((v) => v.key).join(",")}>
+        <button type="button" data-step="-1" aria-label="上一个变体">‹</button>
+        <span class="proto-label" data-names={VARIANTS.map((v) => `${v.key}=${v.name}`).join("|")}>
+          {variant} — {VARIANTS.find((v) => v.key === variant)?.name ?? "unknown"}
+        </span>
+        <button type="button" data-step="1" aria-label="下一个变体">›</button>
+      </nav>
+    )}
+
+    <script>
+      const bar = document.querySelector<HTMLElement>(".proto-bar");
+      if (bar) {
+        const keys = (bar.dataset.variants ?? "A").split(",");
+        const current = (new URL(location.href).searchParams.get("variant") ?? "A").toUpperCase();
+        // 页面预渲染，服务端标签恒是第一个变体，客户端补正一下
+        const label = bar.querySelector<HTMLElement>(".proto-label");
+        if (label) {
+          const names = new Map(
+            (label.dataset.names ?? "").split("|").map((p) => p.split("=") as [string, string])
+          );
+          label.textContent = `${current} — ${names.get(current) ?? "unknown"}`;
+        }
+        const go = (step: number) => {
+          const at = Math.max(0, keys.indexOf(current));
+          const next = keys[(at + step + keys.length) % keys.length];
+          const url = new URL(location.href);
+          url.searchParams.set("variant", next);
+          location.href = url.toString();
+        };
+        bar.querySelectorAll<HTMLButtonElement>("button").forEach((btn) =>
+          btn.addEventListener("click", () => go(Number(btn.dataset.step)))
+        );
+        addEventListener("keydown", (e) => {
+          const t = e.target as HTMLElement | null;
+          if (t && (t.matches("input,textarea,[contenteditable]") || t.isContentEditable)) return;
+          if (e.key === "ArrowLeft") go(-1);
+          if (e.key === "ArrowRight") go(1);
+        });
+      }
+
+      // C 变体：悬停/聚焦时把简介喂给右侧面板
+      const panel = document.querySelector<HTMLElement>(".reveal-panel");
+      if (panel) {
+        const kind = panel.querySelector<HTMLElement>(".rp-kind")!;
+        const desc = panel.querySelector<HTMLElement>(".rp-desc")!;
+        const url = panel.querySelector<HTMLElement>(".rp-url")!;
+        const links = document.querySelectorAll<HTMLAnchorElement>(".reveal-list a");
+        const show = (a: HTMLAnchorElement) => {
+          kind.textContent = a.dataset.kind ?? "";
+          desc.textContent = a.dataset.desc ?? "";
+          url.textContent = a.dataset.url ?? "";
+          panel.dataset.active = "true";
+        };
+        const clear = () => {
+          panel.dataset.active = "false";
+          kind.textContent = "";
+          desc.textContent = "悬停查看简介";
+          url.textContent = "";
+        };
+        links.forEach((a) => {
+          a.addEventListener("pointerenter", () => show(a));
+          a.addEventListener("focus", () => show(a));
+        });
+        document.querySelector(".reveal-list")?.addEventListener("pointerleave", clear);
+      }
+    </script>
+
+    <script>
+      import { LOOKS, buildAtlas, mountStampField } from "@/lib/stamp-foil-prototype";
+
+      const canvas = document.querySelector<HTMLCanvasElement>("#stamp-field");
+      const page = document.querySelector<HTMLElement>(".stamp-page");
+      if (canvas && page) {
+        const stamps = () => Array.from(document.querySelectorAll<HTMLElement>(".stamp"));
+        const els = stamps();
+        // 票面美术全部画进图集：站名、编号、类别、主字都在 canvas 里
+        const atlas = buildAtlas(
+          els.map((el, i) => {
+            const name = el.dataset.name ?? "?";
+            return {
+              name: name.length > 14 ? name.slice(0, 14) : name,
+              glyph: name.trim().charAt(0),
+              index: String((Number(el.dataset.slot ?? i) % 12) + 1).padStart(2, "0"),
+              kind: el.dataset.kind ?? "",
+              year: "2026",
+            };
+          })
+        );
+        // 页面是预渲染的，服务端的 Astro.url.searchParams 永远拿不到 ?variant=，
+        // 所以 data-look 恒为 0。look 必须在客户端从 URL 现读。
+        const key = (new URL(location.href).searchParams.get("variant") ?? "S1").toUpperCase();
+        const look = LOOKS.find((l) => l.key === key) ?? LOOKS[Number(page.dataset.look ?? 0)] ?? LOOKS[0];
+        // S2 的票面自己是墨黑的，台面反而要留米色 —— 黑票压在米纸上才看得出是票
+        const bg: [number, number, number] = [0.961, 0.957, 0.929];
+        document.body.style.setProperty("--stamp-bg", "#f5f4ed");
+        try {
+          mountStampField(canvas, stamps, atlas, look, bg);
+        } catch (err) {
+          console.error("[stamp prototype]", err);
+          canvas.remove();
+        }
+
+        // 票面极简，简介走右侧 readout
+        const ro = document.querySelector<HTMLElement>(".stamp-readout");
+        if (ro) {
+          const kind = ro.querySelector<HTMLElement>(".ro-kind")!;
+          const desc = ro.querySelector<HTMLElement>(".ro-desc")!;
+          const url = ro.querySelector<HTMLElement>(".ro-url")!;
+          els.forEach((el) => {
+            const show = () => {
+              kind.textContent = el.dataset.kind ?? "";
+              desc.textContent = el.dataset.desc ?? "";
+              url.textContent = el.dataset.url ?? "";
+              ro.dataset.active = "true";
+            };
+            el.addEventListener("pointerenter", show);
+            el.addEventListener("focus", show);
+          });
+          document.querySelector(".scatter")?.addEventListener("pointerleave", () => {
+            ro.dataset.active = "false";
+            kind.textContent = "";
+            desc.textContent = "点一张邮票，它会浮到中央";
+            url.textContent = "";
+          });
+        }
+
+        // 点击 = 浮到中央转正（第二次点击才真的跳转），Esc 或点空白放回去
+        let lifted: HTMLElement | null = null;
+        const drop = () => {
+          if (!lifted) return;
+          lifted.dataset.lifted = "false";
+          lifted = null;
+        };
+        els.forEach((el) => {
+          el.addEventListener("click", (e) => {
+            if (lifted === el) return; // 已经平视了，放行跳转
+            e.preventDefault();
+            drop();
+            el.dataset.lifted = "true";
+            lifted = el;
+          });
+        });
+        window.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") drop();
+        });
+        document.addEventListener("click", (e) => {
+          const t = e.target as HTMLElement;
+          if (lifted && !t.closest(".stamp")) drop();
+        });
+      }
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  /* ── paper 基底：从 about.astro 原样搬来，供各变体共用 ── */
+  :root { --paper-bg:#f5f4ed; --paper-text:rgba(0,0,0,.5); --paper-strong:#000; --paper-line:rgba(0,0,0,.15); }
+  html { overflow-y:scroll;color-scheme:light;background:var(--paper-bg); }
+  body { min-height:100%;margin:0;color:var(--paper-text);background:var(--paper-bg);font-family:"Maple Mono NF CN",system-ui,sans-serif;-webkit-font-smoothing:antialiased; }
+  * { box-sizing:border-box; }
+  a { color:inherit;text-decoration:underline;text-decoration-color:rgba(0,0,0,.15);text-underline-offset:2px;transition:color .3s ease,text-decoration-color .3s ease; }
+  a:hover { color:var(--paper-strong);text-decoration-color:rgba(0,0,0,.25); }
+  a:focus-visible,button:focus-visible { outline:2px solid #4385be;outline-offset:3px; }
+  main { min-height:100vh;padding:128px 0; }
+  .paper-container { width:100%;max-width:640px;margin-inline:auto;padding-inline:20px; }
+  .paper-flow { display:flex;flex-direction:column;gap:64px; }
+  .paper-section { display:flex;flex-direction:column;gap:24px; }
+  .section-heading { display:flex;min-height:24px;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px; }
+  .section-heading h2 { margin:0;color:var(--paper-strong);font-size:16px;font-weight:600;line-height:24px; }
+  .section-heading>a,.section-heading>span { font-size:16px;line-height:24px; }
+  article { font-size:16px;line-height:28px; } article p { margin:0; }
+  .page-head { display:flex;flex-direction:column;gap:16px; }
+  .page-head h1 { margin:0;color:var(--paper-strong);font-size:16px;font-weight:600;line-height:24px; }
+  .comment-stub { display:grid;height:120px;place-items:center;border:1px dashed var(--paper-line);border-radius:8px;font-size:14px; }
+
+  /* 原型脚手架：切换 bar 和 About 入口预览分隔线，都不是设计的一部分 */
+  .proto-bar { position:fixed;right:20px;bottom:20px;z-index:99;display:flex;align-items:center;gap:4px;padding:6px 8px;border-radius:999px;background:#141413;box-shadow:0 8px 24px rgba(0,0,0,.28);color:#f5f4ed;font-size:13px; }
+  .proto-bar button { width:28px;height:28px;border:0;border-radius:999px;background:transparent;color:inherit;font-size:18px;line-height:1;cursor:pointer; }
+  .proto-bar button:hover { background:rgba(255,255,255,.14); }
+  .proto-label { padding:0 8px;white-space:nowrap; }
+  .about-preview { display:flex;flex-direction:column;gap:24px;margin-top:24px;padding-top:32px;border-top:1px dashed rgba(0,0,0,.25); }
+  .preview-tag { margin:0;font-size:13px;opacity:.6; }
+
+  @media(max-width:640px){ main{padding:112px 0 96px} .paper-flow{gap:56px} }
+  @media(prefers-reduced-motion:reduce){ *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important} }
+  /* ── A. Card grid 名片墙 ─────────────────────────────── */
+  .card-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0;padding:0;list-style:none; }
+  .friend-card { display:flex;height:70px;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--paper-line);border-radius:8px;text-decoration:none;transition:border-color .3s ease,background .3s ease; }
+  .friend-card:hover { border-color:rgba(0,0,0,.3);background:rgba(255,255,255,.45); }
+  .avatar { display:grid;flex:none;width:36px;height:36px;place-items:center;border-radius:999px;background:hsl(var(--h) 42% 82%);color:hsl(var(--h) 45% 26%);font-size:15px;font-weight:600; }
+  .avatar-lg { width:48px;height:48px;font-size:19px; }
+  .card-body { display:flex;min-width:0;flex-direction:column; }
+  .card-body strong { overflow:hidden;color:var(--paper-strong);font-size:15px;font-weight:600;line-height:22px;text-overflow:ellipsis;white-space:nowrap; }
+  .card-body small { overflow:hidden;font-size:13px;line-height:20px;text-overflow:ellipsis;white-space:nowrap; }
+  .mysite-card { display:flex;gap:16px;padding:16px;border:1px solid var(--paper-line);border-radius:8px; }
+  .mysite-dl { display:flex;min-width:0;flex:1;flex-direction:column;gap:6px;margin:0; }
+  .mysite-dl>div { display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px; }
+  .mysite-dl dt { color:var(--paper-strong);font-size:13px;font-weight:600;line-height:20px; }
+  .mysite-dl dd { margin:0;overflow:hidden;font-size:13px;line-height:20px;text-overflow:ellipsis;white-space:nowrap; }
+  @media(max-width:640px){ .card-grid{grid-template-columns:minmax(0,1fr)} }
+
+  /* ── B. Typographic index 排印目录 ───────────────────── */
+  .page-head-b h1 { font-size:32px;line-height:40px;letter-spacing:-.02em; }
+  .rule-heading { display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:8px;border-bottom:1px solid var(--paper-strong); }
+  .rule-heading h2 { margin:0;color:var(--paper-strong);font-size:13px;font-weight:600;line-height:20px;letter-spacing:.14em;text-transform:uppercase; }
+  .rule-heading span { font-size:13px;line-height:20px;font-variant-numeric:tabular-nums; }
+  .index-list { display:flex;flex-direction:column;margin:0;padding:0;list-style:none; }
+  .index-list li+li { border-top:1px solid rgba(0,0,0,.08); }
+  .index-list a { display:grid;grid-template-columns:28px auto 1fr auto;align-items:baseline;gap:0 10px;padding:14px 0;text-decoration:none; }
+  .index-list .idx { font-size:12px;font-style:normal;line-height:22px;opacity:.45;font-variant-numeric:tabular-nums; }
+  .index-list .idx-name { color:var(--paper-strong);font-size:17px;font-weight:600;line-height:24px; }
+  .index-list .idx-dots { align-self:center;height:1px;background:repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 1px,transparent 1px 5px); }
+  .index-list .idx-url { font-size:12px;line-height:22px;opacity:.5;white-space:nowrap; }
+  .index-list .idx-desc { grid-column:2/-1;grid-row:2;font-size:13px;line-height:20px; }
+  .index-list a:hover .idx-name { text-decoration:underline;text-underline-offset:3px; }
+  .index-list a:hover .idx-url { opacity:.85; }
+  .index-list-compact a { grid-template-columns:28px auto 1fr;padding:10px 0; }
+  .index-list-compact .idx-name { font-size:15px; }
+  .code-card { margin:0;padding:16px;overflow-x:auto;border:1px solid var(--paper-line);border-radius:8px;background:rgba(255,255,255,.4);font-family:inherit;font-size:13px;line-height:22px; }
+  @media(max-width:640px){ .index-list .idx-url{display:none} }
+
+  /* ── C. Hover reveal 悬停索引 ────────────────────────── */
+  .reveal-page { display:flex;flex-direction:column;gap:56px; }
+  .reveal-stage { display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:32px;align-items:start; }
+  .reveal-list { display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none; }
+  .reveal-list a { display:inline-block;color:rgba(0,0,0,.32);font-size:26px;font-weight:600;line-height:38px;letter-spacing:-.015em;text-decoration:none;transition:color .25s ease,transform .25s ease; }
+  .reveal-list a:hover,.reveal-list a:focus-visible { color:var(--paper-strong);transform:translateX(6px); }
+  .reveal-panel { position:sticky;top:128px;display:flex;flex-direction:column;gap:8px;padding-left:20px;border-left:1px solid var(--paper-line);opacity:.55;transition:opacity .25s ease; }
+  .reveal-panel[data-active="true"] { opacity:1; }
+  .reveal-panel p { margin:0; }
+  .rp-kind { min-height:18px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.6; }
+  .rp-desc { color:var(--paper-strong);font-size:14px;line-height:22px; }
+  .rp-url { font-size:12px;line-height:20px;opacity:.6;word-break:break-all; }
+  .inline-names { display:flex;flex-wrap:wrap;gap:8px;margin:0;font-size:15px;line-height:26px; }
+  .inline-names span { opacity:.35; }
+  @media(max-width:640px){
+    .reveal-stage{grid-template-columns:minmax(0,1fr);gap:20px}
+    .reveal-list a{font-size:20px;line-height:32px}
+    .reveal-panel{position:static;order:-1;padding:12px 0 12px 16px;opacity:1}
+  }
+
+  /* ── S. 邮票墙：canvas 画质感，DOM 只出矩形和文字 ────── */
+  #stamp-field { position:fixed;inset:0;z-index:0;display:block;width:100vw;height:100vh;pointer-events:none; }
+  body.stamp-mode { background:var(--stamp-bg,#f5f4ed); }
+  body.stamp-mode main { position:relative;z-index:1; }
+  body.stamp-mode .paper-container { max-width:760px; }
+  /* 深色台面那档，文字要反过来 */
+  body.look-1 { --paper-text:rgba(255,255,255,.55);--paper-strong:#f7f5f0;--paper-line:rgba(255,255,255,.18); }
+  body.look-1 a { text-decoration-color:rgba(255,255,255,.2); }
+  body.look-1 a:hover { color:#fff;text-decoration-color:rgba(255,255,255,.4); }
+  body.look-1 .code-card { background:rgba(255,255,255,.05); }
+  .sr-only { position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap; }
+
+  /* 邮票墙铺满视口宽度，留白靠 scatter 里的坐标本身留出来 */
+  body.stamp-mode .paper-container { max-width:none;padding-inline:0; }
+  body.stamp-mode .stamp-page>*:not(.stamp-section) { width:100%;max-width:640px;margin-inline:auto;padding-inline:20px; }
+  body.stamp-mode .page-head { width:100%;max-width:640px;margin-inline:auto;padding-inline:20px; }
+
+  .stamp-section { display:flex;flex-direction:column;gap:24px; }
+  .stamp-section>.section-heading,.stamp-section>.stamp-readout { width:100%;max-width:640px;margin-inline:auto;padding-inline:20px; }
+
+  /* 撒开的一桌票：每张绝对定位，角度交给 shader（DOM 不转，否则热区盒会被撑大） */
+  .scatter { position:relative;width:100%;height:min(78vw,760px);margin:8px 0 24px; }
+  .stamp {
+    position:absolute;display:block;width:clamp(96px,9.5vw,132px);aspect-ratio:1/1.2;
+    text-decoration:none;background:transparent;
+    transition:transform .5s cubic-bezier(.22,.9,.24,1);
+  }
+  .stamp[data-hot="true"] { transform:translateY(-6px) scale(1.03); }
+  /* 点击后浮到画面中央、放大、转正 —— 从"落在桌上"切到"平视端在眼前" */
+  .stamp[data-lifted="true"] {
+    left:50% !important;top:50% !important;z-index:40 !important;
+    transform:translate(-50%,-50%) scale(2.1);
+  }
+  .scatter-mini { height:min(46vw,300px); }
+  .scatter-mini .stamp { width:clamp(84px,8vw,108px); }
+
+  .stamp-readout { display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;min-height:22px;padding-left:14px;border-left:1px solid var(--paper-line);opacity:.55;transition:opacity .25s ease; }
+  .stamp-readout[data-active="true"] { opacity:1; }
+  .ro-kind { font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.7; }
+  .ro-desc { color:var(--paper-strong);font-size:14px;line-height:22px; }
+  .ro-url { font-size:12px;opacity:.6; }
+  @media(max-width:640px){ .stamp-grid,.stamp-grid-mini{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 14px} }
+
+  /* ── D. Contact sheet 贴纸墙 ─────────────────────────── */
+  .sheet-grid { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px 12px;margin:0;padding:0;list-style:none; }
+  .sheet-grid>li { transform:rotate(var(--tilt,0deg));transition:transform .3s ease; }
+  .sheet-grid>li:hover { transform:rotate(0deg) translateY(-3px); }
+  .sticker { display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 8px 10px;border:1px solid var(--paper-line);border-radius:10px;background:rgba(255,255,255,.5);box-shadow:0 2px 6px rgba(0,0,0,.06);text-align:center;text-decoration:none; }
+  .sticker-face { display:grid;width:52px;height:52px;place-items:center;border-radius:999px;background:hsl(var(--h) 42% 82%);color:hsl(var(--h) 45% 26%);font-size:22px;font-weight:600; }
+  .sticker-name { max-width:100%;overflow:hidden;color:var(--paper-strong);font-size:13px;font-weight:600;line-height:18px;text-overflow:ellipsis;white-space:nowrap; }
+  .sticker-desc { display:-webkit-box;overflow:hidden;font-size:11px;line-height:16px;-webkit-box-orient:vertical;-webkit-line-clamp:2; }
+  .sheet-grid-self { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .sticker-self { border-style:dashed; }
+  .sheet-grid-mini { grid-template-columns:repeat(4,minmax(0,1fr));gap:16px 12px; }
+  .sheet-grid-mini .sticker-face { width:40px;height:40px;font-size:17px; }
+  @media(max-width:640px){ .sheet-grid,.sheet-grid-mini,.sheet-grid-self{grid-template-columns:repeat(3,minmax(0,1fr))} }
+</style>

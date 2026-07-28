@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useUiSound } from "@/hooks/use-ui-sound";
 
 const STORAGE_KEY = "blog-reader-settings";
 
@@ -83,6 +84,7 @@ function applyToDOM(s: Settings) {
 }
 
 export default function ReaderControls() {
+  const { play: playSound } = useUiSound();
   const [settings, setSettings] = useState<Settings>(DEFAULTS);
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -129,7 +131,10 @@ export default function ReaderControls() {
     <div ref={panelRef} className="reader-controls-wrapper">
       {/* Toggle button */}
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          playSound(open ? "toggle-off" : "toggle-on");
+          setOpen((value) => !value);
+        }}
         className="reader-ctrl-toggle"
         title="阅读设置"
         aria-label="阅读设置"
@@ -158,6 +163,7 @@ export default function ReaderControls() {
             <button
               className="reader-ctrl-btn theme-btn"
               onClick={() => {
+                playSound("click");
                 const idx = THEME_ORDER.indexOf(settings.theme);
                 update({
                   theme: THEME_ORDER[(idx + 1) % THEME_ORDER.length],

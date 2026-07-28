@@ -1,0 +1,1263 @@
+---
+// 首页 v4 叙事 demo v2 —— 强叙事 + 强动画 + 强性能
+// 叙事：Hero(staged+漂浮) → Manifesto(全屏纸面 zoom-out 成卡片 + 逐词点亮)
+//       → Marquee → Works(横向 pinned + 每卡微场景) → Lab 跑马灯 → Writing → Sticky Footer
+// 性能约定：只动 transform/opacity；布局指标缓存(resize/字体加载后重测)；
+//           单 rAF 循环 + lerp 平滑；无动画中的 blur/box-shadow；左下角 FPS 表验证
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Feichuan · 首页 v4 demo</title>
+    <meta name="theme-color" content="#f5f4ed" />
+    <link
+      href="https://fontsapi.zeoseven.com/442/main/result.css"
+      onload="this.rel='stylesheet'"
+      rel="preload"
+      as="style"
+      crossorigin
+    />
+    <noscript><link rel="stylesheet" href="https://fontsapi.zeoseven.com/442/main/result.css" /></noscript>
+  </head>
+  <body>
+    <div id="progress"><i id="progressBar"></i></div>
+
+    <div id="footer-wrap">
+      <div id="main-content">
+        <!-- ================= §0 HERO ================= -->
+        <section id="hero">
+          <span class="dev-tag">§0 hero · 160vh · AppleHello + SignatureDraw + DappledLight 接入位</span>
+          <div class="pin">
+            <div class="light" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="bubbles" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div class="chips" aria-hidden="true">
+              <span class="chip" style="--x: 14%; --y: 24%; --spd: 0.5; --dur: 5.2s">GSAP</span>
+              <span class="chip" style="--x: 80%; --y: 20%; --spd: 0.8; --dur: 6.1s">Three.js</span>
+              <span class="chip" style="--x: 8%; --y: 66%; --spd: 0.65; --dur: 4.6s">Agent UI</span>
+              <span class="chip" style="--x: 86%; --y: 58%; --spd: 0.4; --dur: 5.7s">Tauri</span>
+              <span class="chip" style="--x: 24%; --y: 84%; --spd: 0.9; --dur: 6.6s">WebGL</span>
+              <span class="chip" style="--x: 70%; --y: 82%; --spd: 0.55; --dur: 4.9s">交互设计</span>
+            </div>
+            <div class="staged" id="heroStaged">
+              <p class="hello" data-auto>hello.</p>
+              <h1 class="name" data-auto>扉川 <span>feichuan</span></h1>
+              <p class="intro" data-scroll>
+                Creative Frontend · 交互设计<br />网站本身就是作品。
+              </p>
+            </div>
+            <div class="hint" data-auto>scroll</div>
+          </div>
+        </section>
+
+        <!-- ================= §1 MANIFESTO ================= -->
+        <!-- 全屏纸面 zoom-out 收成一张卡片（wiki「沉浸→揭示」拍点），随后逐词点亮 -->
+        <section id="manifesto">
+          <span class="dev-tag">§1 manifesto · 260vh · 全屏纸面 zoom-out + 逐词点亮</span>
+          <div class="pin">
+            <figure class="mani-card" id="maniCard">
+              <figcaption>manifesto</figcaption>
+              <p id="maniText"></p>
+              <p class="mani-tail" id="maniTail">This page is the proof — keep scrolling.</p>
+            </figure>
+          </div>
+        </section>
+
+        <!-- ================= MARQUEE 换场 ================= -->
+        <section id="marquee" aria-hidden="true">
+          <span class="dev-tag">换场 marquee · 滚动速度驱动</span>
+          <div class="mq-clip">
+            <div class="mq-track" id="mqTrack">
+              <span>CREATIVE FRONTEND — INTERACTION — MOTION — AGENT UI —&nbsp;</span>
+              <span>CREATIVE FRONTEND — INTERACTION — MOTION — AGENT UI —&nbsp;</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= §2 WORKS ================= -->
+        <section id="works">
+          <span class="dev-tag">§2 works · 460vh · 横向 pinned + 每卡滚动驱动微场景</span>
+          <div class="pin" id="worksPin">
+            <header class="works-head">
+              <span class="eyebrow">craft</span>
+              <span class="works-note">纵向滚动 → 横向前进 · demo 均为实机接入位</span>
+              <span class="counter"><b id="wIdx">01</b>&nbsp;/&nbsp;03</span>
+            </header>
+            <div class="track" id="worksTrack">
+              <!-- 01 VoiceStream -->
+              <article class="project" style="--accent: var(--orange)">
+                <div class="info">
+                  <p class="k">01 · 语音 · Tauri · WebGL</p>
+                  <h3>VoiceStream</h3>
+                  <p class="d">
+                    Mac 上用语音输入文字、润色内容、后台执行 Agent 任务。ShaderOrb
+                    声波球随语音波动。
+                  </p>
+                  <p class="beat">滚动推进：静默 → 说话 → 响应</p>
+                </div>
+                <div class="demo-slot">
+                  <div class="scene scene-orb" aria-hidden="true">
+                    <i class="orb"></i>
+                    <div class="bars">
+                      <i style="--f: 0.35; --ph: 0"></i><i style="--f: 0.8; --ph: 1"></i
+                      ><i style="--f: 0.55; --ph: 2"></i><i style="--f: 1; --ph: 3"></i
+                      ><i style="--f: 0.7; --ph: 4"></i><i style="--f: 0.45; --ph: 5"></i
+                      ><i style="--f: 0.9; --ph: 6"></i>
+                    </div>
+                  </div>
+                  <span class="cap">ShaderOrb 声波球 · 实机 demo 接入位</span>
+                </div>
+              </article>
+              <!-- 02 Eyrie -->
+              <article class="project" style="--accent: var(--blue)">
+                <div class="info">
+                  <p class="k">02 · 系统设计 · Agent UI · 流式</p>
+                  <h3>Eyrie Session UI</h3>
+                  <p class="d">
+                    桌面端 Agent 会话：message parts、ToolGroup、ApprovalTicket、
+                    流式渲染 + 工具调用。
+                  </p>
+                  <p class="beat">滚动推进：消息流入 → 工具展开 → 审批</p>
+                </div>
+                <div class="demo-slot">
+                  <div class="scene scene-chat" aria-hidden="true">
+                    <div class="bub user" style="--t: 0.08">帮我看下这个 PR 的风险点</div>
+                    <div class="bub" style="--t: 0.3">正在读取 diff…</div>
+                    <div class="bub tool" style="--t: 0.52">⚙ ToolGroup · Read × 3</div>
+                    <div class="bub ok" style="--t: 0.74">✓ ApprovalTicket · 已批准</div>
+                  </div>
+                  <span class="cap">流式对话 + 工具调用 · 实机 demo 接入位</span>
+                </div>
+              </article>
+              <!-- 03 CareerTime -->
+              <article class="project" style="--accent: var(--green)">
+                <div class="info">
+                  <p class="k">03 · 实习 · 求职平台 · AI</p>
+                  <h3>CareerTime 小程序</h3>
+                  <p class="d">
+                    pdf.js + Canvas 双层标注、rAF 分页渲染、容器/展示解耦的简历编辑器、
+                    LangGraph AI 三链路。
+                  </p>
+                  <p class="beat">滚动推进：标注 → 编辑 → AI 生成</p>
+                </div>
+                <div class="demo-slot">
+                  <div class="scene scene-pdf" aria-hidden="true">
+                    <i class="pdf-line" style="--t: 0.05; --w: 92%"></i>
+                    <i class="pdf-line" style="--t: 0.15; --w: 78%"></i>
+                    <i class="pdf-line hl" style="--t: 0.3; --w: 85%"></i>
+                    <i class="pdf-line" style="--t: 0.45; --w: 60%"></i>
+                    <span class="pdf-box" style="--t: 0.62">AI 标注</span>
+                  </div>
+                  <span class="cap">PDF 标注 + 简历编辑器 · 实机 demo 接入位</span>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= LAB 跑马灯 ================= -->
+        <section id="lab-strip">
+          <span class="dev-tag">lab 试验场引流 · CSS 无限跑马灯（合成器动画）</span>
+          <p class="eyebrow">lab — 效果试验场</p>
+          <a class="lab-clip" href="/labs">
+            <div class="lab-track">
+              <span>gooey</span><span>blur 三件套</span><span>texture-lab</span
+              ><span>lenis × 5</span><span>DappledLight</span><span>打字动画</span
+              ><span>braille loading</span><span>液态玻璃</span>
+              <span>gooey</span><span>blur 三件套</span><span>texture-lab</span
+              ><span>lenis × 5</span><span>DappledLight</span><span>打字动画</span
+              ><span>braille loading</span><span>液态玻璃</span>
+            </div>
+            <span class="lab-go">全部 demo →</span>
+          </a>
+        </section>
+
+        <!-- ================= §3 WRITING ================= -->
+        <section id="writing">
+          <span class="dev-tag">§3 writing — 把原理写清楚</span>
+          <p class="eyebrow">writing — 把原理写清楚</p>
+          <a class="post" href="#"
+            ><span class="no">a</span
+            ><span class="body"><span class="t">被 AI 逼疯的前端</span><span class="d">SSE · Unicode 截断 · Markdown 流式渲染</span></span
+            ><span class="arrow">↗</span></a
+          >
+          <a class="post" href="#"
+            ><span class="no">b</span
+            ><span class="body"><span class="t">OpenClaw 架构解析</span><span class="d">五层服务 · Claude tool use · 横向对比</span></span
+            ><span class="arrow">↗</span></a
+          >
+          <a class="post" href="#"
+            ><span class="no">c</span
+            ><span class="body"><span class="t">Lenis 与 GSAP ScrollTrigger 深度解析</span><span class="d">虚拟滚动原理 · scrollerProxy</span></span
+            ><span class="arrow">↗</span></a
+          >
+          <a class="post" href="#"
+            ><span class="no">d</span
+            ><span class="body"><span class="t">details that make interfaces feel better</span><span class="d">设计品味 · 微交互</span></span
+            ><span class="arrow">↗</span></a
+          >
+        </section>
+      </div>
+
+      <!-- ================= STICKY FOOTER ================= -->
+      <footer id="footer">
+        <span class="dev-tag">§4 footer · sticky reveal · 签名复现位</span>
+        <p class="f-ghost" aria-hidden="true" id="fGhost">feichuan</p>
+        <p class="f-name">扉川</p>
+        <nav class="f-links">
+          <a href="#">GitHub</a><a href="#">邮箱</a><a href="#">简历</a>
+        </nav>
+        <p class="f-tags">
+          <span>Vue 3</span><span>React</span><span>TypeScript</span><span>GSAP</span
+          ><span>Three.js</span><span>Tauri</span><span>Rust</span><span>AI SDK</span>
+        </p>
+        <p class="f-copy">© 2026 Feichuan</p>
+      </footer>
+    </div>
+
+    <div id="fps" aria-hidden="true">-- fps</div>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --bg: #f5f4ed;
+    --paper: #fffcf0;
+    --ui: #e6e4d9;
+    --line: #dad8ce;
+    --tx: #141413;
+    --tx2: #6f6e69;
+    --tx3: #b7b5ac;
+    --orange: #bc5215;
+    --blue: #205ea6;
+    --green: #66800b;
+    --max: 1100px;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background: var(--bg);
+    color: var(--tx);
+    font:
+      15px/1.7 "Maple Mono NF CN",
+      system-ui,
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .dev-tag {
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    z-index: 40;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--orange);
+    border: 1px dashed color-mix(in srgb, var(--orange) 50%, transparent);
+    background: color-mix(in srgb, var(--orange) 6%, transparent);
+    padding: 3px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--tx3);
+  }
+
+  /* 顶部进度条：transform 驱动 */
+  #progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: 100;
+    pointer-events: none;
+  }
+  #progress i {
+    display: block;
+    height: 100%;
+    background: var(--orange);
+    transform-origin: left;
+    transform: scaleX(0);
+  }
+
+  /* FPS 表（demo 验证用） */
+  #fps {
+    position: fixed;
+    left: 12px;
+    bottom: 12px;
+    z-index: 100;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--tx3);
+    background: color-mix(in srgb, var(--paper) 80%, transparent);
+    border: 1px solid var(--line);
+    padding: 2px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
+  #footer-wrap {
+    position: relative;
+  }
+  #main-content {
+    position: relative;
+    z-index: 2;
+    background: var(--bg);
+    box-shadow: 0 24px 48px -24px rgba(20, 20, 19, 0.18);
+  }
+
+  /* ======== §0 HERO ======== */
+  #hero {
+    position: relative;
+    height: 160vh;
+  }
+  #hero .pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  #hero .light {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  #hero .light i {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px); /* 静态 blur，只动 transform */
+    will-change: transform;
+  }
+  #hero .light i:nth-child(1) {
+    width: 48vw;
+    height: 48vw;
+    left: -10%;
+    top: -14%;
+    background: rgba(188, 82, 21, 0.12);
+  }
+  #hero .light i:nth-child(2) {
+    width: 36vw;
+    height: 36vw;
+    right: -6%;
+    top: 20%;
+    background: rgba(32, 94, 166, 0.1);
+  }
+  #hero .light i:nth-child(3) {
+    width: 32vw;
+    height: 32vw;
+    left: 22%;
+    bottom: -16%;
+    background: rgba(102, 128, 11, 0.1);
+  }
+  /* 装饰气泡：弹性入场 + 缓慢漂浮 */
+  #hero .bubbles i {
+    position: absolute;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  #hero .bubbles i:nth-child(1) {
+    width: 72px;
+    height: 72px;
+    right: 14%;
+    top: 20%;
+  }
+  #hero .bubbles i:nth-child(2) {
+    width: 44px;
+    height: 44px;
+    left: 12%;
+    top: 30%;
+  }
+  #hero .bubbles i:nth-child(3) {
+    width: 56px;
+    height: 56px;
+    right: 24%;
+    bottom: 24%;
+  }
+  #hero .bubbles i:nth-child(4) {
+    width: 30px;
+    height: 30px;
+    left: 22%;
+    bottom: 32%;
+  }
+  #hero .bubbles i.pop {
+    opacity: 0.55;
+    transform: scale(1);
+    transition:
+      opacity 0.5s,
+      transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  /* 技术词漂浮：外层 JS 视差，内层 CSS 浮动 */
+  #hero .chips .chip {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--tx3);
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--paper) 70%, transparent);
+    padding: 4px 12px;
+    border-radius: 999px;
+    opacity: 0;
+    will-change: transform;
+  }
+  #hero .chips .chip::after {
+    content: "";
+  }
+  #hero .chips.pop .chip {
+    opacity: 1;
+    transition: opacity 0.8s;
+    animation: chip-float var(--dur) ease-in-out infinite alternate;
+  }
+  @keyframes chip-float {
+    from {
+      translate: 0 -6px;
+    }
+    to {
+      translate: 0 8px;
+    }
+  }
+  #hero .staged {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 0 24px;
+    will-change: transform, opacity;
+  }
+  #hero [data-auto],
+  #hero [data-scroll] {
+    opacity: 0;
+    transform: translateY(22px);
+    transition:
+      opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+      transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  #hero .in {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+  #hero .hello {
+    font-size: clamp(28px, 4vw, 44px);
+    font-style: italic;
+    color: var(--tx2);
+  }
+  #hero .name {
+    font-size: clamp(44px, 8vw, 96px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  #hero .name span {
+    display: block;
+    font-size: clamp(13px, 1.6vw, 18px);
+    font-weight: 400;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--tx3);
+    margin-top: 12px;
+  }
+  #hero .intro {
+    font-size: clamp(14px, 1.8vw, 17px);
+    color: var(--tx2);
+    margin-top: 18px;
+  }
+  #hero .hint {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--tx3);
+    text-align: center;
+    transition: opacity 0.5s;
+  }
+  #hero .hint::before {
+    content: "";
+    display: block;
+    width: 1px;
+    height: 36px;
+    margin: 0 auto 8px;
+    background: linear-gradient(var(--tx3), transparent);
+  }
+
+  /* ======== §1 MANIFESTO ======== */
+  #manifesto {
+    position: relative;
+    height: 260vh;
+  }
+  #manifesto .pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+    overflow: hidden;
+  }
+  .mani-card {
+    width: min(760px, 92vw);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: calc(22px * var(--flat, 1));
+    padding: clamp(32px, 6vw, 64px);
+    box-shadow:
+      0 1px 2px rgba(20, 20, 19, 0.04),
+      0 24px 64px -32px rgba(20, 20, 19, 0.22);
+    will-change: transform;
+  }
+  .mani-card figcaption {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--tx3);
+    margin-bottom: 24px;
+    opacity: var(--txtin, 0);
+  }
+  .mani-card p {
+    font-size: clamp(21px, 3.1vw, 36px);
+    font-weight: 500;
+    line-height: 1.55;
+    letter-spacing: -0.015em;
+  }
+  .mani-card p span {
+    opacity: 0.13;
+    transition: opacity 0.18s linear;
+  }
+  .mani-card p span.lit {
+    opacity: 1;
+  }
+  .mani-card p span.em {
+    color: var(--orange);
+  }
+  .mani-card .mani-tail {
+    font-size: 13px;
+    color: var(--tx3);
+    margin-top: 28px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity 0.6s,
+      transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .mani-card .mani-tail.in {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ======== MARQUEE ======== */
+  #marquee {
+    position: relative;
+    padding: clamp(48px, 10vh, 110px) 0;
+  }
+  .mq-clip {
+    overflow: hidden;
+    white-space: nowrap;
+    border-block: 1px solid var(--line);
+    padding: 18px 0;
+  }
+  .mq-track {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: clamp(28px, 4.6vw, 56px);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: color-mix(in srgb, var(--tx) 22%, var(--bg));
+    will-change: transform;
+  }
+  .mq-track span {
+    display: inline-block;
+  }
+
+  /* ======== §2 WORKS ======== */
+  #works {
+    position: relative;
+    height: 460vh;
+  }
+  #works .pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .works-head {
+    position: absolute;
+    top: clamp(24px, 5vh, 48px);
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 0 clamp(24px, 6vw, 96px);
+  }
+  .works-note {
+    font-size: 11px;
+    color: var(--tx3);
+  }
+  .works-head .counter {
+    font-size: 12px;
+    color: var(--tx3);
+    letter-spacing: 0.1em;
+  }
+  .works-head .counter b {
+    color: var(--tx);
+    font-weight: 600;
+  }
+  .track {
+    display: flex;
+    align-items: center;
+    gap: clamp(24px, 4vw, 64px);
+    padding: 0 clamp(24px, 8vw, 120px);
+    will-change: transform;
+  }
+  .project {
+    flex: 0 0 min(78vw, 960px);
+    height: min(62vh, 560px);
+    display: flex;
+    align-items: center;
+    gap: clamp(24px, 4vw, 56px);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: clamp(24px, 4vw, 56px);
+    box-shadow: 0 20px 56px -36px rgba(20, 20, 19, 0.25);
+  }
+  .project .info {
+    flex: 1;
+    min-width: 0;
+  }
+  .project .k {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .project h3 {
+    font-size: clamp(24px, 3.4vw, 40px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .project .d {
+    font-size: 14px;
+    color: var(--tx2);
+    margin-top: 14px;
+    line-height: 1.75;
+  }
+  .project .beat {
+    font-size: 11px;
+    color: var(--tx3);
+    margin-top: 18px;
+    letter-spacing: 0.04em;
+  }
+  .project .demo-slot {
+    flex: 0 0 44%;
+    height: 100%;
+    border: 1.5px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--accent) 4%, var(--bg));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    color: var(--tx3);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-align: center;
+    padding: 20px;
+    overflow: hidden;
+  }
+  .project .cap {
+    font-size: 10px;
+  }
+
+  /* --- 微场景：全部由 --cp (0~1) 驱动，纯 transform/opacity --- */
+  .scene {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+  }
+  /* 01 声波球 */
+  .scene-orb .orb {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #eda678, var(--orange));
+    transform: scale(calc(0.65 + var(--cp, 0) * 0.5));
+    will-change: transform;
+  }
+  .scene-orb .bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+    height: 40px;
+  }
+  .scene-orb .bars i {
+    width: 4px;
+    height: 40px;
+    border-radius: 2px;
+    background: var(--orange);
+    opacity: 0.75;
+    transform-origin: bottom;
+    transform: scaleY(calc(0.12 + min(1, max(0, var(--cp, 0) * 1.4 - var(--ph) * 0.12)) * var(--f)));
+  }
+  /* 02 流式对话 */
+  .scene-chat {
+    align-items: stretch;
+    width: min(88%, 300px);
+    gap: 9px;
+  }
+  .scene-chat .bub {
+    --p: min(1, max(0, calc((var(--cp, 0) - var(--t)) * 5)));
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--tx2);
+    text-align: left;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 12px;
+    opacity: var(--p);
+    transform: translateY(calc((1 - var(--p)) * 12px));
+  }
+  .scene-chat .bub.user {
+    align-self: flex-end;
+    background: color-mix(in srgb, var(--blue) 8%, var(--paper));
+  }
+  .scene-chat .bub.tool {
+    font-family: inherit;
+    color: var(--blue);
+    border-style: dashed;
+  }
+  .scene-chat .bub.ok {
+    color: var(--green);
+  }
+  /* 03 PDF 标注 */
+  .scene-pdf {
+    align-items: stretch;
+    width: min(88%, 300px);
+    gap: 10px;
+  }
+  .scene-pdf .pdf-line {
+    --p: min(1, max(0, calc((var(--cp, 0) - var(--t)) * 4)));
+    display: block;
+    width: var(--w);
+    height: 9px;
+    border-radius: 4px;
+    background: var(--ui);
+    transform-origin: left;
+    transform: scaleX(var(--p));
+  }
+  .scene-pdf .pdf-line.hl {
+    background: color-mix(in srgb, var(--green) 35%, var(--ui));
+  }
+  .scene-pdf .pdf-box {
+    --p: min(1, max(0, calc((var(--cp, 0) - var(--t)) * 4)));
+    display: grid;
+    place-items: center;
+    height: 56px;
+    border: 1.5px dashed var(--green);
+    border-radius: 8px;
+    color: var(--green);
+    font-size: 11px;
+    opacity: var(--p);
+    transform: scale(calc(0.9 + var(--p) * 0.1));
+  }
+
+  /* ======== LAB 跑马灯 ======== */
+  #lab-strip {
+    position: relative;
+    padding: clamp(64px, 10vh, 120px) 0;
+    max-width: 100%;
+  }
+  #lab-strip .eyebrow {
+    display: block;
+    max-width: var(--max);
+    margin: 0 auto 20px;
+    padding: 0 clamp(24px, 5vw, 80px);
+  }
+  .lab-clip {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    border-block: 1px solid var(--line);
+    padding: 20px 0;
+  }
+  .lab-track {
+    display: inline-flex;
+    gap: 14px;
+    padding-right: 14px;
+    animation: lab-scroll 26s linear infinite;
+    will-change: transform;
+  }
+  .lab-clip:hover .lab-track {
+    animation-play-state: paused;
+  }
+  .lab-track span {
+    font-size: 13px;
+    color: var(--tx2);
+    border: 1px solid var(--line);
+    background: var(--paper);
+    padding: 8px 18px;
+    border-radius: 999px;
+    transition:
+      color 0.3s,
+      border-color 0.3s;
+  }
+  .lab-clip:hover .lab-track span {
+    color: var(--tx);
+  }
+  @keyframes lab-scroll {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .lab-go {
+    position: absolute;
+    right: clamp(24px, 5vw, 80px);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--orange);
+    background: linear-gradient(90deg, transparent, var(--bg) 30%);
+    padding: 10px 0 10px 48px;
+  }
+
+  /* ======== §3 WRITING ======== */
+  #writing {
+    position: relative;
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: clamp(72px, 12vh, 150px) clamp(24px, 5vw, 80px) clamp(96px, 16vh, 200px);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 760px;
+  }
+  #writing .eyebrow {
+    display: block;
+    margin-bottom: 28px;
+  }
+  .post {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--line);
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.6s,
+      transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .post.in {
+    opacity: 1;
+    transform: none;
+  }
+  .post .no {
+    font-size: 12px;
+    color: var(--tx3);
+    font-style: italic;
+    width: 20px;
+  }
+  .post .body {
+    flex: 1;
+  }
+  .post .t {
+    display: block;
+    font-size: clamp(16px, 2vw, 20px);
+    font-weight: 600;
+    transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .post .d {
+    display: block;
+    font-size: 12px;
+    color: var(--tx2);
+    margin-top: 5px;
+  }
+  .post .arrow {
+    color: var(--tx3);
+    font-size: 18px;
+    transition:
+      color 0.3s,
+      transform 0.3s;
+  }
+  .post:hover .t {
+    transform: translateX(8px);
+  }
+  .post:hover .arrow {
+    color: var(--orange);
+    transform: translate(3px, -3px);
+  }
+
+  /* ======== FOOTER ======== */
+  #footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    min-height: 78vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    padding: clamp(48px, 8vh, 96px) 24px;
+    overflow: hidden;
+  }
+  #footer .f-ghost {
+    position: absolute;
+    left: 50%;
+    bottom: -0.18em;
+    transform: translateX(-50%);
+    font-size: clamp(120px, 22vw, 320px);
+    font-weight: 700;
+    font-style: italic;
+    letter-spacing: -0.04em;
+    color: color-mix(in srgb, var(--tx) 5%, transparent);
+    white-space: nowrap;
+    pointer-events: none;
+    will-change: transform;
+  }
+  #footer > *:not(.dev-tag):not(.f-ghost) {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.7s,
+      transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  #footer > .in {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  #footer .f-name {
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+  #footer .f-links {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #footer .f-links a {
+    font-size: 13px;
+    color: var(--tx2);
+    border: 1px solid var(--line);
+    background: var(--paper);
+    padding: 8px 18px;
+    border-radius: 8px;
+    transition: 0.3s;
+  }
+  #footer .f-links a:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+  }
+  #footer .f-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #footer .f-tags span {
+    font-size: 11px;
+    color: var(--tx3);
+    border: 1px solid var(--line);
+    padding: 3px 9px;
+    border-radius: 5px;
+  }
+  #footer .f-copy {
+    font-size: 11px;
+    color: var(--tx3);
+  }
+
+  /* ======== 移动端降级 ======== */
+  @media (max-width: 760px) {
+    #works {
+      height: auto;
+    }
+    #works .pin {
+      position: static;
+      height: auto;
+      overflow: visible;
+      padding: 96px 0 48px;
+    }
+    .works-head {
+      position: static;
+      padding: 0 24px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .works-head .counter {
+      display: none;
+    }
+    .track {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 0 20px;
+      gap: 20px;
+      transform: none !important;
+    }
+    .project {
+      flex: none;
+      height: auto;
+      flex-direction: column;
+      align-items: stretch;
+      --cp: 1;
+    }
+    .project .demo-slot {
+      flex: none;
+      height: 240px;
+    }
+    #hero .chips {
+      display: none;
+    }
+  }
+
+  /* ======== reduced motion ======== */
+  @media (prefers-reduced-motion: reduce) {
+    #hero [data-auto],
+    #hero [data-scroll],
+    .post,
+    #footer > * {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+    #hero .bubbles i,
+    #hero .chips .chip {
+      opacity: 0.55;
+      transform: none;
+      animation: none !important;
+    }
+    .mani-card {
+      transform: none !important;
+      --txtin: 1;
+    }
+    .mani-card p span {
+      opacity: 1;
+    }
+    .mani-card .mani-tail {
+      opacity: 1;
+      transform: none;
+    }
+    .project {
+      --cp: 1 !important;
+    }
+    .lab-track {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  // ============ 性能骨架 ============
+  // 1) 布局指标一次性测量并缓存（resize / 字体加载后重测），rAF 内零 getBoundingClientRect
+  // 2) 单 rAF 循环，只写 transform/opacity/class/CSS 变量
+  // 3) lerp 平滑横向位移与视差，模拟惯性（正式版可换 Lenis）
+  const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const mobileMq = matchMedia('(max-width: 760px)')
+
+  const $ = (id: string) => document.getElementById(id)!
+  const hero = $('hero')
+  const heroStaged = $('heroStaged')
+  const manifesto = $('manifesto')
+  const maniCard = $('maniCard')
+  const maniTail = $('maniTail')
+  const works = $('works')
+  const track = $('worksTrack')
+  const wIdx = $('wIdx')
+  const mqTrack = $('mqTrack')
+  const progressBar = $('progressBar')
+  const footer = $('footer')
+  const fGhost = $('fGhost')
+  const fps = $('fps')
+
+  const heroScrollEls = document.querySelectorAll<HTMLElement>('#hero [data-scroll]')
+  const hint = document.querySelector<HTMLElement>('#hero .hint')!
+  const lights = document.querySelectorAll<HTMLElement>('#hero .light i')
+  const chips = document.querySelectorAll<HTMLElement>('#hero .chips .chip')
+  const projects = document.querySelectorAll<HTMLElement>('.project')
+  const posts = document.querySelectorAll<HTMLElement>('.post')
+  const footerEls = document.querySelectorAll<HTMLElement>(
+    '#footer > *:not(.dev-tag):not(.f-ghost)',
+  )
+
+  // ---- 宣言文案 ----
+  const MANIFESTO =
+    'I care less about whether it runs — and more about why it is built this way. Understand from zero, then reinvent.'
+  const EM = new Set(['why', 'zero,', 'reinvent.'])
+  const maniText = $('maniText')
+  const maniWords: HTMLSpanElement[] = []
+  MANIFESTO.split(' ').forEach((w) => {
+    const s = document.createElement('span')
+    s.textContent = w + ' '
+    if (EM.has(w)) s.classList.add('em')
+    maniText.appendChild(s)
+    maniWords.push(s)
+  })
+
+  // ---- 布局指标缓存 ----
+  type Metric = { top: number; h: number }
+  const M = { vh: 0, doc: 0, coverScale: 1, trackShift: 0 } as Record<string, number>
+  const sections: Record<string, Metric> = {}
+  function measure() {
+    M.vh = window.innerHeight
+    M.doc = document.documentElement.scrollHeight - M.vh
+    for (const el of [hero, manifesto, works, footer, ...posts]) {
+      const r = el.getBoundingClientRect()
+      sections[el.id || el.textContent!.slice(0, 8)] = {
+        top: r.top + window.scrollY,
+        h: el.offsetHeight,
+      }
+    }
+    // manifesto 卡片铺满视口所需 scale
+    M.coverScale = Math.max(
+      (window.innerWidth / maniCard.offsetWidth) * 1.06,
+      (M.vh / maniCard.offsetHeight) * 1.06,
+    )
+    M.trackShift = Math.max(0, track.scrollWidth - window.innerWidth)
+  }
+  const pinP = (m: Metric, y: number) => clamp01((y - m.top) / (m.h - M.vh))
+  const viewP = (m: Metric, y: number) => clamp01((y + M.vh - m.top) / (M.vh + m.h))
+
+  measure()
+  window.addEventListener('resize', measure)
+  // 字体分块加载会改变布局 → 重测，避免滚动锚定跳位
+  document.fonts?.ready.then(measure)
+  setTimeout(measure, 1500)
+
+  // ---- hero 自动入场 ----
+  if (!reduced) {
+    document.querySelectorAll<HTMLElement>('#hero [data-auto]').forEach((el, i) => {
+      setTimeout(() => el.classList.add('in'), 250 + i * 180)
+    })
+    document.querySelectorAll<HTMLElement>('#hero .bubbles i').forEach((b, i) => {
+      setTimeout(() => b.classList.add('pop'), 900 + i * 130)
+    })
+    setTimeout(() => document.querySelector('#hero .chips')?.classList.add('pop'), 1200)
+  } else {
+    document.querySelector('#hero .chips')?.classList.add('pop')
+  }
+
+  // ---- 主循环 ----
+  let smooth = window.scrollY // lerp 平滑后的滚动值
+  let frames = 0
+  let fpsT = performance.now()
+
+  function tick(now: number) {
+    const y = window.scrollY
+    smooth = Math.abs(smooth - y) < 0.1 ? y : lerp(smooth, y, 0.14)
+
+    // FPS
+    frames++
+    if (now - fpsT > 1000) {
+      fps.textContent = `${frames} fps`
+      frames = 0
+      fpsT = now
+    }
+
+    progressBar.style.transform = `scaleX(${clamp01(y / M.doc)})`
+
+    if (!reduced) {
+      // ---- §0 hero ----
+      const hp = pinP(sections.hero, y)
+      heroScrollEls.forEach((el, i) => el.classList.toggle('in', hp > 0.06 + i * 0.1))
+      hint.style.opacity = hp < 0.04 ? '1' : '0'
+      // 离场：内容上浮缩小淡出
+      const out = clamp01((hp - 0.55) / 0.45)
+      heroStaged.style.transform = `translateY(${-out * 90}px) scale(${1 - out * 0.08})`
+      heroStaged.style.opacity = String(1 - out * 0.9)
+      lights.forEach((o, i) => {
+        o.style.transform = `translateY(${smooth * (0.06 + i * 0.05)}px) scale(${1 + out * (0.5 + i * 0.2)})`
+      })
+      chips.forEach((c) => {
+        const spd = parseFloat(c.style.getPropertyValue('--spd')) || 0.5
+        c.style.transform = `translateY(${-smooth * spd * 0.25}px)`
+        c.style.opacity = String(1 - out)
+      })
+
+      // ---- §1 manifesto：全屏纸面 → 卡片 ----
+      const mp = pinP(sections.manifesto, y)
+      const shrink = clamp01(mp / 0.3) // 0~0.3：cover → 1
+      const scale = M.coverScale + (1 - M.coverScale) * (1 - Math.pow(1 - shrink, 3))
+      maniCard.style.transform = `scale(${scale})`
+      maniCard.style.setProperty('--flat', String(shrink))
+      maniCard.style.setProperty('--txtin', String(clamp01((mp - 0.22) / 0.1)))
+      const lit = Math.floor(clamp01((mp - 0.34) / 0.5) * maniWords.length)
+      maniWords.forEach((w, i) => w.classList.toggle('lit', i < lit))
+      maniTail.classList.toggle('in', mp > 0.88)
+
+      // ---- marquee：滚动位置驱动，无缝循环 ----
+      const mqHalf = mqTrack.scrollWidth / 2
+      if (mqHalf > 0) {
+        mqTrack.style.transform = `translateX(${-((smooth * 0.55) % mqHalf)}px)`
+      }
+
+      // ---- §2 works：横向 + 每卡微场景 ----
+      if (!mobileMq.matches) {
+        const wp = pinP(sections.works, y)
+        const t = clamp01(wp / 0.9) // 末尾留 10% 停留缓冲
+        track.style.transform = `translateX(${-t * M.trackShift}px)`
+        wIdx.textContent = String(
+          Math.min(projects.length, Math.floor(t * projects.length) + 1),
+        ).padStart(2, '0')
+        projects.forEach((card, i) => {
+          const cp = clamp01(t * projects.length - i)
+          card.style.setProperty('--cp', cp.toFixed(3))
+        })
+      } else {
+        track.style.transform = ''
+        projects.forEach((card) => card.style.setProperty('--cp', '1'))
+      }
+
+      // ---- §3 writing ----
+      posts.forEach((p, i) => {
+        const m = sections[p.textContent!.slice(0, 8)]
+        if (m) p.classList.toggle('in', viewP(m, y) > 0.16 + i * 0.03)
+      })
+
+      // ---- footer ----
+      const fp = viewP(sections.footer, y)
+      footerEls.forEach((el, i) => el.classList.toggle('in', fp > 0.2 + i * 0.08))
+      fGhost.style.transform = `translateX(-50%) translateY(${(1 - fp) * 60}px)`
+    }
+    requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
+</script>
