@@ -314,8 +314,10 @@ vec4 shadeStamp(vec2 p, vec2 half2, vec2 slot, float hover, float lift, float se
 
   // ── 烫金：只在坡上。墨边坡最陡，所以金天然沿着字走 ────
   float slope = length(nFoil.xy);
-  vec2 pn = (uPointer - vec2(0.5)) * 2.0;
-  vec2 sweepDir = normalize(vec2(0.6, -0.8) + pn * 0.35);
+  // 扫光方向 = 从当前像素指向光标。所以亮箔是绕着光标转的，而不是整片一起偏 ——
+  // 一张票上不同位置看到的金不一样，这才是"光在票面上走"。
+  vec2 toL = lp - p;
+  vec2 sweepDir = normalize(mix(vec2(0.6, -0.8), toL / max(length(toL), 0.05), hover * 0.9));
   float aniso = dot(nFoil.xy / max(slope, 0.001), sweepDir);
 
   // 金箔是各向异性的：只有朝向光的那一侧坡面反光，背光的坡是暗的。
@@ -377,6 +379,7 @@ void main() {
     if (rect.z <= 0.0) continue;
     vec4 meta = uMeta[i];
     vec4 lft = uLift[i];
+    vec2 tilt = uTilt[i].xy;
 
     float s = min(rect.z, rect.w);
     vec2 half2 = vec2(rect.z, rect.w) / s * 0.5;
@@ -387,21 +390,29 @@ void main() {
     // 反旋转到票的本地空间
     vec2 d = (frag - rect.xy) / s;
     float c = cos(-rot), sn = sin(-rot);
-    vec2 p = vec2(d.x * c - d.y * sn, d.x * sn + d.y * c);
+    vec2 pFlat = vec2(d.x * c - d.y * sn, d.x * sn + d.y * c);
 
-    // 粗剔除：本地空间的包围盒
-    if (abs(p.x) > half2.x + 0.42 || abs(p.y) > half2.y + 0.42) continue;
+    // 粗剔除在倾斜前做，包围盒放宽一点容纳透视变大的那一侧
+    if (abs(pFlat.x) > half2.x + 0.6 || abs(pFlat.y) > half2.y + 0.6) continue;
+
+    // 反投影到倾斜平面上：票面上的一切（齿孔、图、箔纹）都跟着透视走
+    vec2 p = unproject(pFlat, tilt);
+
+    // 光标也要落到同一个本地空间里，斑驳光才跟得准
+    vec2 dc = (uPointerPx - rect.xy) / s;
+    vec2 lp = unproject(vec2(dc.x * c - dc.y * sn, dc.x * sn + dc.y * c), tilt);
 
     // 投影：抬起时偏移更远、更散，形成"浮起来"的高度感
+    // 影子落在桌面上，所以用未倾斜的轮廓 —— 倾斜是票离开桌面那一侧的事
     float h = 0.014 + (hover * 0.02) + lift * 0.09;
-    vec2 sp = p - vec2(-h * 0.7, h) / max(0.6, 1.0);
+    vec2 sp = pFlat - vec2(-h * 0.7, h) / max(0.6, 1.0);
     float ssd = stampShape(sp, half2, lft.z);
     float blur = 0.022 + hover * 0.03 + lift * 0.1;
     float sm = smoothstep(-blur, blur, ssd);
     float amount = 0.3 * uShadow * (1.0 + hover * 0.5 + lift * 0.9);
     col = mix(col, col * (1.0 - amount), sm * 0.92);
 
-    vec4 st = shadeStamp(p, half2, vec2(meta.z, meta.w), hover, lift, lft.y, lft.z);
+    vec4 st = shadeStamp(p, half2, vec2(meta.z, meta.w), hover, lift, lft.y, lft.z, lp);
     col = mix(col, st.rgb, st.a);
   }
 
@@ -535,11 +546,12 @@ export function mountStampField(
   const U = (n: string) => gl.getUniformLocation(prog, n);
   const uRes = U("uRes");
   const uTime = U("uTime");
-  const uPointer = U("uPointer");
+  const uPointerPx = U("uPointerPx");
   const uCount = U("uCount");
   const uRects = U("uRects");
   const uMeta = U("uMeta");
   const uLift = U("uLift");
+  const uTilt = U("uTilt");
 
   let look = initialLook;
   const applyLook = () => {
