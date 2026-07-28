@@ -5,7 +5,7 @@
 // 每个变体下方附带「About 页里的入口 Section」预览，确认两处语言一致。
 import SiteMenu from "@/components/layout/SiteMenu.astro";
 
-const variant = (Astro.url.searchParams.get("variant") ?? "S1").toUpperCase();
+const variant = (Astro.url.searchParams.get("variant") ?? "S3").toUpperCase();
 // S1/S2/S3 是邮票方向的三档质感（共享 canvas + shader）；A/B/C 是早先的排版对照组。
 const VARIANTS = [
   { key: "S1", name: "邮票·米纸细砂微金" },
@@ -420,32 +420,37 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
       if (canvas && page) {
         const stamps = () => Array.from(document.querySelectorAll<HTMLElement>(".stamp"));
         const els = stamps();
-        // 票面美术全部画进图集：站名、编号、类别、主字都在 canvas 里
-        const atlas = buildAtlas(
-          els.map((el, i) => {
-            const name = el.dataset.name ?? "?";
-            return {
-              name: name.length > 14 ? name.slice(0, 14) : name,
-              glyph: name.trim().charAt(0),
-              index: String((Number(el.dataset.slot ?? i) % 12) + 1).padStart(2, "0"),
-              kind: el.dataset.kind ?? "",
-              year: "2026",
-            };
-          })
-        );
+        // 票面无字，只有一张图 —— 原型阶段借 public/ 里现成的贴图轮换，
+        // 真实实现换成 src/assets/friends/ 里的本地头像。
+        const ART = [
+          "/logo-stickers/vue.svg",
+          "/logo-stickers/react.svg",
+          "/logo-stickers/tailwind.svg",
+          "/logo-stickers/javascript.svg",
+          "/logo-stickers/css.svg",
+          "/logo-stickers/chatgpt.svg",
+          "/feichuan-logo.svg",
+          "/dappled/leaf.png",
+          "/claudecode-color.svg",
+        ];
         // 页面是预渲染的，服务端的 Astro.url.searchParams 永远拿不到 ?variant=，
         // 所以 data-look 恒为 0。look 必须在客户端从 URL 现读。
-        const key = (new URL(location.href).searchParams.get("variant") ?? "S1").toUpperCase();
+        const key = (new URL(location.href).searchParams.get("variant") ?? "S3").toUpperCase();
         const look = LOOKS.find((l) => l.key === key) ?? LOOKS[Number(page.dataset.look ?? 0)] ?? LOOKS[0];
         // S2 的票面自己是墨黑的，台面反而要留米色 —— 黑票压在米纸上才看得出是票
         const bg: [number, number, number] = [0.961, 0.957, 0.929];
         document.body.style.setProperty("--stamp-bg", "#f5f4ed");
-        try {
-          mountStampField(canvas, stamps, atlas, look, bg);
-        } catch (err) {
-          console.error("[stamp prototype]", err);
-          canvas.remove();
-        }
+        buildAtlas(
+          els.map((el, i) => {
+            const slot = Number(el.dataset.slot ?? i);
+            return { src: ART[slot % ART.length], pattern: slot };
+          })
+        )
+          .then((atlas) => mountStampField(canvas, stamps, atlas, look, bg))
+          .catch((err) => {
+            console.error("[stamp prototype]", err);
+            canvas.remove();
+          });
 
         // 票面极简，简介走右侧 readout
         const ro = document.querySelector<HTMLElement>(".stamp-readout");
@@ -471,18 +476,33 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
           });
         }
 
-        // 点击 = 浮到中央转正（第二次点击才真的跳转），Esc 或点空白放回去
+        // 点击 = 浮到中央转正（第二次点击才真的跳转），Esc 或点空白放回去。
+        // 位移用 transform 而不是改 left/top：--fx/--fy 归零就是沿原路退回原位，
+        // 中途打断也能从当前位置接着插值。
         let lifted: HTMLElement | null = null;
         const drop = () => {
           if (!lifted) return;
           lifted.dataset.lifted = "false";
+          lifted.style.removeProperty("--fx");
+          lifted.style.removeProperty("--fy");
           lifted = null;
+        };
+        // 用未变换的 offset 量算票心，避开 hover 那 6px 位移的干扰
+        const flyTo = (el: HTMLElement) => {
+          const host = el.offsetParent as HTMLElement | null;
+          if (!host) return;
+          const hr = host.getBoundingClientRect();
+          const cx = hr.left + el.offsetLeft + el.offsetWidth / 2;
+          const cy = hr.top + el.offsetTop + el.offsetHeight / 2;
+          el.style.setProperty("--fx", `${Math.round(innerWidth / 2 - cx)}px`);
+          el.style.setProperty("--fy", `${Math.round(innerHeight / 2 - cy)}px`);
         };
         els.forEach((el) => {
           el.addEventListener("click", (e) => {
             if (lifted === el) return; // 已经平视了，放行跳转
             e.preventDefault();
             drop();
+            flyTo(el);
             el.dataset.lifted = "true";
             lifted = el;
           });
@@ -614,10 +634,12 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
     transition:transform .5s cubic-bezier(.22,.9,.24,1);
   }
   .stamp[data-hot="true"] { transform:translateY(-6px) scale(1.03); }
-  /* 点击后浮到画面中央、放大、转正 —— 从"落在桌上"切到"平视端在眼前" */
+  /* 点击后浮到画面中央、放大、转正 —— 从"落在桌上"切到"平视端在眼前"。
+     位移全部走 transform（--fx/--fy 由 JS 算好），left/top 一直是原位：
+     所以放回去就是同一条路倒着走一遍，而不是瞬移回原点。 */
   .stamp[data-lifted="true"] {
-    left:50% !important;top:50% !important;z-index:40 !important;
-    transform:translate(-50%,-50%) scale(2.1);
+    z-index:40;
+    transform:translate(var(--fx,0px),var(--fy,0px)) scale(2.1);
   }
   .scatter-mini { height:min(46vw,300px); }
   .scatter-mini .stamp { width:clamp(84px,8vw,108px); }

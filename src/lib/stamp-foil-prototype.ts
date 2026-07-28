@@ -71,11 +71,10 @@ export const LOOKS: StampLook[] = [
 ];
 
 export type StampItem = {
-  name: string;
-  glyph: string;
-  index: string;
-  kind: string;
-  year: string;
+  /** 票面主图。原型阶段随便借了 public/ 里现成的图。 */
+  src: string;
+  /** 背景纹样，只是让每张票不一样 */
+  pattern?: number;
 };
 
 export const VERT = `
@@ -423,20 +422,73 @@ void main() {
 const MAX_STAMPS = 28;
 const ATLAS_GRID = 6;
 const ATLAS_CELL = 256;
-const MONO = '"Maple Mono NF CN", ui-monospace, monospace';
+
+function loadImage(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.decoding = "sync";
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
 
 /**
- * 把每张票的整个票面画成图集的一格：编号、站名、年份、主字全在里面。
- * 只出黑墨 + alpha，颜色和浮雕都由 shader 决定 —— 这样墨的 alpha 可以
- * 直接当 UV 印刷的高度场用。真实头像后面换成 drawImage 即可。
+ * 把一张彩色图压成纯黑 + 原 alpha。
+ * shader 只吃 alpha（当 UV 印刷的高度场），rgb 用不上，但留着彩色会在
+ * 双线性采样时把颜色渗到边缘外，所以先统一刷黑。
  */
-export function buildAtlas(items: StampItem[]): HTMLCanvasElement {
+function flatten(img: HTMLImageElement, w: number, h: number): HTMLCanvasElement {
+  const cv = document.createElement("canvas");
+  cv.width = w;
+  cv.height = h;
+  const c = cv.getContext("2d")!;
+  c.drawImage(img, 0, 0, w, h);
+  c.globalCompositeOperation = "source-in";
+  c.fillStyle = "#000";
+  c.fillRect(0, 0, w, h);
+  return cv;
+}
+
+/** 雕刻底纹：同心车花。真邮票的底纹就是这种连续细线，也给箔提供走向。 */
+function guilloche(ctx: CanvasRenderingContext2D, C: number, kind: number) {
+  ctx.save();
+  ctx.translate(C * 0.5, C * 0.5);
+  ctx.strokeStyle = "#000";
+  ctx.globalAlpha = 0.16;
+  ctx.lineWidth = C * 0.0045;
+  const petals = 5 + (kind % 4);
+  for (let ring = 0; ring < 14; ring++) {
+    const base = C * (0.1 + ring * 0.021);
+    ctx.beginPath();
+    for (let a = 0; a <= 180; a++) {
+      const t = (a / 180) * Math.PI * 2;
+      const r = base * (1 + 0.075 * Math.sin(t * petals + ring * 0.42));
+      const x = Math.cos(t) * r;
+      const y = Math.sin(t) * r;
+      if (a === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/**
+ * 票面 = 雕刻底纹 + 一张主图，没有任何文字。
+ * 只出黑墨 + alpha，颜色和浮雕都由 shader 决定 —— 墨的 alpha 直接当
+ * UV 印刷的高度场，所以图的轮廓天然是凸起的、边上会吃到金。
+ */
+export async function buildAtlas(items: StampItem[]): Promise<HTMLCanvasElement> {
   const size = ATLAS_GRID * ATLAS_CELL;
   const cv = document.createElement("canvas");
   cv.width = size;
   cv.height = size;
   const ctx = cv.getContext("2d")!;
   ctx.clearRect(0, 0, size, size);
+
+  const imgs = await Promise.all(items.map((it) => loadImage(it.src)));
 
   items.forEach((item, i) => {
     if (i >= ATLAS_GRID * ATLAS_GRID) return;
@@ -449,41 +501,25 @@ export function buildAtlas(items: StampItem[]): HTMLCanvasElement {
     ctx.rect(ox, oy, C, C);
     ctx.clip();
     ctx.translate(ox, oy);
-    ctx.fillStyle = "#000";
+
+    guilloche(ctx, C, item.pattern ?? i);
+
+    // 内框：一圈细线，把图框住，也是一道明确的墨边给金走
+    ctx.globalAlpha = 0.4;
     ctx.strokeStyle = "#000";
+    ctx.lineWidth = C * 0.008;
+    ctx.strokeRect(C * 0.11, C * 0.11, C * 0.78, C * 0.78);
 
-    // 画面框
-    ctx.globalAlpha = 0.5;
-    ctx.lineWidth = C * 0.006;
-    ctx.strokeRect(C * 0.13, C * 0.17, C * 0.74, C * 0.6);
-
-    // 主字，稍微压扁，像雕刻版
-    ctx.globalAlpha = 0.9;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = `600 ${C * 0.4}px ${MONO}`;
-    ctx.fillText(item.glyph, C * 0.5, C * 0.47);
-
-    // 顶部站名
-    ctx.globalAlpha = 0.72;
-    ctx.textAlign = "left";
-    ctx.font = `600 ${C * 0.058}px ${MONO}`;
-    ctx.fillText(item.name.toUpperCase(), C * 0.13, C * 0.105);
-
-    // 顶部右侧类别
-    ctx.globalAlpha = 0.5;
-    ctx.textAlign = "right";
-    ctx.fillText(item.kind, C * 0.87, C * 0.105);
-
-    // 底部编号 / 年份
-    ctx.globalAlpha = 0.66;
-    ctx.textAlign = "left";
-    ctx.font = `600 ${C * 0.072}px ${MONO}`;
-    ctx.fillText(item.index, C * 0.13, C * 0.885);
-    ctx.textAlign = "right";
-    ctx.globalAlpha = 0.44;
-    ctx.font = `600 ${C * 0.055}px ${MONO}`;
-    ctx.fillText(item.year, C * 0.87, C * 0.885);
+    const img = imgs[i];
+    if (img) {
+      // 等比塞进内框，留一点边距
+      const box = C * 0.56;
+      const ar = img.naturalWidth / Math.max(img.naturalHeight, 1);
+      const w = ar >= 1 ? box : box * ar;
+      const h = ar >= 1 ? box / ar : box;
+      ctx.globalAlpha = 0.92;
+      ctx.drawImage(flatten(img, Math.round(w * 2), Math.round(h * 2)), (C - w) / 2, (C - h) / 2, w, h);
+    }
 
     ctx.restore();
   });
