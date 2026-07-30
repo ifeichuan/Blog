@@ -1,0 +1,98 @@
+---
+import PaperPlanePath from "@/components/labs/PaperPlanePath";
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lab · 纸飞机 SVG path 飞行</title>
+    <style is:global>
+      :root {
+        --pp-ink: #1a1917;
+        --pp-page: #efe9dd;
+        --pp-card: #f7f3ea;
+        --pp-line: rgba(26, 25, 23, 0.14);
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: auto; }
+      body {
+        margin: 0;
+        background: var(--pp-page);
+        color: var(--pp-ink);
+        font: 400 15px/1.6 ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
+      }
+
+      /* canvas 舞台夹在卡片的两档 z 之间：卡片默认 20（全在飞机之上，对齐 v5 分层
+         契约），开「穿插」后交替卡降到 5，飞机就从那张卡上面掠过。
+         data-above 是对照用的暴力档，压过所有卡片。 */
+      .pp-stage { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+      .pp-stage[data-above="true"] { z-index: 40; }
+
+      /* 轨迹层：absolute + 高度 = 整篇文档，所以描边随文档一起滚。
+         viewBox 0 0 100 100 + preserveAspectRatio=none → x 是视口宽百分比、
+         y 是文档高百分比，与 3D 映射共用同一条 path */
+      .pp-track { position: absolute; top: 0; left: 0; width: 100%; z-index: 50; pointer-events: none; }
+      .pp-track path {
+        fill: none; stroke: #c2410c; stroke-width: 2; stroke-dasharray: 9 7;
+      }
+      /* HUD 层：fixed + 屏幕像素坐标，取样点与切线跟着飞机留在屏内 */
+      .pp-hud { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 51; pointer-events: none; }
+      .pp-hud circle { fill: #c2410c; }
+      .pp-hud line { stroke: #0369a1; stroke-width: 2; }
+
+      /* flow 自己不能有 z-index：那会开一个层叠上下文，把卡片的 z 全困在里面，
+         fixed 的 canvas 就永远插不进相邻两卡之间。层叠交给卡片自己。 */
+      .pp-flow { position: relative; display: flex; flex-direction: column; gap: 0.75rem; padding: 0.75rem; }
+      .pp-card {
+        position: relative;
+        z-index: var(--pp-z, 20);
+        width: calc(100vw - 1.5rem);
+        min-height: 88vh;
+        border-radius: 1.5rem;
+        border: 1px dashed var(--pp-line);
+        background: color-mix(in srgb, var(--pp-card) calc(var(--pp-alpha, 0.22) * 100%), transparent);
+        display: flex; flex-direction: column; justify-content: center; gap: 0.5rem;
+        padding: clamp(1.5rem, 5vw, 4rem);
+      }
+      /* 在飞机之下的那档标出来，不然全透明时根本看不出交替生效了 */
+      .pp-card[data-under="true"] { border-style: solid; border-color: rgba(3, 105, 161, 0.45); }
+      .pp-card[data-tall="true"] { min-height: 240vh; }
+      .pp-card .idx { font: 500 11px/1 ui-monospace, monospace; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.5; }
+      .pp-card h2 { margin: 0; font-size: clamp(1.5rem, 4vw, 2.75rem); font-weight: 500; }
+      .pp-card p { margin: 0; max-width: 46ch; opacity: 0.62; }
+
+      .pp-panel {
+        position: fixed; top: 0.75rem; right: 0.75rem; z-index: 60; width: 320px; max-height: calc(100vh - 1.5rem);
+        overflow: auto; padding: 0.875rem; border-radius: 0.875rem;
+        background: rgba(250, 248, 243, 0.92); border: 1px solid var(--pp-line);
+        backdrop-filter: blur(10px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+        font: 400 12px/1.5 ui-monospace, ui-sans-serif, monospace;
+        display: flex; flex-direction: column; gap: 0.625rem;
+      }
+      .pp-panel h3 { margin: 0; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.55; }
+      .pp-panel textarea {
+        width: 100%; min-height: 116px; resize: vertical; padding: 0.5rem;
+        border-radius: 0.5rem; border: 1px solid var(--pp-line); background: #fff;
+        font: 400 11px/1.5 ui-monospace, monospace; color: inherit;
+      }
+      .pp-panel textarea[data-err="true"] { border-color: #dc2626; }
+      .pp-panel .err { color: #dc2626; }
+      .pp-panel .row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+      .pp-panel label { display: flex; align-items: center; gap: 0.375rem; cursor: pointer; }
+      .pp-panel .toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem 0.5rem; }
+      .pp-panel input[type="range"] { width: 132px; }
+      .pp-panel .val { min-width: 42px; text-align: right; opacity: 0.6; }
+      .pp-panel pre { margin: 0; padding: 0.5rem; border-radius: 0.5rem; background: rgba(26, 25, 23, 0.05); font-size: 11px; }
+      .pp-panel button {
+        padding: 0.375rem 0.625rem; border-radius: 0.5rem; border: 1px solid var(--pp-line);
+        background: #fff; font: inherit; cursor: pointer;
+      }
+      .pp-panel hr { border: 0; border-top: 1px solid var(--pp-line); margin: 0; }
+    </style>
+  </head>
+  <body>
+    <PaperPlanePath client:only="react" />
+  </body>
+</html>
