@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<!--
+  PROTOTYPE — throwaway. 不要往 src/ 里引用。
+  回答的问题：impasto 邮票的等值线纹理，是否由「一张图片当高度场输入」驱动？
+  验证方式：拖入任意图片 → 看等值线是否绕着图片的形状走，同时越过邮票内容边界。
+  运行：直接 open，或 pnpm dev 后访问 /demos/impasto-stamp-prototype.html
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Impasto Stamp — prototype</title>
+<style>
+  :root { --panel-bg: rgba(20,20,20,.82); --panel-fg: #e8e6e0; }
+  * { box-sizing: border-box; }
+  html,body { margin:0; height:100%; overflow:hidden;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  body { background:#232323; }
+  #stage { position:fixed; inset:0; }
+  canvas { display:block; width:100%; height:100%; }
+
+  /* 文字层：DOM 叠加，尺寸由 JS 与邮票几何同步 */
+  #overlay { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    pointer-events:none; }
+  #overlay .t { position:absolute; color:#3d4a33; letter-spacing:.14em;
+    font-size:13px; line-height:1.5; text-transform:uppercase;
+    mix-blend-mode:multiply; opacity:.88; }
+  #ttl { left:18%; top:14%; }
+  #dat { right:11%; bottom:11%; letter-spacing:.1em; }
+
+  #panel { position:fixed; top:12px; right:12px; width:250px; padding:12px 13px;
+    background:var(--panel-bg); color:var(--panel-fg); border-radius:9px;
+    font-size:11px; backdrop-filter:blur(12px); max-height:calc(100vh - 24px);
+    overflow-y:auto; }
+  #panel h3 { margin:0 0 3px; font-size:11px; letter-spacing:.1em; text-transform:uppercase; }
+  #panel .hint { opacity:.5; margin:0 0 10px; font-size:10px; line-height:1.5; }
+  .row { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
+  .row label { flex:0 0 88px; opacity:.72; }
+  .row input[type=range] { flex:1; min-width:0; height:14px; }
+  .row .v { flex:0 0 34px; text-align:right; font-variant-numeric:tabular-nums; opacity:.95; }
+  .sep { margin:10px 0 7px; padding-top:8px; border-top:1px solid rgba(255,255,255,.13);
+    opacity:.5; letter-spacing:.1em; text-transform:uppercase; font-size:10px; }
+  button, #panel select { width:100%; margin-top:6px; padding:6px; font:inherit; font-size:10px;
+    background:rgba(255,255,255,.1); color:inherit; border:1px solid rgba(255,255,255,.2);
+    border-radius:5px; cursor:pointer; }
+  button:hover { background:rgba(255,255,255,.18); }
+  #state { margin-top:9px; padding:7px; background:rgba(0,0,0,.35); border-radius:5px;
+    font-size:9.5px; line-height:1.55; white-space:pre-wrap; word-break:break-all; opacity:.72; }
+  #drop { position:fixed; inset:0; display:none; place-items:center; z-index:9;
+    background:rgba(30,60,40,.55); color:#fff; font-size:15px; letter-spacing:.1em; }
+  #drop.on { display:grid; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="overlay">
+    <div class="t" id="ttl">New Craft<br>Society.</div>
+    <div class="t" id="dat">01/2025</div>
+  </div>
+</div>
+<div id="drop">拖放图片以替换高度场输入</div>
+<div id="panel">
+  <h3>Impasto Stamp</h3>
+  <p class="hint">拖入图片 → 观察等值线是否绕其形状。移动鼠标改变光向。</p>
+  <div id="ctrls"></div>
+  <div class="sep">输入图</div>
+  <select id="preset">
+    <option value="synthetic">内置合成图（默认）</option>
+    <option value="none">纯噪声（无图片输入）</option>
+  </select>
+  <button id="pick">选择本地图片…</button>
+  <input type="file" id="file" accept="image/*" hidden>
+  <div class="sep">状态</div>
+  <div id="state"></div>
+  <button id="copy">复制参数 JSON</button>
+</div>
+<script type="x-shader/x-fragment" id="fs">
+precision highp float;
+varying vec2 vUv;
+
+uniform vec2  uRes;        // canvas 像素尺寸
+uniform vec2  uStamp;      // 邮票尺寸（像素）
+uniform float uTime;
+uniform vec2  uLight;      // 光方向 xy，鼠标驱动
+uniform sampler2D uImg;
+uniform float uHasImg;
+
+uniform float uImgWeight;  // 图片对高度场的权重  ← 核心旋钮
+uniform float uNoiseWeight;
+uniform float uWarp;       // domain warp 强度
+uniform float uNoiseScale;
+uniform float uLineCount;   // 等值线密度
+uniform float uLineWidth;
+uniform float uRelief;     // 浮雕/厚涂强度
+uniform float uPaintMix;   // 颜料层不透明度
+uniform float uGrain;
+uniform float uDapple;     // 斑驳光强度
+uniform float uFlow;       // ambient 流动速度
+
+// ---------- noise ----------
+vec2 hash2(vec2 p){
+  p = vec2(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)));
+  return fract(sin(p)*43758.5453);
+}
+float vnoise(vec2 p){
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f*f*(3.0-2.0*f);
+  float a = hash2(i).x, b = hash2(i+vec2(1,0)).x;
+  float c = hash2(i+vec2(0,1)).x, d = hash2(i+vec2(1,1)).x;
+  return mix(mix(a,b,u.x), mix(c,d,u.x), u.y);
+}
+float fbm(vec2 p){
+  float s = 0.0, a = 0.5;
+  for(int i=0;i<4;i++){ s += a*vnoise(p); p *= 2.03; a *= 0.5; }
+  return s;
+}
+float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5); }
+
+// ---------- 邮票几何：圆角矩形 - 周期性半圆齿孔 ----------
+// uv 为 0..1 邮票局部坐标，aspect 用于让齿孔在两轴上保持圆形
+float stampMask(vec2 uv, vec2 px){
+  vec2 p = (uv - 0.5) * px;              // 转到像素空间，居中
+  vec2 half_ = px * 0.5 - 6.0;           // 内缩，留出齿孔切入余量
+  // 圆角矩形 SDF
+  vec2 d = abs(p) - half_;
+  float body = min(max(d.x,d.y),0.0) + length(max(d,0.0)) - 3.0;
+
+  float r = min(px.x, px.y) * 0.042;      // 齿孔半径，随邮票尺寸缩放
+  float holes = 1e9;
+  // 上下边
+  float spanX = px.x - 26.0;
+  float stepX = spanX / floor(spanX / (r*2.35));
+  float ix = (p.x + spanX*0.5) / stepX;
+  float cx = (floor(ix + 0.5)) * stepX - spanX*0.5;
+  cx = clamp(cx, -spanX*0.5, spanX*0.5);
+  holes = min(holes, length(p - vec2(cx,  half_.y)) - r);
+  holes = min(holes, length(p - vec2(cx, -half_.y)) - r);
+  // 左右边
+  float spanY = px.y - 26.0;
+  float stepY = spanY / floor(spanY / (r*2.35));
+  float iy = (p.y + spanY*0.5) / stepY;
+  float cy = (floor(iy + 0.5)) * stepY - spanY*0.5;
+  cy = clamp(cy, -spanY*0.5, spanY*0.5);
+  holes = min(holes, length(p - vec2( half_.x, cy)) - r);
+  holes = min(holes, length(p - vec2(-half_.x, cy)) - r);
+
+  float sdf = max(body, -holes);          // 从本体里挖掉齿孔
+  // 毛边：沿边界加高频扰动
+  sdf += (vnoise(uv * 190.0) - 0.5) * 1.9;
+  return 1.0 - smoothstep(-1.0, 1.0, sdf);
+}
+
+// ---------- 高度场：图片亮度 + warped fbm ----------
+// 这是本原型要验证的核心：uImgWeight > 0 时线条应绕着图片形状走
+float height(vec2 uv, out vec3 imgCol){
+  imgCol = vec3(0.72,0.78,0.62);
+  float lum = 0.5;
+  if(uHasImg > 0.5){
+    imgCol = texture2D(uImg, vec2(uv.x, 1.0-uv.y)).rgb;
+    lum = dot(imgCol, vec3(0.299,0.587,0.114));
+  }
+  vec2 p = uv * uNoiseScale;
+  float t = uTime * uFlow;
+  // 两级 domain warp — 单级只能得到平缓的等高线大回环，
+  // 二级才出参考图那种指纹状的致密短漩涡
+  vec2 w1 = vec2(fbm(p + vec2(1.7, 9.2) + t),
+                 fbm(p + vec2(8.3, 2.8) - t * 0.7));
+  vec2 q  = p + w1 * uWarp;
+  vec2 w2 = vec2(fbm(q * 2.1 + vec2(4.1, 1.3)),
+                 fbm(q * 2.1 + vec2(0.7, 6.6)));
+  q += w2 * uWarp * 0.55;
+  float n = fbm(q);
+  return lum * uImgWeight + n * uNoiseWeight;
+}
+
+void main(){
+  vec2 uv = vUv;
+  vec3 imgCol;
+  float h = height(uv, imgCol);
+
+  // 有限差分求法线 —— 「厚」的来源
+  vec2 e = 1.0 / uStamp;
+  vec3 dummy;
+  float hx = height(uv + vec2(e.x,0.0), dummy) - height(uv - vec2(e.x,0.0), dummy);
+  float hy = height(uv + vec2(0.0,e.y), dummy) - height(uv - vec2(0.0,e.y), dummy);
+  vec3 nrm = normalize(vec3(-hx * uRelief * 40.0, -hy * uRelief * 40.0, 1.0));
+
+  // 等值线提取，fwidth 抗锯齿保证任意缩放下线宽稳定
+  float f = fract(h * uLineCount);
+  float w = max(fwidth(f), 0.0012) * uLineWidth;
+  float line = 1.0 - smoothstep(0.0, w, abs(f - 0.5));
+
+  // 掠射光：低角度，线脊亮线沟暗
+  vec3 L = normalize(vec3(uLight, 0.42));
+  float diff = max(dot(nrm, L), 0.0);
+  float spec = pow(max(dot(reflect(-L, nrm), vec3(0,0,1)), 0.0), 22.0);
+
+  vec3 paper = vec3(0.945, 0.925, 0.885);
+  // 颜料层：以图片饱和度为主，低频噪声只做扰动
+  // 这样颜料浓淡跟随图片内容，而不是各走各的
+  float sat = 0.0;
+  if(uHasImg > 0.5){
+    float mx = max(max(imgCol.r, imgCol.g), imgCol.b);
+    float mn = min(min(imgCol.r, imgCol.g), imgCol.b);
+    sat = (mx - mn) / max(mx, 0.001);
+  }
+  float paintMask = smoothstep(0.05, 0.42, sat + (fbm(uv * 3.1 + 4.0) - 0.5) * 0.30) * uPaintMix;
+  vec3 base = mix(paper, imgCol, paintMask);
+
+  // 线条参与明暗：压暗为主，脊上提亮少许
+  vec3 col = base * (0.78 + 0.30 * diff);
+  // 线密度高时单根线不能压太狠，否则整张糊成深色
+  col = mix(col, col * 0.74, line * 0.62);
+  col += spec * line * 0.22;
+  col += vec3(0.035) * (1.0 - line) * diff;
+  col = mix(col, vec3(0.97,0.955,0.925), 0.10);   // 整体提亮，靠近纸白
+
+  // 纸纤维颗粒
+  col += (hash1(uv * uStamp) - 0.5) * uGrain;
+
+  // 斑驳光：大尺度柔化噪声，与纹理层不同周期，避免可识别节拍
+  float dap = fbm(uv * 1.6 + vec2(uTime * 0.014, uTime * 0.009));
+  dap = smoothstep(0.30, 0.78, dap);
+  col *= 1.0 + (dap - 0.45) * uDapple;
+
+  float mask = stampMask(uv, uStamp);
+  if(mask < 0.01) discard;
+  gl_FragColor = vec4(col, mask);
+}
+</script>
+<script>
+/* ---------------- 参数 ---------------- */
+const P = {
+  imgWeight:   { v:0.42, min:0,   max:1.2, step:.01, label:'图片权重' },
+  noiseWeight: { v:0.55, min:0,   max:1.5, step:.01, label:'噪声权重' },
+  warp:        { v:1.6,  min:0,   max:3,   step:.01, label:'domain warp' },
+  noiseScale:  { v:8.5,  min:.5,  max:24,  step:.1,  label:'噪声尺度' },
+  lineCount:   { v:118,  min:6,   max:260, step:1,   label:'线密度' },
+  lineWidth:   { v:0.7,  min:.2,  max:4,   step:.05, label:'线宽' },
+  relief:      { v:1.0,  min:0,   max:3,   step:.02, label:'浮雕强度' },
+  paintMix:    { v:0.86, min:0,   max:1,   step:.01, label:'颜料层' },
+  grain:       { v:0.05, min:0,   max:.2,  step:.005,label:'颗粒' },
+  dapple:      { v:0.26, min:0,   max:1,   step:.01, label:'斑驳光' },
+  flow:        { v:0.012,min:0,   max:.2,  step:.002,label:'流动速度' },
+};
+
+/* ---------------- WebGL 装配 ---------------- */
+const cv = document.getElementById('c');
+const gl = cv.getContext('webgl', { alpha:false, antialias:true, premultipliedAlpha:false });
+if(!gl){ document.body.innerHTML = '<p style="color:#fff;padding:2rem">WebGL 不可用</p>'; throw 0; }
+gl.getExtension('OES_standard_derivatives');
+
+const VS = `attribute vec2 aPos; varying vec2 vUv;
+  void main(){ vUv = aPos*0.5+0.5; gl_Position = vec4(aPos,0.0,1.0); }`;
+
+function sh(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+gl.attachShader(prog, sh(gl.FRAGMENT_SHADER,
+  '#extension GL_OES_standard_derivatives : enable\n' + document.getElementById('fs').textContent));
+gl.linkProgram(prog);
+if(!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+const aPos = gl.getAttribLocation(prog, 'aPos');
+gl.enableVertexAttribArray(aPos);
+gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+const U = {};
+for(const n of ['uRes','uStamp','uTime','uLight','uImg','uHasImg','uImgWeight',
+  'uNoiseWeight','uWarp','uNoiseScale','uLineCount','uLineWidth','uRelief',
+  'uPaintMix','uGrain','uDapple','uFlow'])
+  U[n] = gl.getUniformLocation(prog, n);
+
+/* ---------------- 纹理 ---------------- */
+const tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+let hasImg = 0;
+
+function upload(src){
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+  hasImg = 1;
+}
+
+// 内置合成图：几块柔和色斑 + 大尺度形状，模拟原图那种「米色斑块 + 绿底」
+function syntheticImage(){
+  const s = 512, c = Object.assign(document.createElement('canvas'), {width:s, height:s});
+  const x = c.getContext('2d');
+  x.fillStyle = '#8fa86a'; x.fillRect(0,0,s,s);
+  const blobs = [
+    [0.30,0.34,0.15,'#d9cdb0'], [0.34,0.62,0.10,'#cfd4c4'],
+    [0.66,0.28,0.11,'#e0d6bd'], [0.72,0.34,0.07,'#d3c9a8'],
+    [0.52,0.78,0.20,'#7f9d5c'], [0.18,0.82,0.13,'#9db877'],
+    [0.80,0.70,0.16,'#87a463'],
+  ];
+  for(const [cxp,cyp,rp,col] of blobs){
+    const g = x.createRadialGradient(cxp*s, cyp*s, 0, cxp*s, cyp*s, rp*s);
+    g.addColorStop(0, col); g.addColorStop(1, 'rgba(143,168,106,0)');
+    x.fillStyle = g; x.fillRect(0,0,s,s);
+  }
+  return c;
+}
+upload(syntheticImage());
+
+/* ---------------- 尺寸 ---------------- */
+let stampW = 0, stampH = 0;
+function resize(){
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  cv.width  = Math.round(innerWidth  * dpr);
+  cv.height = Math.round(innerHeight * dpr);
+  gl.viewport(0, 0, cv.width, cv.height);
+  // 邮票占屏，保持 5:6 竖版比例
+  const ar = 5 / 6;
+  stampH = Math.min(innerHeight * 0.82, innerWidth * 0.82 / ar);
+  stampW = stampH * ar;
+  const ov = document.getElementById('overlay');
+  ov.style.width  = stampW + 'px';
+  ov.style.height = stampH + 'px';
+  document.querySelectorAll('#overlay .t').forEach(el =>
+    el.style.fontSize = Math.max(9, stampH * 0.026) + 'px');
+  // canvas 只绘制邮票区域，居中定位，让 vUv 直接是邮票局部坐标
+  const dw = Math.round(stampW * dpr), dh = Math.round(stampH * dpr);
+  cv.width = dw; cv.height = dh;
+  cv.style.width = stampW + 'px'; cv.style.height = stampH + 'px';
+  cv.style.position = 'absolute';
+  cv.style.left = '50%'; cv.style.top = '50%';
+  cv.style.transform = 'translate(-50%,-50%)';
+  gl.viewport(0, 0, dw, dh);
+  gl.uniform2f(U.uRes, dw, dh);
+  gl.uniform2f(U.uStamp, dw, dh);
+}
+addEventListener('resize', resize);
+
+/* ---------------- 光向跟随鼠标 ---------------- */
+let lx = -0.55, ly = 0.42, tlx = lx, tly = ly;
+addEventListener('pointermove', e => {
+  tlx = (e.clientX / innerWidth  - 0.5) * 1.8;
+  tly = (0.5 - e.clientY / innerHeight) * 1.8;
+});
+
+/* ---------------- 面板 ---------------- */
+const ctrls = document.getElementById('ctrls');
+const stateEl = document.getElementById('state');
+for(const [k, d] of Object.entries(P)){
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML = `<label>${d.label}</label>
+    <input type="range" min="${d.min}" max="${d.max}" step="${d.step}" value="${d.v}">
+    <span class="v">${d.v}</span>`;
+  const [inp, out] = [row.querySelector('input'), row.querySelector('.v')];
+  inp.oninput = () => { d.v = +inp.value; out.textContent = inp.value; dumpState(); };
+  ctrls.appendChild(row);
+}
+function dumpState(){
+  const o = {};
+  for(const [k,d] of Object.entries(P)) o[k] = d.v;
+  o.hasImg = !!hasImg;
+  stateEl.textContent = Object.entries(o)
+    .map(([k,v]) => `${k}: ${v}`).join('\n');
+  return o;
+}
+document.getElementById('preset').onchange = e => {
+  if(e.target.value === 'synthetic') upload(syntheticImage());
+  else hasImg = 0;
+  dumpState();
+};
+const fileInp = document.getElementById('file');
+document.getElementById('pick').onclick = () => fileInp.click();
+fileInp.onchange = () => fileInp.files[0] && loadFile(fileInp.files[0]);
+document.getElementById('copy').onclick = () =>
+  navigator.clipboard.writeText(JSON.stringify(dumpState(), null, 2));
+
+function loadFile(f){
+  const img = new Image();
+  img.onload = () => { upload(img); URL.revokeObjectURL(img.src); dumpState(); };
+  img.src = URL.createObjectURL(f);
+}
+const drop = document.getElementById('drop');
+addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('on'); });
+addEventListener('dragleave', e => { if(e.clientX === 0 && e.clientY === 0) drop.classList.remove('on'); });
+addEventListener('drop', e => {
+  e.preventDefault(); drop.classList.remove('on');
+  const f = [...e.dataTransfer.files].find(f => f.type.startsWith('image/'));
+  if(f) loadFile(f);
+});
+
+/* ---------------- 主循环 ---------------- */
+gl.clearColor(0.137, 0.137, 0.137, 1);
+gl.enable(gl.BLEND);
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+resize(); dumpState();
+
+const t0 = performance.now();
+function frame(){
+  lx += (tlx - lx) * 0.07;   // 阻尼跟随，别跟手
+  ly += (tly - ly) * 0.07;
+  gl.uniform1f(U.uTime, (performance.now() - t0) / 1000);
+  gl.uniform2f(U.uLight, lx, ly);
+  gl.uniform1i(U.uImg, 0);
+  gl.uniform1f(U.uHasImg, hasImg);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  for(const [k,d] of Object.entries(P))
+    gl.uniform1f(U['u' + k[0].toUpperCase() + k.slice(1)], d.v);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>

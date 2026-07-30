@@ -344,6 +344,27 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
       </div>
     </main>
 
+    {/* 悬停标签：票面本身无字，站名只在这个黑胶囊里出现。
+        放在 main 外面 —— 正文栏那条 640px 的宽度规则会把它一起套住，
+        fixed 也管不了继承来的 width，位置就整个偏掉。 */}
+    <div class="stamp-tip" aria-hidden="true"><span></span></div>
+
+    {/* 调色面板：所有 look 参数的滑杆。原型专用，选定后连面板一起删。
+        滑杆由 JS 从 LOOK_CONTROLS 生成，所以加参数只要动那张表。 */}
+    {import.meta.env.DEV && STAMP_KEYS.includes(variant) && (
+      <aside class="tune-panel" data-open="true">
+        <header>
+          <span class="tune-title">质感调色台</span>
+          <button type="button" class="tune-toggle" aria-label="折叠面板">–</button>
+        </header>
+        <div class="tune-rows"></div>
+        <footer>
+          <button type="button" data-act="copy">复制 JSON</button>
+          <button type="button" data-act="reset">还原</button>
+        </footer>
+      </aside>
+    )}
+
     {import.meta.env.DEV && (
       <nav class="proto-bar" data-variants={VARIANTS.map((v) => v.key).join(",")}>
         <button type="button" data-step="-1" aria-label="上一个变体">‹</button>
@@ -413,30 +434,37 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
     </script>
 
     <script>
-      import { LOOKS, buildAtlas, mountStampField } from "@/lib/stamp-foil-prototype";
+      import { LOOKS, LOOK_CONTROLS, buildAtlas, mountStampField } from "@/lib/stamp-foil-prototype";
+      import type { StampLook } from "@/lib/stamp-foil-prototype";
 
       const canvas = document.querySelector<HTMLCanvasElement>("#stamp-field");
       const page = document.querySelector<HTMLElement>(".stamp-page");
       if (canvas && page) {
         const stamps = () => Array.from(document.querySelectorAll<HTMLElement>(".stamp"));
         const els = stamps();
-        // 票面无字，只有一张图 —— 原型阶段借 public/ 里现成的贴图轮换，
-        // 真实实现换成 src/assets/friends/ 里的本地头像。
-        const ART = [
-          "/logo-stickers/vue.svg",
-          "/logo-stickers/react.svg",
-          "/logo-stickers/tailwind.svg",
-          "/logo-stickers/javascript.svg",
-          "/logo-stickers/css.svg",
-          "/logo-stickers/chatgpt.svg",
-          "/feichuan-logo.svg",
-          "/dappled/leaf.png",
-          "/claudecode-color.svg",
-        ];
+        // 票面只有一张彩图。原型阶段用 DiceBear 生成的卡通抽象头像 ——
+        // 它带 access-control-allow-origin，配 crossOrigin="anonymous" 才不会污染
+        // 图集 canvas（污染了 texImage2D 会直接抛，九张票一起没）。
+        // 真实实现换成 src/assets/friends/ 里的本地头像，不外链。
+        const seeds = ["kiln", "ochre", "vellum", "gouache", "burin", "sepia", "aquatint", "linocut", "riso"];
+        const styles = ["shapes", "bottts", "fun-emoji", "thumbs", "croodles", "notionists", "shapes", "bottts", "fun-emoji"];
+        const ART = seeds.map(
+          (s, i) => `https://api.dicebear.com/9.x/${styles[i]}/png?seed=${s}&size=256&backgroundType=solid`
+        );
         // 页面是预渲染的，服务端的 Astro.url.searchParams 永远拿不到 ?variant=，
         // 所以 data-look 恒为 0。look 必须在客户端从 URL 现读。
         const key = (new URL(location.href).searchParams.get("variant") ?? "S3").toUpperCase();
-        const look = LOOKS.find((l) => l.key === key) ?? LOOKS[Number(page.dataset.look ?? 0)] ?? LOOKS[0];
+        const base = LOOKS.find((l) => l.key === key) ?? LOOKS[Number(page.dataset.look ?? 0)] ?? LOOKS[0];
+        // 面板调过的值存在 localStorage，按变体分开 —— 刷新页面不该丢掉刚调好的手感
+        const STORE = `stamp-look-${base.key}`;
+        const saved = (() => {
+          try {
+            return JSON.parse(localStorage.getItem(STORE) ?? "null") as Partial<StampLook> | null;
+          } catch {
+            return null;
+          }
+        })();
+        const look: StampLook = { ...base, ...(saved ?? {}) };
         // S2 的票面自己是墨黑的，台面反而要留米色 —— 黑票压在米纸上才看得出是票
         const bg: [number, number, number] = [0.961, 0.957, 0.929];
         document.body.style.setProperty("--stamp-bg", "#f5f4ed");
@@ -446,11 +474,138 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
             return { src: ART[slot % ART.length], pattern: slot };
           })
         )
-          .then((atlas) => mountStampField(canvas, stamps, atlas, look, bg))
+          .then((atlas) => {
+            const renderer = mountStampField(canvas, stamps, atlas, look, bg);
+            mountPanel(renderer, look, base, STORE);
+          })
           .catch((err) => {
             console.error("[stamp prototype]", err);
             canvas.remove();
           });
+
+        // 调色台：LOOK_CONTROLS 那张表直接生成滑杆，改一个就整份重传 uniform。
+        // 不做单参数增量上传 —— 十几个 uniform1f 的开销可以忽略，代码简单得多。
+        function mountPanel(
+          renderer: { setLook: (l: StampLook) => void },
+          live: StampLook,
+          defaults: StampLook,
+          storeKey: string
+        ) {
+          const panel = document.querySelector<HTMLElement>(".tune-panel");
+          const rows = panel?.querySelector<HTMLElement>(".tune-rows");
+          if (!panel || !rows) return;
+
+          const fmt = (v: number) => (Math.abs(v) >= 10 ? v.toFixed(0) : v.toFixed(3).replace(/0+$/, "").replace(/\.$/, ""));
+          const inputs = new Map<string, { input: HTMLInputElement; out: HTMLOutputElement }>();
+
+          const persist = () => {
+            const diff: Record<string, number> = {};
+            for (const c of LOOK_CONTROLS) {
+              const v = live[c.key] as number;
+              if (v !== (defaults[c.key] as number)) diff[c.key as string] = v;
+            }
+            localStorage.setItem(storeKey, JSON.stringify(diff));
+          };
+
+          for (const c of LOOK_CONTROLS) {
+            const row = document.createElement("div");
+            row.className = "tune-row";
+            const id = `tune-${c.key}`;
+            const label = document.createElement("label");
+            label.htmlFor = id;
+            label.textContent = c.label;
+            const input = document.createElement("input");
+            input.type = "range";
+            input.id = id;
+            input.min = String(c.min);
+            input.max = String(c.max);
+            input.step = String(c.step);
+            input.value = String(live[c.key]);
+            const out = document.createElement("output");
+            out.textContent = fmt(live[c.key] as number);
+            input.addEventListener("input", () => {
+              (live[c.key] as number) = Number(input.value);
+              out.textContent = fmt(Number(input.value));
+              renderer.setLook(live);
+              persist();
+            });
+            row.append(label, input, out);
+            rows.append(row);
+            inputs.set(c.key as string, { input, out });
+          }
+
+          panel.querySelector(".tune-toggle")?.addEventListener("click", () => {
+            const open = panel.dataset.open !== "false";
+            panel.dataset.open = open ? "false" : "true";
+            panel.querySelector(".tune-toggle")!.textContent = open ? "+" : "–";
+          });
+
+          panel.querySelector('[data-act="copy"]')?.addEventListener("click", async () => {
+            const out: Record<string, unknown> = { key: live.key, name: live.name, paper: live.paper, ink: live.ink };
+            for (const c of LOOK_CONTROLS) out[c.key as string] = Number((live[c.key] as number).toFixed(4));
+            await navigator.clipboard.writeText(JSON.stringify(out, null, 2));
+            const btn = panel.querySelector<HTMLElement>('[data-act="copy"]')!;
+            btn.textContent = "已复制";
+            setTimeout(() => (btn.textContent = "复制 JSON"), 1200);
+          });
+
+          panel.querySelector('[data-act="reset"]')?.addEventListener("click", () => {
+            for (const c of LOOK_CONTROLS) {
+              (live[c.key] as number) = defaults[c.key] as number;
+              const ref = inputs.get(c.key as string)!;
+              ref.input.value = String(defaults[c.key]);
+              ref.out.textContent = fmt(defaults[c.key] as number);
+            }
+            renderer.setLook(live);
+            localStorage.removeItem(storeKey);
+          });
+        }
+
+        // 悬停标签跟着票走。锚在票上，不锚在光标上 —— 光标在票内移动时标签不该抖。
+        // 80ms 延迟是为了滤掉快速划过：扫过一排票不该炸出一串标签。
+        const tip = document.querySelector<HTMLElement>(".stamp-tip");
+        const tipText = tip?.querySelector("span");
+        if (tip && tipText) {
+          let shown: HTMLElement | null = null;
+          let timer = 0;
+          const place = (el: HTMLElement) => {
+            const r = el.getBoundingClientRect();
+            const t = tip.getBoundingClientRect();
+            tip.style.setProperty("--tx", `${Math.round(r.left + r.width / 2 - t.width / 2)}px`);
+            tip.style.setProperty("--ty", `${Math.round(r.top - t.height - 12)}px`);
+          };
+          const show = (el: HTMLElement) => {
+            if (shown === el) return place(el);
+            shown = el;
+            clearTimeout(timer);
+            tipText.textContent = (el.dataset.name ?? "").toUpperCase();
+            timer = window.setTimeout(() => {
+              place(el);
+              tip.dataset.on = "true";
+            }, 80);
+          };
+          const hide = () => {
+            shown = null;
+            clearTimeout(timer);
+            tip.dataset.on = "false";
+          };
+          // 键盘走 focus，鼠标不用 pointerenter —— DOM 的矩形不带旋转，重叠处
+          // 会同时 enter 到被压住的那张，标签就穿透了。渲染器已经裁决出唯一的
+          // data-hot，直接读它，命中范围和视觉永远一致。
+          els.forEach((el) => {
+            el.addEventListener("focus", () => show(el));
+            el.addEventListener("blur", hide);
+          });
+          // 票飞到中央时位置一直在变，标签得跟着，所以每帧对一次
+          const track = () => {
+            const hot = els.find((el) => el.dataset.hot === "true");
+            if (hot) show(hot);
+            else if (shown && !shown.matches(":focus")) hide();
+            if (shown && tip.dataset.on === "true") place(shown);
+            requestAnimationFrame(track);
+          };
+          requestAnimationFrame(track);
+        }
 
         // 票面极简，简介走右侧 readout
         const ro = document.querySelector<HTMLElement>(".stamp-readout");
@@ -458,22 +613,24 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
           const kind = ro.querySelector<HTMLElement>(".ro-kind")!;
           const desc = ro.querySelector<HTMLElement>(".ro-desc")!;
           const url = ro.querySelector<HTMLElement>(".ro-url")!;
-          els.forEach((el) => {
-            const show = () => {
-              kind.textContent = el.dataset.kind ?? "";
-              desc.textContent = el.dataset.desc ?? "";
-              url.textContent = el.dataset.url ?? "";
-              ro.dataset.active = "true";
-            };
-            el.addEventListener("pointerenter", show);
-            el.addEventListener("focus", show);
-          });
-          document.querySelector(".scatter")?.addEventListener("pointerleave", () => {
-            ro.dataset.active = "false";
-            kind.textContent = "";
-            desc.textContent = "点一张邮票，它会浮到中央";
-            url.textContent = "";
-          });
+          const fill = (el: HTMLElement | null) => {
+            ro.dataset.active = el ? "true" : "false";
+            kind.textContent = el?.dataset.kind ?? "";
+            desc.textContent = el?.dataset.desc ?? "点一张邮票，它会浮到中央";
+            url.textContent = el?.dataset.url ?? "";
+          };
+          // 同样读 data-hot 而不是 pointerenter，理由同标签：DOM 矩形不带旋转会穿透
+          let last: HTMLElement | null = null;
+          const sync = () => {
+            const hot = els.find((el) => el.dataset.hot === "true") ?? null;
+            if (hot !== last) {
+              last = hot;
+              fill(hot);
+            }
+            requestAnimationFrame(sync);
+          };
+          requestAnimationFrame(sync);
+          els.forEach((el) => el.addEventListener("focus", () => fill(el)));
         }
 
         // 点击 = 浮到中央转正（第二次点击才真的跳转），Esc 或点空白放回去。
@@ -501,6 +658,9 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
           el.addEventListener("click", (e) => {
             if (lifted === el) return; // 已经平视了，放行跳转
             e.preventDefault();
+            // 点击也不能穿透：矩形重叠处点到的可能是被压住的那张，
+            // 交给渲染器裁决出的 data-hot 说话（键盘触发时没有 hot，放行）
+            if (e.detail > 0 && el.dataset.hot !== "true") return;
             drop();
             flyTo(el);
             el.dataset.lifted = "true";
@@ -512,6 +672,9 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
         });
         document.addEventListener("click", (e) => {
           const t = e.target as HTMLElement;
+          // 调色台和底部切换条不算"点空白"：调滑杆的时候票必须留在中央，
+          // 否则每动一下参数票就飞回去，根本没法比对效果
+          if (t.closest(".tune-panel") || t.closest(".proto-bar")) return;
           if (lifted && !t.closest(".stamp")) drop();
         });
       }
@@ -545,6 +708,31 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
   .proto-bar button { width:28px;height:28px;border:0;border-radius:999px;background:transparent;color:inherit;font-size:18px;line-height:1;cursor:pointer; }
   .proto-bar button:hover { background:rgba(255,255,255,.14); }
   .proto-label { padding:0 8px;white-space:nowrap; }
+
+  /* 调色台。固定在左上，票墙铺满视口所以它必须浮在上面，
+     pointer-events 保持开启 —— 面板是要摸的，只是别让它抢走票的 hover */
+  .tune-panel {
+    position:fixed;right:16px;top:16px;z-index:99;width:250px;
+    display:flex;flex-direction:column;gap:8px;
+    padding:10px 12px 12px;border-radius:12px;
+    background:rgba(20,20,19,.94);color:#f5f4ed;
+    box-shadow:0 10px 30px rgba(0,0,0,.3);
+    font-size:11px;letter-spacing:.02em;
+    max-height:calc(100vh - 32px);
+  }
+  .tune-panel header { display:flex;align-items:center;justify-content:space-between; }
+  .tune-title { font-size:12px;opacity:.9; }
+  .tune-toggle { width:20px;height:20px;border:0;border-radius:4px;background:rgba(255,255,255,.12);color:inherit;cursor:pointer;line-height:1; }
+  .tune-rows { display:flex;flex-direction:column;gap:5px;overflow-y:auto;padding-right:2px; }
+  .tune-panel[data-open="false"] .tune-rows,
+  .tune-panel[data-open="false"] footer { display:none; }
+  .tune-row { display:grid;grid-template-columns:58px 1fr 40px;align-items:center;gap:6px; }
+  .tune-row label { opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .tune-row input { width:100%;height:14px;accent-color:#e8c37a; }
+  .tune-row output { text-align:right;font-variant-numeric:tabular-nums;opacity:.85; }
+  .tune-panel footer { display:flex;gap:6px; }
+  .tune-panel footer button { flex:1;padding:5px 0;border:0;border-radius:6px;background:rgba(255,255,255,.12);color:inherit;font-size:11px;cursor:pointer; }
+  .tune-panel footer button:hover { background:rgba(255,255,255,.2); }
   .about-preview { display:flex;flex-direction:column;gap:24px;margin-top:24px;padding-top:32px;border-top:1px dashed rgba(0,0,0,.25); }
   .preview-tag { margin:0;font-size:13px;opacity:.6; }
 
@@ -643,6 +831,35 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
   }
   .scatter-mini { height:min(46vw,300px); }
   .scatter-mini .stamp { width:clamp(84px,8vw,108px); }
+
+  /* 悬停标签：黑胶囊，浮在票的上方外侧。不跟着票倾斜 —— 票是实物，标签是 UI */
+  .stamp-tip {
+    position:fixed;top:0;left:0;z-index:60;pointer-events:none;
+    /* 必须显式收成内容宽 —— 它挂在 640px 的正文栏里，fixed 也拦不住继承来的栏宽，
+       宽度不对的话居中计算就整个偏掉 */
+    width:max-content;
+    padding:5px 11px 6px;border-radius:999px;background:#141413;
+    color:#f5f4ed;font-size:12px;letter-spacing:.06em;line-height:16px;white-space:nowrap;
+    opacity:0;
+    /* 位移用 translate 单独走，所以跟手时不会被 opacity/scale 的过渡拖慢 */
+    translate:var(--tx,0) var(--ty,0);
+    scale:.9;transform-origin:50% 100%;
+    transition:opacity .16s ease,scale .2s cubic-bezier(.2,1.5,.4,1);
+  }
+  .stamp-tip[data-on="true"] { opacity:1;scale:1; }
+
+  /* 有票进入焦点时，页面上的 DOM 文字一起退到后面去。只糊不压暗。 */
+  .stamp-page .page-head,.stamp-section>.section-heading,.stamp-page .paper-section,.stamp-page .about-preview {
+    transition:filter .38s ease,opacity .38s ease;
+  }
+  body[data-stamp-focus="hover"] .stamp-page .page-head,
+  body[data-stamp-focus="hover"] .stamp-section>.section-heading,
+  body[data-stamp-focus="hover"] .stamp-page .paper-section,
+  body[data-stamp-focus="hover"] .stamp-page .about-preview { filter:blur(2px); }
+  body[data-stamp-focus="lift"] .stamp-page .page-head,
+  body[data-stamp-focus="lift"] .stamp-section>.section-heading,
+  body[data-stamp-focus="lift"] .stamp-page .paper-section,
+  body[data-stamp-focus="lift"] .stamp-page .about-preview { filter:blur(7px); }
 
   .stamp-readout { display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;min-height:22px;padding-left:14px;border-left:1px solid var(--paper-line);opacity:.55;transition:opacity .25s ease; }
   .stamp-readout[data-active="true"] { opacity:1; }
