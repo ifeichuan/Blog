@@ -46,6 +46,40 @@ export function StampCard({
   const pointerFrameRef = useRef<number | null>(null)
   const pendingPointerRef = useRef({ x: 0.5, y: 0.5 })
 
+  const reveal = isPreviewTarget ? debug.previewProgress : isFocused ? 1 : 0
+  const showShader = isPreviewTarget || isFocused
+
+  // shader 层按需挂载：hover 时才创建 WebGL context，移开后延迟 600ms 卸载。
+  // （移开后 shader 层 opacity 已经为 0，600ms 只影响 GPU 资源释放时机，
+  // 不影响视觉。11 张卡只会有 1-3 个并发 context，GPU 内存与 shader 编译
+  // 只在真正需要时发生。首次 hover 多一次编译，之后立即出画。）
+  const [shaderAlive, setShaderAlive] = useState(false)
+  const shaderAliveRef = useRef(false)
+  const shaderTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (showShader) {
+      if (shaderTimerRef.current !== null) {
+        clearTimeout(shaderTimerRef.current)
+        shaderTimerRef.current = null
+      }
+      if (!shaderAliveRef.current) {
+        shaderAliveRef.current = true
+        setShaderAlive(true)
+      }
+    } else if (shaderAliveRef.current) {
+      shaderTimerRef.current = window.setTimeout(() => {
+        shaderAliveRef.current = false
+        setShaderAlive(false)
+      }, 600)
+    }
+    return () => {
+      if (shaderTimerRef.current !== null) clearTimeout(shaderTimerRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showShader])
+
+
   useEffect(() => {
     const build = () => {
       setTextures(createStampTextures(stamp))
@@ -127,15 +161,19 @@ export function StampCard({
   const focusScale = debug.focusScale
   const dimBlur = debug.dimBlur
 
-  const reveal = isPreviewTarget ? debug.previewProgress : isFocused ? 1 : 0
-  const showShader = isPreviewTarget || isFocused
-
-  const live = liveFromDebug(
-    debug,
-    showShader ? 1 : 0,
-    lightUV,
-    reveal,
-    reduce || isPreviewTarget ? 0 : debug.burnDuration,
+  // live 对象用 useMemo 稳定：只在真实参数变化时才新建引用，
+  // 避免每次 render 都触发 StampMesh 的 requestRender（无谓重绘一帧）
+  const live = useMemo(
+    () =>
+      liveFromDebug(
+        debug,
+        showShader ? 1 : 0,
+        lightUV,
+        reveal,
+        reduce || isPreviewTarget ? 0 : debug.burnDuration,
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [debug, showShader, lightUV, reveal, reduce, isPreviewTarget],
   )
 
   return (
@@ -252,21 +290,23 @@ export function StampCard({
                     opacity: showShader ? 0.88 : 1,
                   }}
                 />
-                <div
-                  className="stamp-shader-layer"
-                  style={{ opacity: showShader ? 1 : 0, visibility: showShader ? 'visible' : 'hidden' }}
-                >
-                  <StampMesh
-                    albedoUrl={textures.albedoUrl}
-                    heightUrl={textures.heightUrl}
-                    width={textures.width}
-                    height={textures.height}
-                    live={live}
-                    displayWidth={displayWidth}
-                    className="stamp-canvas"
-                    active={showShader}
-                  />
-                </div>
+            {ready && textures && shaderAlive && (
+              <div
+                className="stamp-shader-layer"
+                style={{ opacity: showShader ? 1 : 0, visibility: showShader ? 'visible' : 'hidden' }}
+              >
+                <StampMesh
+                  albedoUrl={textures.albedoUrl}
+                  heightUrl={textures.heightUrl}
+                  width={textures.width}
+                  height={textures.height}
+                  live={live}
+                  displayWidth={displayWidth}
+                  className="stamp-canvas"
+                  active={showShader}
+                />
+              </div>
+            )}
               </>
             ) : (
               <div
