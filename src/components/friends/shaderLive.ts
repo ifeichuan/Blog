@@ -1,0 +1,45 @@
+import type { DebugParams } from './debugParams'
+import type { ShaderLive } from './StampMesh'
+
+export function liveFromDebug(
+  debug: DebugParams,
+  intensity: number,
+  lightUV: { x: number; y: number },
+  reveal: number,
+  revealDuration = debug.burnDuration,
+): ShaderLive {
+  return {
+    intensity,
+    lightUV,
+    reveal,
+    revealDuration,
+    bumpScale: debug.bumpScale,
+    foil: debug.foil,
+    glitter: debug.glitter,
+    glitterDensity: debug.glitterDensity,
+    glitterSharpness: debug.glitterSharpness,
+    dapple: debug.dapple,
+    frost: debug.frost,
+    frostSharpness: debug.frostSharpness,
+    microGrain: debug.microGrain,
+    microGrainScale: debug.microGrainScale,
+    foilSharpness: debug.foilSharpness,
+    holoBands: debug.holoBands,
+    lightHeight: debug.lightHeight,
+    lightRadius: debug.lightRadius,
+    ambient: debug.ambient,
+    keyLight: debug.keyLight,
+    burnNoise: debug.burnNoiseScale,
+    burnDetailScale: debug.burnDetailScale,
+    burnDetailMix: debug.burnDetailMix,
+    burnBite: debug.burnBite,
+    burnBiteThreshold: debug.burnBiteThreshold,
+    burnWarp: debug.burnWarp,
+    burnDirection: debug.burnDirection,
+    burnEdge: debug.burnEdge,
+    burnGlow: debug.burnGlow,
+    burnShadow: debug.burnShadow,
+    burnGrain: debug.burnGrain,
+    burnDrift: debug.burnDrift,
+  }
+}

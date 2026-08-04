@@ -1,0 +1,163 @@
+---
+// Friends —— 邮票墙友链页。
+// 技术来自 quickDemos/stamp-impasto（React + three.js 烫金/喷砂 shader），
+// 数据换成朋友与常读站点。邮票由 StampGallery 组件渲染，本页负责
+// paper 基底、页头文案与交换友链区（与 About 同一种纸面语言）。
+import BaseHead from "@/components/layout/BaseHead.astro";
+import SiteMenu from "@/components/layout/SiteMenu.astro";
+import { StampGallery } from "@/components/friends/StampGallery";
+import type { FriendItem } from "@/components/friends/stamps";
+
+const friends: FriendItem[] = [
+  { name: "云游君", url: "yunyoujun.cn", desc: "一个想成为夏日和风的少年", kind: "互链" },
+  { name: "Tw93", url: "tw93.fun", desc: "折腾一些有意思的开源小工具", kind: "互链" },
+  { name: "Xuanwo", url: "xuanwo.io", desc: "通过开源和 Rust 实现数据自由", kind: "互链" },
+  { name: "Anthony Fu", url: "antfu.me", desc: "Vue / Vite core team, 无数工具的作者", kind: "互链" },
+  { name: "Innei", url: "innei.in", desc: "写代码，也写生活里的琐碎念头", kind: "互链" },
+  { name: "Ovilia", url: "zhangwenli.com", desc: "数据可视化与创意编程", kind: "互链" },
+  { name: "斜杠青年", url: "slashwithme.dev", desc: "在设计和工程之间来回横跳", kind: "互链" },
+  { name: "苏卡卡", url: "sukaka.top", desc: "记录一些前端踩坑和阅读笔记", kind: "互链" },
+];
+
+const reading: FriendItem[] = [
+  { name: "Rauno Freiberg", url: "rauno.me", desc: "界面细节与交互质感的教科书", kind: "常读" },
+  { name: "Josh W. Comeau", url: "joshwcomeau.com", desc: "把 CSS 讲透的交互式长文", kind: "常读" },
+  { name: "Emil Kowalski", url: "emilkowal.ski", desc: "动效与组件设计的第一性思考", kind: "常读" },
+];
+
+const all: FriendItem[] = [...friends, ...reading];
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <BaseHead
+      title="Friends · Feichuan"
+      description="一版寄给彼此的邮票：互链的朋友、常读的站点，和交换友链的方式。"
+      ogType="website"
+    />
+  </head>
+  <body class="friends-page">
+    <SiteMenu />
+
+    <main>
+      <div class="paper-container">
+        <header class="page-head">
+          <h1>Friends</h1>
+          <article><p>一版寄给彼此的邮票。鼠标扫过去看烫金，点一张它会浮到眼前。</p></article>
+        </header>
+
+        <section class="stamp-section" aria-label="朋友与常读站点">
+          <div class="section-heading"><h2>互链</h2><span>{friends.length} sites · {reading.length} reading</span></div>
+          <StampGallery client:only="react" items={all} />
+        </section>
+
+        <section class="paper-section">
+          <div class="section-heading"><h2>也想贴一张？</h2></div>
+          <article><p>留言把站名、地址、头像和一句话说清，我会寄一张回去。</p></article>
+          <pre class="code-card"><code>{`name   Feichuan
+url    https://feichuans.com
+avatar https://feichuans.com/avatar.webp
+desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
+          <div class="comment-stub">Twikoo 评论区（占位）</div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  /* ── paper 基底：与 about.astro 同一种纸面语言 ── */
+  :root {
+    --paper-bg: #f5f4ed;
+    --paper-text: rgba(0, 0, 0, 0.5);
+    --paper-strong: #000;
+    --paper-line: rgba(0, 0, 0, 0.15);
+  }
+  html {
+    overflow-y: scroll;
+    color-scheme: light;
+    background: var(--paper-bg);
+  }
+  body {
+    min-height: 100%;
+    margin: 0;
+    color: var(--paper-text);
+    background: var(--paper-bg);
+    font-family: "Maple Mono NF CN", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  * { box-sizing: border-box; }
+  a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: rgba(0, 0, 0, 0.15);
+    text-underline-offset: 2px;
+    transition: color 0.3s ease, text-decoration-color 0.3s ease;
+  }
+  a:hover { color: var(--paper-strong); text-decoration-color: rgba(0, 0, 0, 0.25); }
+  a:focus-visible, button:focus-visible { outline: 2px solid #4385be; outline-offset: 3px; }
+
+  main { position: relative; min-height: 100vh; padding: 128px 0; }
+
+  /* 邮票墙全宽，其余区块收回到 640px 正文栏 */
+  .paper-container { width: 100%; max-width: none; margin-inline: auto; padding-inline: 0; }
+  .page-head,
+  .paper-section,
+  .stamp-section > .section-heading {
+    width: 100%;
+    max-width: 640px;
+    margin-inline: auto;
+    padding-inline: 20px;
+  }
+
+  .paper-section { display: flex; flex-direction: column; gap: 24px; }
+  .stamp-section { display: flex; flex-direction: column; gap: 24px; }
+  .section-heading { display: flex; min-height: 24px; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+  .section-heading h2 { margin: 0; color: var(--paper-strong); font-size: 16px; font-weight: 600; line-height: 24px; }
+  .section-heading > a, .section-heading > span { font-size: 16px; line-height: 24px; }
+  article { font-size: 16px; line-height: 28px; }
+  article p { margin: 0; }
+  .page-head { display: flex; flex-direction: column; gap: 16px; }
+  .page-head h1 { margin: 0; color: var(--paper-strong); font-size: 16px; font-weight: 600; line-height: 24px; }
+
+  .code-card {
+    margin: 0;
+    padding: 16px;
+    overflow-x: auto;
+    border: 1px solid var(--paper-line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.4);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 22px;
+  }
+  .comment-stub {
+    display: grid;
+    height: 120px;
+    place-items: center;
+    border: 1px dashed var(--paper-line);
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  /* 灯箱打开时，页面文字退到后面去（状态由组件写到 body.has-stamp-viewer） */
+  .page-head,
+  .stamp-section > .section-heading,
+  .paper-section {
+    transition: filter 0.28s ease, opacity 0.28s ease;
+  }
+  body.has-stamp-viewer .page-head,
+  body.has-stamp-viewer .stamp-section > .section-heading,
+  body.has-stamp-viewer .paper-section {
+    filter: blur(14px);
+    opacity: 0.58;
+  }
+
+  @media (max-width: 640px) {
+    main { padding: 112px 0 96px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  }
+</style>
