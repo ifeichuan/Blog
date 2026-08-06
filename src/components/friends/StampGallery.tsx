@@ -79,7 +79,10 @@ export function StampGallery({ items, className }: Props) {
                 ? viewer?.id !== stamp.id
                 : focused !== null && focused !== stamp.id
             }
-            isOpen={viewer?.id === stamp.id}
+            // viewerOpen 在关闭动作一开始就翻 false —— 卡片从那一刻开始按
+            // viewerTiming 的时序延迟渐显，与旧邮票落点渐隐同步（交叉淡化）
+            isOpen={viewerOpen && viewer?.id === stamp.id}
+            isViewerActive={viewerActive}
             isPreviewTarget={
               debug.previewEnabled && !viewerActive && stamp.id === previewTargetId
             }

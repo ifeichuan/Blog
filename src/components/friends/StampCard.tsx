@@ -5,12 +5,17 @@ import type { DebugParams } from './debugParams'
 import { liveFromDebug } from './shaderLive'
 import { StampMesh } from './StampMesh'
 import type { StampDef } from './stamps'
+import { SWAP_DELAY_S, SWAP_FADE_S } from './viewerTiming'
 
 export type CardOrigin = {
   centerX: number
   centerY: number
+  /** 聚焦态（×focusScale）下的视觉宽高 —— 灯箱起手用 */
   width: number
   height: number
+  /** 未缩放的布局宽高 —— 灯箱落回时用（卡片以 scale 1 接棒） */
+  baseWidth: number
+  baseHeight: number
   rotation: number
 }
 
@@ -20,6 +25,8 @@ type Props = {
   isFocused: boolean
   isDimmed: boolean
   isOpen: boolean
+  /** 灯箱检视中（含退出动画期间）：暂停浮游，保证落点与卡片位置一致 */
+  isViewerActive: boolean
   isPreviewTarget: boolean
   debug: DebugParams
   onFocus: (id: StampDef['id'] | null) => void
@@ -32,6 +39,7 @@ export function StampCard({
   isFocused,
   isDimmed,
   isOpen,
+  isViewerActive,
   isPreviewTarget,
   debug,
   onFocus,
@@ -45,6 +53,13 @@ export function StampCard({
   const [ready, setReady] = useState(false)
   const pointerFrameRef = useRef<number | null>(null)
   const pendingPointerRef = useRef({ x: 0.5, y: 0.5 })
+
+  // 记录上一轮的 isOpen：关闭灯箱时 isOpen 在退出动画开始时就翻回 false，
+  // 卡片需要延迟到飞行接近尾声再渐显，与旧邮票的渐隐做交叉淡化
+  const wasOpenRef = useRef(false)
+  useEffect(() => {
+    wasOpenRef.current = isOpen
+  }, [isOpen])
 
   const reveal = isPreviewTarget ? debug.previewProgress : isFocused ? 1 : 0
   const showShader = isPreviewTarget || isFocused
@@ -151,6 +166,8 @@ export function StampCard({
       centerY: bounds.top + bounds.height / 2,
       width: element.offsetWidth * debug.focusScale,
       height: element.offsetHeight * debug.focusScale,
+      baseWidth: element.offsetWidth,
+      baseHeight: element.offsetHeight,
       rotation: stamp.rotation,
     })
   }
@@ -215,7 +232,11 @@ export function StampCard({
         stiffness: 280,
         damping: 28,
         mass: 0.85,
-        opacity: { duration: isOpen ? 0.04 : 0.16 },
+        // 打开时渐隐（与灯箱邮票的渐显交叉淡化）；关闭时延迟到飞行尾声再渐显
+        opacity: {
+          duration: isOpen || wasOpenRef.current ? SWAP_FADE_S : 0.16,
+          delay: !isOpen && wasOpenRef.current ? SWAP_DELAY_S : 0,
+        },
       }}
       onPointerEnter={() => onFocus(stamp.id)}
       onPointerLeave={clearPointer}
@@ -249,7 +270,7 @@ export function StampCard({
           <motion.div
             className="stamp-float"
             animate={
-              reduce || isFocused
+              reduce || isFocused || isViewerActive
                 ? { y: 0, rotate: 0 }
                 : {
                     y: [0, -5 - phase * 4, 0, 4 + phase * 3, 0],
@@ -257,7 +278,7 @@ export function StampCard({
                   }
             }
             transition={
-              reduce || isFocused
+              reduce || isFocused || isViewerActive
                 ? { duration: 0.2 }
                 : {
                     duration: 7 + phase * 3,
