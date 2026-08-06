@@ -156,11 +156,18 @@
   z-index: 100;
   display: grid;
   place-items: center;
-  background: rgba(246, 242, 234, 0.56);
   cursor: zoom-out;
 }
 
+/* 遮罩独立成层：退出时只有它淡出，邮票保持不透明飞回落点 */
+.lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(246, 242, 234, 0.56);
+}
+
 .lightbox-perspective {
+  position: relative;
   display: grid;
   place-items: center;
   perspective: 1100px;
@@ -172,6 +179,12 @@
   cursor: default;
   transform-style: preserve-3d;
   will-change: transform;
+}
+
+/* 内容层：进入/退出时的交叉淡化作用在这层（投影随之一起淡，避免影子瞬变） */
+.lightbox-stamp-face {
+  position: relative;
+  width: 100%;
   filter: drop-shadow(0 24px 48px rgba(0, 0, 0, 0.34));
 }
 

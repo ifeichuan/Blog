@@ -6,6 +6,7 @@ import { liveFromDebug } from './shaderLive'
 import type { CardOrigin } from './StampCard'
 import { StampMesh } from './StampMesh'
 import type { StampDef } from './stamps'
+import { SWAP_DELAY_S, SWAP_FADE_S } from './viewerTiming'
 
 type Props = {
   stamp: StampDef
@@ -73,19 +74,25 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
   const tiltY = reduce ? 0 : tilt.x * tiltMax
   const live = liveFromDebug(debug, 1, lightUV, 1, 0)
 
+  // 根节点不再整体淡出：遮罩独立成层，邮票保持不透明飞回落点，
+  // 否则邮票还没到落点就先透明了，墙上原卡又还没淡入 —— 中间的空窗就是闪烁
   return (
     <motion.div
       className="lightbox"
       role="dialog"
       aria-modal="true"
       aria-label={`${stamp.label} 详情`}
-      initial={reduce ? false : { opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={reduce ? { opacity: 0 } : { opacity: 0 }}
-      transition={{ duration: reduce ? 0.12 : 0.28, ease: 'easeOut' }}
+      initial={false}
       onClick={onClose}
       onPointerMove={onMove}
     >
+      <motion.div
+        className="lightbox-backdrop"
+        initial={reduce ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: reduce ? 0.12 : 0.28, ease: 'easeOut' }}
+      />
       <div className="lightbox-perspective" onClick={(event) => event.stopPropagation()}>
         <motion.div
           className="lightbox-stamp"
@@ -116,7 +123,8 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
               : {
                   x: sourceOffsetX,
                   y: sourceOffsetY,
-                  width: origin.width,
+                  // 落回时用未缩放的布局宽度：原卡以 scale 1 接棒，落点尺寸才一致
+                  width: origin.baseWidth,
                   rotate: origin.rotation,
                   rotateX: 0,
                   rotateY: 0,
@@ -134,32 +142,44 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
                 }
           }
         >
-          <img
-            className="lightbox-static-face"
-            src={textures.albedoUrl}
-            alt=""
-            draggable={false}
-          />
-          {shaderReady && (
-            <div className="lightbox-shader-face">
-              <StampMesh
-                albedoUrl={textures.albedoUrl}
-                heightUrl={textures.heightUrl}
-                width={textures.width}
-                height={textures.height}
-                live={live}
-                displayWidth={size}
-                fluidWidth
-              />
-            </div>
-          )}
+          <motion.div
+            className="lightbox-stamp-face"
+            initial={reduce ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{
+              opacity: 0,
+              // 飞行接近尾声才开始渐隐，与墙上原卡的渐显同步（交叉淡化）
+              transition: { duration: reduce ? 0.12 : SWAP_FADE_S, delay: reduce ? 0 : SWAP_DELAY_S },
+            }}
+            transition={{ duration: reduce ? 0.12 : SWAP_FADE_S }}
+          >
+            <img
+              className="lightbox-static-face"
+              src={textures.albedoUrl}
+              alt=""
+              draggable={false}
+            />
+            {shaderReady && (
+              <div className="lightbox-shader-face">
+                <StampMesh
+                  albedoUrl={textures.albedoUrl}
+                  heightUrl={textures.heightUrl}
+                  width={textures.width}
+                  height={textures.height}
+                  live={live}
+                  displayWidth={size}
+                  fluidWidth
+                />
+              </div>
+            )}
+          </motion.div>
         </motion.div>
       </div>
       <motion.p
         className="lightbox-hint"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        exit={{ opacity: 0, transition: { duration: 0.15 } }}
         transition={{ delay: reduce ? 0 : 0.25, duration: 0.2 }}
       >
         点击空白区域或按 ESC 返回
@@ -168,7 +188,7 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
         className="lightbox-info"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0 }}
+        exit={{ opacity: 0, transition: { duration: 0.15 } }}
         transition={{ delay: reduce ? 0 : 0.3, duration: 0.22 }}
         onClick={(event) => event.stopPropagation()}
       >
