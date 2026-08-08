@@ -54,12 +54,47 @@ const all: FriendItem[] = [...friends, ...reading];
 
         <section class="paper-section">
           <div class="section-heading"><h2>也想贴一张？</h2></div>
-          <article><p>留言把站名、地址、头像和一句话说清，我会寄一张回去。</p></article>
+          <article><p>把站名、地址、头像和一句话填好，我会寄一张回去。提交后自动生成标准格式，复制或一键发邮件即可。</p></article>
           <pre class="code-card"><code>{`name   Feichuan
 url    https://feichuans.com
 avatar https://feichuans.com/avatar.webp
 desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
-          <div class="comment-stub">Twikoo 评论区（占位）</div>
+          <form class="friend-form" data-friend-form novalidate>
+            <div class="form-grid">
+              <label class="form-field">
+                <span class="form-label">站名 <em class="req">必填</em></span>
+                <input type="text" name="name" required maxlength="30" placeholder="如：Feichuan" autocomplete="off" />
+              </label>
+              <label class="form-field">
+                <span class="form-label">网址 <em class="req">必填</em></span>
+                <input type="url" name="url" required placeholder="https://example.com" inputmode="url" />
+              </label>
+              <label class="form-field">
+                <span class="form-label">头像</span>
+                <input type="url" name="avatar" placeholder="https://example.com/avatar.webp" inputmode="url" />
+              </label>
+              <label class="form-field">
+                <span class="form-label">一句话 <em class="req">必填</em></span>
+                <input type="text" name="desc" required maxlength="60" placeholder="用一句话介绍你的站点" />
+              </label>
+              <label class="form-field">
+                <span class="form-label">邮箱（选填，用于回信）</span>
+                <input type="email" name="email" placeholder="you@example.com" autocomplete="email" />
+              </label>
+            </div>
+            <p class="form-error" data-form-error hidden></p>
+            <div class="form-actions">
+              <button type="submit" class="form-submit">生成友链信息</button>
+              <span class="form-hint">不经过任何服务器，信息只在你浏览器里</span>
+            </div>
+            <div class="form-result" data-form-result hidden>
+              <pre class="form-result-code" data-form-result-code></pre>
+              <div class="form-result-actions">
+                <button type="button" data-copy>复制</button>
+                <a href="#" data-mailto>用邮件发送</a>
+              </div>
+            </div>
+          </form>
         </section>
       </div>
     </main>
@@ -141,6 +176,133 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
     font-size: 14px;
   }
 
+  /* 友链申请表单 — 纸面语言，纯前端生成 + 复制/邮件 */
+  .friend-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .form-field:nth-child(4),
+  .form-field:nth-child(5) {
+    grid-column: 1 / -1;
+  }
+  .form-label {
+    color: var(--paper-strong);
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .req {
+    font-style: normal;
+    font-size: 11px;
+    color: #b3542e;
+  }
+  .friend-form input {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--paper-line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.5);
+    color: var(--paper-strong);
+    font: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .friend-form input::placeholder {
+    color: rgba(0, 0, 0, 0.32);
+  }
+  .friend-form input:focus {
+    outline: none;
+    border-color: #4385be;
+    box-shadow: 0 0 0 3px rgba(67, 133, 190, 0.15);
+  }
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .form-submit {
+    padding: 9px 18px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #f5f4ed;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .form-submit:hover {
+    background: #000;
+  }
+  .form-hint {
+    font-size: 12px;
+    color: var(--paper-text);
+  }
+  .form-error {
+    margin: 0;
+    font-size: 13px;
+    color: #b3542e;
+  }
+  .form-result {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .form-result[hidden] {
+    display: none;
+  }
+  .form-result-code {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--paper-line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.4);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 22px;
+    white-space: pre-wrap;
+  }
+  .form-result-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .form-result-actions button,
+  .form-result-actions a {
+    font-size: 13px;
+    padding: 6px 14px;
+    border: 1px solid var(--paper-line);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--paper-strong);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .form-result-actions button:hover,
+  .form-result-actions a:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  @media (max-width: 480px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
   /* 灯箱打开时，页面文字退到后面去（状态由组件写到 body.has-stamp-viewer） */
   .page-head,
   .stamp-section > .section-heading,
@@ -161,3 +323,89 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
     *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
   }
 </style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>("[data-friend-form]");
+  if (form) {
+    const errorEl = form.querySelector<HTMLElement>("[data-form-error]")!;
+    const resultEl = form.querySelector<HTMLElement>("[data-form-result]")!;
+    const codeEl = form.querySelector<HTMLElement>("[data-form-result-code]")!;
+    const mailtoLink = form.querySelector<HTMLAnchorElement>("[data-mailto]")!;
+    const copyBtn = form.querySelector<HTMLButtonElement>("[data-copy]")!;
+
+    const clean = (v: string) => v.trim().replace(/\s+/g, " ");
+    const toUrl = (v: string) => {
+      const t = clean(v);
+      if (!t) return "";
+      return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+    };
+    const isHttpUrl = (v: string) => /^https?:\/\/[^\s]+\.[^\s]+$/i.test(v);
+
+    const setCopyState = (label: string) => {
+      copyBtn.textContent = label;
+      window.setTimeout(() => (copyBtn.textContent = "复制"), 1600);
+    };
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const name = clean(String(fd.get("name") ?? ""));
+      const url = toUrl(String(fd.get("url") ?? ""));
+      const avatar = toUrl(String(fd.get("avatar") ?? ""));
+      const desc = clean(String(fd.get("desc") ?? ""));
+      const email = clean(String(fd.get("email") ?? ""));
+
+      errorEl.hidden = true;
+      resultEl.hidden = true;
+
+      const errors: string[] = [];
+      if (!name) errors.push("站名不能为空");
+      if (!url) errors.push("网址不能为空");
+      else if (!isHttpUrl(url)) errors.push("网址需是完整的 http(s) 地址");
+      if (!desc) errors.push("一句话不能为空");
+      if (avatar && !isHttpUrl(avatar)) errors.push("头像地址需是完整的 http(s) 地址");
+
+      if (errors.length > 0) {
+        errorEl.textContent = errors.join("；");
+        errorEl.hidden = false;
+        errorEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        return;
+      }
+
+      const lines = [
+        `name   ${name}`,
+        `url    ${url}`,
+        avatar ? `avatar ${avatar}` : "",
+        `desc   ${desc}`,
+        email ? `email  ${email}` : "",
+      ].filter(Boolean);
+      const text = lines.join("\n");
+      codeEl.textContent = text;
+
+      const subject = encodeURIComponent(`友链申请：${name}`);
+      const body = encodeURIComponent(text);
+      mailtoLink.href = `mailto:feichuan05@gmail.com?subject=${subject}&body=${body}`;
+
+      resultEl.hidden = false;
+      resultEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      const text = codeEl.textContent ?? "";
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopyState("已复制 ✓");
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        setCopyState("已复制 ✓");
+      }
+    });
+  }
+</script>

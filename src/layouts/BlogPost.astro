@@ -170,10 +170,10 @@ const bannerURL = typeof banner === "string" ? banner : banner?.src;
 </Base>
 
 <style>
-  /* 阅读进度条 */
+  /* 阅读进度条 — 贴住视口顶部；top: 28px 曾是给已移除的 AnnouncementBar 预留的偏移 */
   .reader-progress-bar {
     position: fixed;
-    top: 28px;
+    top: 0;
     left: 0;
     height: 3px;
     width: calc(var(--reading-progress, 0) * 100%);
@@ -225,7 +225,7 @@ const bannerURL = typeof banner === "string" ? banner : banner?.src;
     z-index: 5;
   }
   .reader-mask-top {
-    top: 28px;
+    top: 0;
     background: linear-gradient(to bottom, color-mix(in srgb, var(--reader-bg) 80%, transparent), transparent);
   }
   .reader-mask-bottom {
