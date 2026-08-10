@@ -102,16 +102,25 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
 </html>
 
 <style is:global>
-  /* ── paper 基底：与 about.astro 同一种纸面语言 ── */
+  /* ── paper 基底：与 about.astro 同一种纸面语言 ──
+   *
+   * 原本四个变量是写死的亮色（#f5f4ed / 黑色 alpha），暗色下整页留在亮面。
+   * 改为引用 --fc-*，跟随 data-fc-theme 切换。
+   *
+   * 同时补两个变量，把散落各处的「黑色 alpha 叠在纸上」收敛掉：
+   *   --paper-surface  卡片/输入框的浮起面（原 rgba(255,255,255,0.4~0.5)）
+   *   --paper-wash     hover 的极弱底（原 rgba(0,0,0,0.05)）
+   * 这两种写法在暗底是反的 —— 白 alpha 会发光，黑 alpha 会消失。 */
   :root {
-    --paper-bg: #f5f4ed;
-    --paper-text: rgba(0, 0, 0, 0.5);
-    --paper-strong: #000;
-    --paper-line: rgba(0, 0, 0, 0.15);
+    --paper-bg: var(--fc-surface-page);
+    --paper-text: var(--fc-ink-meta);
+    --paper-strong: var(--fc-ink);
+    --paper-line: var(--fc-border-strong);
+    --paper-surface: var(--fc-surface-raised);
+    --paper-wash: color-mix(in oklab, var(--fc-ink) 6%, transparent);
   }
   html {
     overflow-y: scroll;
-    color-scheme: light;
     background: var(--paper-bg);
   }
   body {
@@ -126,12 +135,12 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
   a {
     color: inherit;
     text-decoration: underline;
-    text-decoration-color: rgba(0, 0, 0, 0.15);
+    text-decoration-color: var(--paper-line);
     text-underline-offset: 2px;
     transition: color 0.3s ease, text-decoration-color 0.3s ease;
   }
-  a:hover { color: var(--paper-strong); text-decoration-color: rgba(0, 0, 0, 0.25); }
-  a:focus-visible, button:focus-visible { outline: 2px solid #4385be; outline-offset: 3px; }
+  a:hover { color: var(--paper-strong); text-decoration-color: currentColor; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--fc-border-focus); outline-offset: 3px; }
 
   main { position: relative; min-height: 100vh; padding: 128px 0; }
 
@@ -162,7 +171,7 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
     overflow-x: auto;
     border: 1px solid var(--paper-line);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.4);
+    background: var(--paper-surface);
     font-family: inherit;
     font-size: 13px;
     line-height: 22px;
@@ -202,29 +211,30 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
     font-size: 13px;
     line-height: 18px;
   }
+  /* 原来是写死的暖红 #b3542e，在暗底上 2.6:1 读不出来 */
   .req {
     font-style: normal;
     font-size: 11px;
-    color: #b3542e;
+    color: var(--fc-danger);
   }
   .friend-form input {
     width: 100%;
     padding: 9px 11px;
     border: 1px solid var(--paper-line);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.5);
+    background: var(--paper-surface);
     color: var(--paper-strong);
     font: inherit;
     font-size: 14px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
   .friend-form input::placeholder {
-    color: rgba(0, 0, 0, 0.32);
+    color: var(--fc-ink-meta);
   }
   .friend-form input:focus {
     outline: none;
-    border-color: #4385be;
-    box-shadow: 0 0 0 3px rgba(67, 133, 190, 0.15);
+    border-color: var(--fc-border-focus);
+    box-shadow: var(--fc-elev-focus);
   }
   .form-actions {
     display: flex;
@@ -232,19 +242,24 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
     gap: 12px;
     flex-wrap: wrap;
   }
+  /* 实心反相按钮。原本是「85% 黑 + 纸色字」，暗色下会变成深底深字。
+   * 走 ink / surface-page 这一对，两套 palette 下都自动反相。
+   * hover 不用 ink-2 —— 暗色下 ink 与 ink-2 只差 1.14:1，反馈看不见；
+   * 换成品牌蓝，两套下都是明确位移（字面对比 6.3:1 / 6.4:1）。 */
   .form-submit {
     padding: 9px 18px;
-    border: 1px solid rgba(0, 0, 0, 0.2);
+    border: 1px solid transparent;
     border-radius: 8px;
-    background: rgba(0, 0, 0, 0.85);
-    color: #f5f4ed;
+    background: var(--fc-ink);
+    color: var(--fc-surface-page);
     font: inherit;
     font-size: 13px;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease;
   }
   .form-submit:hover {
-    background: #000;
+    background: var(--fc-accent);
+    color: var(--fc-ink-on-accent);
   }
   .form-hint {
     font-size: 12px;
@@ -253,7 +268,7 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
   .form-error {
     margin: 0;
     font-size: 13px;
-    color: #b3542e;
+    color: var(--fc-danger);
   }
   .form-result {
     display: flex;
@@ -268,7 +283,7 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
     padding: 12px 14px;
     border: 1px solid var(--paper-line);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.4);
+    background: var(--paper-surface);
     font-family: inherit;
     font-size: 13px;
     line-height: 22px;
@@ -294,7 +309,7 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
   }
   .form-result-actions button:hover,
   .form-result-actions a:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--paper-wash);
   }
 
   @media (max-width: 480px) {

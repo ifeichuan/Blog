@@ -14,7 +14,20 @@
 /*
   ---break---
  */
-/* @custom-variant dark (&:is(.dark *)); */
+/* Tailwind 的 dark: 变体默认跟 prefers-color-scheme，与 data-fc-theme 是两套
+   独立信号 —— 用户手动切亮色时，用了 dark: 的页面（tools、VisualRootMargin）
+   仍然会是暗的。这里把变体重绑到属性上，让 51 处 dark: 与全站开关一致。
+   同时保留系统兜底：未显式设置属性时仍跟随系统。 */
+@custom-variant dark {
+  &:where([data-fc-theme="dark"], [data-fc-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-fc-theme]) *, :root:not([data-fc-theme])) {
+      @slot;
+    }
+  }
+}
 
 * {
   scroll-behavior: smooth;
@@ -100,6 +113,9 @@ body {
   background-color: var(--fc-surface-page);
 }
 
+/* 纸面噪点。multiply 在亮底上是「压暗一点」，是想要的颗粒感；但在暗底上
+ * multiply 只会继续减，颗粒消失且整页再暗一档、压低所有文字对比。
+ * 暗色改 screen（加法），颗粒才可见；透明度也降一档，避免噪点盖过深底细节。 */
 .smooth-content::before {
   content: "";
   position: fixed;
@@ -109,6 +125,11 @@ body {
   pointer-events: none;
   z-index: 0;
   mix-blend-mode: multiply;
+}
+
+[data-fc-theme="dark"] .smooth-content::before {
+  opacity: 0.28;
+  mix-blend-mode: screen;
 }
 
 /*
@@ -173,6 +194,9 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  /* 白色 alpha 三连（bg/text/border），只在深色背景图上成立 —— 但全库已无任何
+     地方引用这个 class，暂不改配色（改了也验证不了落在什么底上）。
+     若确认不再需要，整块删掉即可。 */
   .post-card {
     @apply backdrop-blur-sm backdrop-saturate-180 text-[12px] bg-white/20 px-2.5 py-1.25 rounded-sm text-white/90 border border-white/10;
   }
@@ -180,7 +204,7 @@ body {
 
 /* Helper styles for remark-github-blockquote-alert */
 .markdown-alert {
-  border-left: 0.25rem solid;
+  border-left: 0.25rem solid var(--alert-accent, var(--fc-border-strong));
   padding: 0.5rem 1rem;
   margin-bottom: 1rem;
   border-radius: 0.25rem;
@@ -192,6 +216,7 @@ body {
   align-items: center;
   font-weight: bold;
   margin-bottom: 0.5rem;
+  color: var(--alert-accent, inherit);
 }
 
 .markdown-alert-title svg {
@@ -200,37 +225,52 @@ body {
   height: 16px;
 }
 
+/* 五种 alert 的颜色原来只有一套 GitHub 亮色值，放到暗底上只有 3.5–3.8:1，
+ * 达不到正文 4.5:1。改成每种一个变量，暗色分支只换变量值（见文件末尾），
+ * 边框与标题共用同一个变量，不会再出现二者色调对不上的情况。 */
 .markdown-alert-note {
-  border-color: #0969da;
+  --alert-accent: #0969da;
 }
-.markdown-alert-note .markdown-alert-title {
-  color: #0969da;
-}
-
 .markdown-alert-tip {
-  border-color: #1a7f37;
+  --alert-accent: #1a7f37;
 }
-.markdown-alert-tip .markdown-alert-title {
-  color: #1a7f37;
-}
-
 .markdown-alert-important {
-  border-color: #8250df;
-}
-.markdown-alert-important .markdown-alert-title {
-  color: #8250df;
+  --alert-accent: #8250df;
 }
 
 .markdown-alert-warning {
-  border-color: #9a6700;
+  --alert-accent: #9a6700;
 }
-.markdown-alert-warning .markdown-alert-title {
-  color: #9a6700;
+.markdown-alert-caution {
+  --alert-accent: #d1242f;
 }
 
-.markdown-alert-caution {
-  border-color: #d1242f;
+/* 暗色一律换 GitHub 的暗色对应值：note 6.0:1、tip 7.3:1、important 6.2:1、
+ * warning 7.4:1、caution 5.5:1，全部过 AA。
+ * 两个入口都要覆盖 —— 文章页由 data-reader-theme 驱动（dark / night 两套皮肤
+ * 底色接近，共用一组值即可），其余页面由 data-fc-theme 驱动。 */
+[data-fc-theme="dark"] .markdown-alert-note,
+[data-reader-theme="dark"] .markdown-alert-note,
+[data-reader-theme="night"] .markdown-alert-note {
+  --alert-accent: #4493f8;
 }
-.markdown-alert-caution .markdown-alert-title {
-  color: #d1242f;
+[data-fc-theme="dark"] .markdown-alert-tip,
+[data-reader-theme="dark"] .markdown-alert-tip,
+[data-reader-theme="night"] .markdown-alert-tip {
+  --alert-accent: #3fb950;
+}
+[data-fc-theme="dark"] .markdown-alert-important,
+[data-reader-theme="dark"] .markdown-alert-important,
+[data-reader-theme="night"] .markdown-alert-important {
+  --alert-accent: #ab7df8;
+}
+[data-fc-theme="dark"] .markdown-alert-warning,
+[data-reader-theme="dark"] .markdown-alert-warning,
+[data-reader-theme="night"] .markdown-alert-warning {
+  --alert-accent: #d29922;
+}
+[data-fc-theme="dark"] .markdown-alert-caution,
+[data-reader-theme="dark"] .markdown-alert-caution,
+[data-reader-theme="night"] .markdown-alert-caution {
+  --alert-accent: #f85149;
 }

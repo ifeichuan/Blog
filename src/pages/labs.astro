@@ -102,17 +102,19 @@ const labs = [
     margin-bottom: 3rem;
   }
 
+  /* --text-primary / --text-secondary 全站没有定义，一直在吃 #1a1a1a / #666
+   * 兜底值，暗色下就是深底深字。换成 --fc-* 后跟着 data-fc-theme 走。 */
   .labs-header h1 {
     font-size: 2.5rem;
     font-weight: 700;
     letter-spacing: -0.02em;
-    color: var(--text-primary, #1a1a1a);
+    color: var(--fc-ink);
   }
 
   .labs-header p {
     margin-top: 0.5rem;
     font-size: 1.1rem;
-    color: var(--text-secondary, #666);
+    color: var(--fc-ink-meta);
   }
 
   .labs-grid {
@@ -120,23 +122,29 @@ const labs = [
     gap: 1rem;
   }
 
+  /* 卡片原来是白色 alpha 叠底 + 黑色 alpha 描边：白 alpha 在暗底会发光，
+   * 黑 alpha 在暗底会消失。改用 surface / border 这对语义值。 */
   .lab-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 1.5rem 2rem;
     border-radius: 12px;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid var(--fc-border);
+    background: var(--fc-surface-raised);
     text-decoration: none;
     color: inherit;
-    transition: all 0.2s ease;
+    transition:
+      background var(--fc-motion-hover),
+      border-color var(--fc-motion-hover),
+      box-shadow var(--fc-motion-hover),
+      transform var(--fc-motion-hover);
   }
 
   .lab-card:hover {
-    background: rgba(255, 255, 255, 0.9);
-    border-color: rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background: var(--fc-surface-inset);
+    border-color: var(--fc-border-strong);
+    box-shadow: var(--fc-elev-raised);
     transform: translateY(-1px);
   }
 
@@ -144,13 +152,13 @@ const labs = [
     font-size: 1.2rem;
     font-weight: 600;
     margin: 0;
-    color: var(--text-primary, #1a1a1a);
+    color: var(--fc-ink);
   }
 
   .lab-card-content p {
     margin: 0.4rem 0 0;
     font-size: 0.9rem;
-    color: var(--text-secondary, #666);
+    color: var(--fc-ink-meta);
   }
 
   .lab-tags {
@@ -163,61 +171,28 @@ const labs = [
   .lab-tag {
     font-size: 0.75rem;
     padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.04);
-    color: var(--text-secondary, #555);
+    border-radius: var(--fc-radius-pill);
+    background: var(--fc-surface-sunken);
+    color: var(--fc-ink-muted);
     font-weight: 500;
   }
 
+  /* 箭头是纯装饰，用 ink-meta 起步、hover 到 ink，两套 palette 都能看见 */
   .lab-arrow {
     font-size: 1.4rem;
-    color: rgba(0, 0, 0, 0.2);
-    transition: color 0.2s, transform 0.2s;
+    color: var(--fc-ink-meta);
+    transition:
+      color var(--fc-motion-hover),
+      transform var(--fc-motion-hover);
     flex-shrink: 0;
   }
 
   .lab-card:hover .lab-arrow {
-    color: rgba(0, 0, 0, 0.5);
+    color: var(--fc-ink);
     transform: translateX(3px);
   }
 
-  :global(.dark) .labs-header h1 {
-    color: #f0f0f0;
-  }
-
-  :global(.dark) .labs-header p {
-    color: #999;
-  }
-
-  :global(.dark) .lab-card {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-
-  :global(.dark) .lab-card:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-
-  :global(.dark) .lab-card-content h2 {
-    color: #f0f0f0;
-  }
-
-  :global(.dark) .lab-card-content p {
-    color: #999;
-  }
-
-  :global(.dark) .lab-tag {
-    background: rgba(255, 255, 255, 0.08);
-    color: #aaa;
-  }
-
-  :global(.dark) .lab-arrow {
-    color: rgba(255, 255, 255, 0.2);
-  }
-
-  :global(.dark) .lab-card:hover .lab-arrow {
-    color: rgba(255, 255, 255, 0.5);
-  }
+  /* 原先这里有一整套 :global(.dark) 覆盖，但全站没有任何代码给元素加 .dark
+   * class（global.css 里那个 .dark block 早已作为死代码删除），所以那些规则
+   * 从未生效过。上面改成 --fc-* 之后不需要第二套色号，已整块移除。 */
 </style>

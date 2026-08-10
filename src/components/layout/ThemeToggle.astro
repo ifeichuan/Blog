@@ -1,0 +1,128 @@
+---
+/** 全站亮暗切换。三态循环 system → light → dark，"跟随系统"因此可以回去。
+ *
+ * 不放进 StaggeredMenu 的 header：那个 header 是 position: absolute 且
+ * pointer-events: none，加进去要连带改它的布局契约。独立 fixed 元素更省事，
+ * 定位对齐到菜单按钮左侧（right: 2rem + 按钮 1.875rem + 间距）。
+ */
+---
+
+<button
+  id="site-theme-toggle"
+  class="theme-toggle g-not"
+  type="button"
+  aria-label="切换主题"
+  title="切换主题"
+>
+  <!-- 三个图标叠放，靠 data-state 控制哪个可见，避免切换时重排 -->
+  <svg class="ico ico-system" viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+    <path d="M8 21h8M12 17v4"></path>
+  </svg>
+  <svg class="ico ico-light" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="4"></circle>
+    <path
+      d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+    ></path>
+  </svg>
+  <svg class="ico ico-dark" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+  </svg>
+</button>
+
+<script>
+  import {
+    cycleSiteTheme,
+    readSiteTheme,
+    THEME_CHANGE_EVENT,
+    type SiteTheme,
+  } from "@/lib/theme";
+
+  const btn = document.getElementById("site-theme-toggle");
+  if (btn) {
+    const LABELS: Record<SiteTheme, string> = {
+      system: "跟随系统",
+      light: "亮色",
+      dark: "暗色",
+    };
+
+    const render = (theme: SiteTheme) => {
+      btn.dataset.state = theme;
+      btn.setAttribute("aria-label", `主题：${LABELS[theme]}，点击切换`);
+      btn.setAttribute("title", `主题：${LABELS[theme]}`);
+    };
+
+    render(readSiteTheme());
+    btn.addEventListener("click", () => render(cycleSiteTheme()));
+    // 别处（如文章页 ReaderControls）改了主题时保持图标同步
+    window.addEventListener(THEME_CHANGE_EVENT, () => render(readSiteTheme()));
+  }
+</script>
+
+<style>
+  .theme-toggle {
+    position: fixed;
+    top: 2rem;
+    /* 2rem 页边距 + 菜单按钮 1.875rem + 1rem 间距 */
+    right: calc(2rem + 1.875rem + 1rem);
+    z-index: 20;
+    display: inline-flex;
+    width: 1.875rem;
+    height: 1.875rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--fc-ink);
+    background: transparent;
+    border: 0;
+    border-radius: var(--fc-radius-sm);
+    cursor: pointer;
+    transition:
+      color var(--fc-motion-hover),
+      opacity var(--fc-motion-hover);
+    opacity: 0.65;
+  }
+
+  .theme-toggle:hover {
+    opacity: 1;
+  }
+
+  .theme-toggle:active {
+    transform: scale(var(--fc-press-scale));
+  }
+
+  .theme-toggle:focus-visible {
+    outline: 2px solid var(--fc-border-focus);
+    outline-offset: 4px;
+    opacity: 1;
+  }
+
+  .ico {
+    position: absolute;
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transform: scale(0.8) rotate(-30deg);
+    transition:
+      opacity var(--fc-motion-state),
+      transform var(--fc-motion-enter);
+  }
+
+  [data-state="system"] .ico-system,
+  [data-state="light"] .ico-light,
+  [data-state="dark"] .ico-dark {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+
+  /* 菜单展开时让位 —— 面板是深色铺满，按钮留在上面会撞色 */
+  :global(body:has(.staggered-menu-wrapper[data-open])) .theme-toggle {
+    opacity: 0;
+    pointer-events: none;
+  }
+</style>

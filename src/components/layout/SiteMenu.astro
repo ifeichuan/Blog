@@ -13,6 +13,9 @@ const socialItems = [
   { label: "GitHub", link: "https://github.com/feichuans" },
   { label: "Email", link: "mailto:feichuan05@gmail.com" },
 ];
+
+// menuButtonColor 走 var(--fc-ink)：原本写死 #141413，在暗底上直接消失。
+// openMenuButtonColor 保持固定深色 —— 面板展开后底色恒为亮色预层，与主题无关。
 ---
 
 <StaggeredMenu
@@ -21,7 +24,7 @@ const socialItems = [
   socialItems={socialItems}
   colors={["#DA702C", "#4385BE"]}
   accentColor="#DA702C"
-  menuButtonColor="#141413"
+  menuButtonColor="var(--fc-ink)"
   openMenuButtonColor="#141413"
   logoUrl="/feichuan-logo.svg"
 />

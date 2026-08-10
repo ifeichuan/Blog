@@ -12,6 +12,8 @@ interface Props {
   ogType?: "website" | "article";
   publishedTime?: Date;
   modifiedTime?: Date;
+  /** 文章页专用。为 true 时首帧的明暗由 reader 皮肤决定，而非全站 site-theme。 */
+  readerPage?: boolean;
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -23,6 +25,7 @@ const {
   ogType = "website",
   publishedTime,
   modifiedTime,
+  readerPage = false,
 } = Astro.props;
 const finalTitle = title ? title + Delimiter + SITE_TITLE : SITE_TITLE;
 const imageSource = typeof image === "string" ? image : image.src;
@@ -36,7 +39,32 @@ const robots = "index, follow, max-snippet:-1, max-image-preview:large, max-vide
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<!-- 亮色兜底值。暗色由下面的内联脚本就地改掉 —— 留着写死的亮色，暗色首帧
+     移动端工具栏会先闪一下米白。 -->
 <meta name="theme-color" content="#f5f4ed" />
+
+<!-- 首帧主题恢复。必须内联且在样式表之前 —— 等模块脚本跑完再切会闪一下白。
+     文章页由 BlogPost 的 reader 脚本接管明暗，这里跳过，避免两次写入打架。 -->
+<script is:inline define:vars={{ readerPage }}>
+  (function () {
+    if (readerPage) return;
+    try {
+      var t = localStorage.getItem("site-theme");
+      if (t !== "light" && t !== "dark" && t !== "system") t = "system";
+      var dark =
+        t === "dark" ||
+        (t === "system" &&
+          matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.dataset.fcTheme = dark ? "dark" : "light";
+      // 这里拿不到 computed style（样式表还没加载），先写死一个近似值；
+      // Base 的模块脚本随后会用真实的 --fc-surface-page 覆盖。
+      if (dark) {
+        var m = document.querySelector('meta[name="theme-color"]');
+        if (m) m.content = "#22201c";
+      }
+    } catch (e) {}
+  })();
+</script>
 <link rel="sitemap" href="/sitemap-index.xml" />
 <link
   rel="alternate"

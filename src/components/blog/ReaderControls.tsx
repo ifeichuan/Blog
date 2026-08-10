@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useUiSound } from "@/hooks/use-ui-sound";
+import {
+  prefersDark,
+  readSiteTheme,
+  setSiteTheme,
+  syncThemeColorMeta,
+} from "@/lib/theme";
 
 const STORAGE_KEY = "blog-reader-settings";
 
@@ -47,11 +53,22 @@ const DEFAULTS: Settings = {
 };
 
 function loadSettings(): Settings {
+  let stored: Partial<Settings> = {};
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULTS, ...JSON.parse(raw) };
+    if (raw) stored = JSON.parse(raw);
   } catch {}
-  return { ...DEFAULTS };
+
+  // 首次进文章页时没有 reader 皮肤，从全站 site-theme 推一个，
+  // 而不是硬落 light —— 与 BlogPost 的首帧内联脚本同一套规则。
+  const site = readSiteTheme();
+  const theme =
+    stored.theme ??
+    (site === "dark" || (site === "system" && prefersDark())
+      ? "dark"
+      : "light");
+
+  return { ...DEFAULTS, ...stored, theme };
 }
 
 function saveSettings(s: Settings) {
@@ -71,9 +88,9 @@ function applyToDOM(s: Settings) {
   // token 的 dark palette 挂在 :root[data-fc-theme='dark']，而 reader 主题挂在
   // #reader-root 上 —— 两个作用域不重合。这里把 reader 的明暗意图同步到 <html>，
   // 让 --fc-* 跟着切换，reader 主题就不必再手写一套暗色值。
-  document.documentElement.dataset.fcTheme = DARK_THEMES.has(s.theme)
-    ? "dark"
-    : "light";
+  const mode = DARK_THEMES.has(s.theme) ? "dark" : "light";
+  document.documentElement.dataset.fcTheme = mode;
+  syncThemeColorMeta(mode);
 
   const article = root.querySelector(".reader-article") as HTMLElement | null;
   if (article) {
@@ -165,9 +182,11 @@ export default function ReaderControls() {
               onClick={() => {
                 playSound("click");
                 const idx = THEME_ORDER.indexOf(settings.theme);
-                update({
-                  theme: THEME_ORDER[(idx + 1) % THEME_ORDER.length],
-                });
+                const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
+                update({ theme: next });
+                // 反写全站主题，离开文章页后明暗不丢。sepia 仍算亮色 ——
+                // 它是亮底阅读皮肤，页面其余部分跟着走亮才协调。
+                setSiteTheme(DARK_THEMES.has(next) ? "dark" : "light");
               }}
             >
               <span>{themeIcon}</span>

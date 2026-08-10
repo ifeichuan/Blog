@@ -125,8 +125,12 @@
 [data-reader-theme="night"] {
   --reader-bg: #0d1117;
   --reader-text: #b8bfc7;
-  --reader-secondary: #6e7681;
-  --reader-border: #21262d;
+  /* secondary 原为 #6e7681，在 #0d1117 上只有 4.12:1 —— 它用在正文级的元信息
+   * 和脚注上，达不到 AA 的 4.5。抬到 #7d8590 得 5.07:1。 */
+  --reader-secondary: #7d8590;
+  /* border 原为 #21262d，对底色 1.24:1，肉眼基本看不到分界线。
+   * #373e47 得 1.75:1 —— 非文本描边够用，也不至于抢视线。 */
+  --reader-border: #373e47;
   --reader-surface: #161b22;
   --reader-link: #58a6ff;
   --reader-link-hover: #79b8ff;
@@ -144,12 +148,12 @@
   --reader-heading: #d2dce6;
   --reader-mark-bg: rgba(88, 166, 255, 0.15);
   --reader-mark-text: #58a6ff;
-  --reader-toc-text: #6e7681;
+  --reader-toc-text: #7d8590;
   --reader-toc-active: #58a6ff;
   --reader-ctrl-bg: rgba(22, 27, 34, 0.95);
   --reader-ctrl-hover: rgba(255, 255, 255, 0.06);
-  --reader-ctrl-text: #6e7681;
-  --reader-ctrl-border: #21262d;
+  --reader-ctrl-text: #7d8590;
+  --reader-ctrl-border: #373e47;
 }
 
 /* ========================================

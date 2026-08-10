@@ -6,6 +6,19 @@
 @import "./new.css";
 @plugin "@tailwindcss/typography";
 
+/* 与 global.css 保持同一份定义 —— 两条引入链各自编译，变体不会互相继承。
+   把 dark: 绑到 data-fc-theme，未设属性时仍跟随系统。 */
+@custom-variant dark {
+  &:where([data-fc-theme="dark"], [data-fc-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-fc-theme]) *, :root:not([data-fc-theme])) {
+      @slot;
+    }
+  }
+}
+
 @layer components {
   .homepage-card {
     width: calc(100vw - 1.5rem);

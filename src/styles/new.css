@@ -11,6 +11,8 @@
     background-color: var(--fc-surface-page);
   }
 
+  /* 与 global.css 的 .smooth-content::before 同一处理：multiply 只在亮底成立，
+     暗底上颗粒会被减没、并整体再压暗一档。暗色换 screen 并降透明度。 */
   main::after {
     content: "";
     position: absolute;
@@ -20,6 +22,11 @@
     pointer-events: none;
     z-index: 0;
     mix-blend-mode: multiply;
+  }
+
+  [data-fc-theme="dark"] main::after {
+    opacity: 0.28;
+    mix-blend-mode: screen;
   }
 
   .dappled-bg {

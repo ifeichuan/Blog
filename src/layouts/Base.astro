@@ -5,6 +5,7 @@ import Mouse from "../components/layout/Mouse.astro";
 import SiteMenu from "@/components/layout/SiteMenu.astro";
 import OnDevMode from "@/components/layout/OnDevMode.astro";
 import Footer from "@/components/layout/Footer.astro";
+import ThemeToggle from "@/components/layout/ThemeToggle.astro";
 
 import "../styles/global.css";
 export type Props = {
@@ -19,6 +20,8 @@ export type Props = {
   showDev?: boolean;
   showFooter?: boolean;
   showMenu?: boolean;
+  /** 文章页置 true：明暗交给 reader 皮肤，BaseHead 不再写首帧主题。 */
+  readerPage?: boolean;
 };
 
 const {
@@ -33,6 +36,7 @@ const {
   showDev = true,
   showFooter = true,
   showMenu = true,
+  readerPage = false,
 }: Props = Astro.props;
 ---
 
@@ -46,6 +50,7 @@ const {
       ogType={ogType}
       publishedTime={publishedTime}
       modifiedTime={modifiedTime}
+      readerPage={readerPage}
     />
   </head>
   <body>
@@ -53,6 +58,8 @@ const {
     {showDev && <OnDevMode />}
     {showMouse && <Mouse />}
     {showMenu && <SiteMenu />}
+    {/* 文章页的明暗归 ReaderControls 管，不放第二个入口 */}
+    {showMenu && !readerPage && <ThemeToggle />}
 
     <div class:list={["smooth-wrapper", enableIntro && "slot"]}>
       <div
@@ -62,6 +69,14 @@ const {
         {showFooter && <Footer />}
       </div>
     </div>
+
+    <script>
+      import { applyFcTheme, watchSystemTheme } from "@/lib/theme";
+      // 首帧已由 BaseHead 的内联脚本处理；这里只补 theme-color（需要 computed
+      // style，内联脚本跑在样式表之前拿不到）并接上系统偏好变化的监听。
+      applyFcTheme();
+      watchSystemTheme();
+    </script>
 
     <script define:vars={{ enableIntro }}>
       if (!enableIntro) {

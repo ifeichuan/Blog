@@ -1,6 +1,12 @@
 <div id="point1" class=""></div>
 <div id="point2" class=""></div>
 <style>
+  /* 两个光点都是「浅色 + multiply」：在纸面上是柔和的着色，在暗底上 multiply
+   * 只做减法，浅蓝乘深底趋近黑 —— 光标变成一个跟着鼠标走的黑洞。
+   * 暗色统一换 screen（加法），才是同一种「柔和着色」的观感。
+   *
+   * 悬停/静止两态原先由 JS 写内联 mixBlendMode，内联样式优先级最高，CSS 里的
+   * 暗色分支会被它盖掉。改成 JS 只切 class，混合模式的决定权留在这里。 */
   #point1,
   #point2 {
     position: fixed;
@@ -22,11 +28,23 @@
     backdrop-filter: blur(0.5px) brightness(1.1) saturate(1.5);
     z-index: 999999;
   }
+
+  /* soft-light 对浅色源是「提亮」，两套 palette 下都成立，不必分支 */
+  #point2.is-hover {
+    mix-blend-mode: soft-light;
+  }
+  #point2.is-idle {
+    mix-blend-mode: overlay;
+  }
+
+  /* overlay 在暗底上等价于 multiply，同样会把光点吃掉，所以静止态也要覆盖 */
+  :global([data-fc-theme="dark"]) #point1,
+  :global([data-fc-theme="dark"]) #point2,
+  :global([data-fc-theme="dark"]) #point2.is-idle {
+    mix-blend-mode: screen;
+  }
 </style>
 <script>
-  import { makeIssue } from "astro:schema";
-
-  // console.log(g1, g2);
   window.addEventListener("load", () => {
     const body = document.body;
     const g1: HTMLDivElement =
@@ -59,7 +77,9 @@
         const style = window.getComputedStyle(target);
         g2.style.width = `${rect.width + 20}px`;
         g2.style.height = `${rect.height + 20}px`;
-        g2.style.mixBlendMode = "soft-light";
+        // 只切 class，混合模式交给 CSS —— 内联样式会盖掉暗色分支
+        g2.classList.add("is-hover");
+        g2.classList.remove("is-idle");
         const borderRadius = style.borderRadius.slice(
           0,
           style.borderRadius.lastIndexOf("p"),
@@ -80,7 +100,8 @@
         g2.style.width = `3rem`;
         g2.style.height = `3rem`;
         g2.style.borderRadius = `50%`;
-        g2.style.mixBlendMode = "overlay";
+        g2.classList.remove("is-hover");
+        g2.classList.add("is-idle");
       }
     };
     const onMouseWheel = (e: WheelEvent) => {
