@@ -10,20 +10,38 @@ const posts = [
   { title: "OpenClaw 架构解析", description: "从事件、工具到 Session 的 Agent 系统。" },
 ];
 const experience = [
-  { date: "2026 - Now", company: "Beijing Zhijingling Technology", role: "Agent Frontend Developer", description: "参与 Aurora AI 开发平台建设，负责多会话实时同步、Agent 代码门禁，以及代码编辑、HTML 预览和协作画布等工作区能力。" },
-  { date: "2025/06 - 2026/01", company: "Shanghai Deyimen Technology Education", role: "Frontend Developer", description: "负责求职服务小程序与 Web 系统，交付 PDF 题库标注、AI 求职助手、简历编辑和 PDF 导出等功能。" },
-  { date: "2025/03 - 2025/06", company: "Hubei Yintu Technology", role: "Frontend Developer", description: "优化 SWC 编译链和 IM 长列表，降低 HMR 与生产构建耗时，并支持万级消息快速定位。" },
+  {
+    date: "2026/05 - 2026/08",
+    company: "北京智精灵科技",
+    role: "Agent 前端开发",
+    description: "做 Aurora AI 开发平台。把 Agent 运行时从 OpenCode 搬到 Pi Agent，注册三类自定义 Tools，用 Hooks 加了 8 个文件编辑闸口，RPC 替掉 SSE 解决浏览器并发上限。做了多会话并行执行和实时同步，又基于 Git Diff + AST 搂了套代码门禁。",
+  },
+  {
+    date: "2025/09 - 2026/03",
+    company: "携程集团",
+    role: "前端开发",
+    description: "做国内携程多端和海外 Trip 详情页。首屏次屏分层加载，JS 体积砍了 32%，TTI 快了 25%，秒杀下单首帧等待缩短 160ms。给 Trip 阿拉伯站做了 RTL 全套适配，H5 和 App 双端都补齐了。顺手写了 3 套 RTL Agent Skill，适配效率提了约 60%。",
+  },
+  {
+    date: "2025/06 - 2025/09",
+    company: "上海德亿门生科技",
+    role: "前端开发",
+    description: "做求职小程序，独立交付了 PDF 题库标注系统。pdf.js + Canvas 双层渲染，IntersectionObserver + rAF 调度避免卡顿，接了豆包多模态做 AI 识别，正确率 90%+。另外用 LangGraph 串了 AI 对话、简历优化、岗位匹配三条链路，流式输出。",
+  },
 ];
 const stack = [
-  { label: "Frontend", items: "TypeScript / Vue 3 / React / Astro" },
-  { label: "Agent", items: "AI SDK / LangGraph / MCP / Streaming UI" },
-  { label: "Interaction", items: "GSAP / Three.js / WebGL / Canvas" },
-  { label: "Runtime", items: "Node.js / Electron / Tauri / Rust / Cloudflare" },
+  { label: "语言与类型", items: "TypeScript / JavaScript / HTML5 / CSS3" },
+  { label: "框架与库", items: "Vue 3 (Nuxt.js/Pinia) / React (Next.js/Zustand) / Electron / UniApp" },
+  { label: "交互与动效", items: "GSAP / Three.js / WebGL / Framer Motion / Canvas / Lenis" },
+  { label: "Agent", items: "AI SDK / LangGraph / Pi Agent / RAG / Function Calling / Streaming UI" },
+  { label: "工程化", items: "Webpack / Vite / Monorepo / CI/CD / ESLint / Git" },
+  { label: "运行时", items: "Node.js / Rust / Tauri / Docker / Cloudflare" },
 ];
 const projects = [
-  { title: "Aurora AI Workbench", description: "Agent 代码生成、沙箱预览与实时发布工作区。", link: "/labs" },
-  { title: "speakMore", description: "基于 Tauri、Rust 与 React 的桌面语音和 Agent 工具。", link: "https://github.com/feichuans/speakMore" },
-  { title: "OpenViking Web Studio", description: "参与 Console Workspace 前端和类型契约建设。", link: "https://github.com/volcengine/OpenViking" },
+  { title: "OpenViking Web Studio", description: "给字节开源的 AI Agent 上下文数据库写 Web Studio 控制台前端。", link: "https://github.com/volcengine/OpenViking" },
+  { title: "speakMore", description: "macOS 语音输入 + Agent 任务工具。Tauri 2 + Rust + React，快捷键触发，实时转写，LLM 润色后粘贴。", link: "https://github.com/feichuans/speakMore" },
+  { title: "Skills", description: "Claude Code 自定义 Skill 工具集——动画词汇规范、设计参考搜索、多 Agent 编排。", link: "https://github.com/feichuans/skills" },
+  { title: "commentMarkdownRender", description: "VS Code 扩展，在代码注释里渲染 Markdown 和 LaTeX，支持 15+ 语言。", link: "https://github.com/ifeichuan/CommentMarkdownRender" },
 ];
 ---
 
@@ -47,10 +65,10 @@ const projects = [
         <div class="paper-flow">
           <section class="intro-section">
             <article>
-              <p>我叫 feichuan，是一名专注于 AI Agent 与前端交互的开发者，也是一名 2027 届计算机科学与技术本科生。</p>
-              <p>我在 TypeScript、Vue 3、React 和 Astro 之间工作，参与过 AI IDE、流式 Session UI、实时协作和桌面 Agent 工具的建设。</p>
-              <p>我关心的不只是把功能做出来，也关心系统如何组织、交互如何被感知，以及设计如何真正进入代码和工作流。</p>
-              <p>目前 Blog 还在开发中，所以一切不和谐的 UI 请见谅 :)</p>
+              <p>我是 feichuan，前端开发，2027 届计算机本科生。目前在 <strong>智精灵</strong> 做 AI 开发平台的前端。</p>
+              <p>我对交互、动效和 UI/UX 有执念。让界面有节奏感、让操作有反馈、让动效自然地引导注意力——这些东西对我来说比功能本身更重要。日常写 TypeScript + Vue 3 + React，偶尔碰 Rust 和 WebGL。</p>
+              <p>工作上从携程到智精灵，切过首屏性能、RTL 国际化、Agent 工具链这些方向。但下班后折腾的基本都是动效和界面细节。</p>
+              <p>Blog 还在装修，奇怪的 UI 请见谅 :)</p>
             </article>
           </section>
 
