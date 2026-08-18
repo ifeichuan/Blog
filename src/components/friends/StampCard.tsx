@@ -1,9 +1,15 @@
-import { motion, useReducedMotion } from 'motion/react'
+import {
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+} from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { createStampTextures } from './createStampTextures'
+import { createStampTextures, type StampTextures } from './createStampTextures'
 import type { DebugParams } from './debugParams'
 import { liveFromDebug } from './shaderLive'
-import { StampMesh } from './StampMesh'
+import { StampMesh, type StampMeshHandle } from './StampMesh'
 import type { StampDef } from './stamps'
 import { SWAP_DELAY_S, SWAP_FADE_S } from './viewerTiming'
 
@@ -47,12 +53,30 @@ export function StampCard({
 }: Props) {
   const reduce = useReducedMotion()
   const rootRef = useRef<HTMLButtonElement>(null)
-  const [textures, setTextures] = useState<ReturnType<typeof createStampTextures> | null>(null)
-  const [lightUV, setLightUV] = useState({ x: 0.5, y: 0.5 })
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
+  const meshRef = useRef<StampMeshHandle>(null)
+  const [textures, setTextures] = useState<StampTextures | null>(null)
   const [ready, setReady] = useState(false)
+  const [inView, setInView] = useState(true)
   const pointerFrameRef = useRef<number | null>(null)
   const pendingPointerRef = useRef({ x: 0.5, y: 0.5 })
+  const lightUVRef = useRef({ x: 0.5, y: 0.5 })
+  const tiltXRaw = useMotionValue(0)
+  const tiltYRaw = useMotionValue(0)
+  const shadowXRaw = useMotionValue(0)
+  const focusedRef = useRef(isFocused)
+  focusedRef.current = isFocused
+  const tiltSpring = useMemo(
+    () => ({
+      stiffness: debug.springStiffness,
+      damping: debug.springDamping,
+      mass: 0.55,
+    }),
+    [debug.springStiffness, debug.springDamping],
+  )
+  const tiltX = useSpring(tiltXRaw, tiltSpring)
+  const tiltY = useSpring(tiltYRaw, tiltSpring)
+  const shadowX = useSpring(shadowXRaw, tiltSpring)
+  const shadowTransform = useMotionTemplate`translateY(14px) translateX(${shadowX}px) scale(0.98)`
 
   // 记录上一轮的 isOpen：关闭灯箱时 isOpen 在退出动画开始时就翻回 false，
   // 卡片需要延迟到飞行接近尾声再渐显，与旧邮票的渐隐做交叉淡化
@@ -96,9 +120,13 @@ export function StampCard({
 
 
   useEffect(() => {
+    let cancelled = false
     const build = () => {
-      setTextures(createStampTextures(stamp))
-      setReady(true)
+      void createStampTextures(stamp).then((next) => {
+        if (cancelled) return
+        setTextures(next)
+        setReady(true)
+      })
     }
 
     const idleWindow = window as typeof window & {
@@ -107,12 +135,31 @@ export function StampCard({
     }
     if (typeof idleWindow.requestIdleCallback === 'function') {
       const id = idleWindow.requestIdleCallback(build, { timeout: 280 + stamp.z * 45 })
-      return () => idleWindow.cancelIdleCallback?.(id)
+      return () => {
+        cancelled = true
+        idleWindow.cancelIdleCallback?.(id)
+      }
     }
 
     const id = globalThis.setTimeout(build, 80 + stamp.z * 45)
-    return () => globalThis.clearTimeout(id)
+    return () => {
+      cancelled = true
+      globalThis.clearTimeout(id)
+    }
   }, [stamp])
+
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        setInView(entry.isIntersecting)
+      },
+      { rootMargin: '80px' },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   useEffect(
     () => () => {
@@ -120,6 +167,13 @@ export function StampCard({
     },
     [],
   )
+
+  useEffect(() => {
+    if (isFocused && !reduce) return
+    tiltXRaw.set(0)
+    tiltYRaw.set(0)
+    shadowXRaw.set(0)
+  }, [isFocused, reduce, tiltXRaw, tiltYRaw, shadowXRaw])
 
   const displayWidth = baseWidth * stamp.scale
   const displayHeight = textures
@@ -132,6 +186,19 @@ export function StampCard({
     return (h % 1000) / 1000
   }, [stamp.id])
 
+  const applyPointer = (nx: number, ny: number, withTilt: boolean) => {
+    lightUVRef.current.x = nx
+    lightUVRef.current.y = ny
+    if (withTilt && !reduce) {
+      const tx = Math.max(-1, Math.min(1, nx * 2 - 1))
+      const ty = Math.max(-1, Math.min(1, ny * 2 - 1))
+      tiltXRaw.set(-ty * debug.tiltMax)
+      tiltYRaw.set(tx * debug.tiltMax)
+      shadowXRaw.set(tx * 6)
+    }
+    meshRef.current?.requestRender()
+  }
+
   const onPointerMove = (e: React.PointerEvent) => {
     const el = rootRef.current
     if (!el) return
@@ -143,18 +210,16 @@ export function StampCard({
     pointerFrameRef.current = requestAnimationFrame(() => {
       pointerFrameRef.current = null
       const point = pendingPointerRef.current
-      setLightUV(point)
-      setTilt({
-        x: Math.max(-1, Math.min(1, point.x * 2 - 1)),
-        y: Math.max(-1, Math.min(1, point.y * 2 - 1)),
-      })
+      applyPointer(point.x, point.y, focusedRef.current)
     })
   }
 
   const clearPointer = () => {
     onFocus(null)
-    setTilt({ x: 0, y: 0 })
-    setLightUV({ x: 0.5, y: 0.5 })
+    applyPointer(0.5, 0.5, false)
+    tiltXRaw.set(0)
+    tiltYRaw.set(0)
+    shadowXRaw.set(0)
   }
 
   const openViewer = () => {
@@ -172,32 +237,29 @@ export function StampCard({
     })
   }
 
-  const tiltMax = debug.tiltMax
-  const tiltX = reduce || !isFocused ? 0 : -tilt.y * tiltMax
-  const tiltY = reduce || !isFocused ? 0 : tilt.x * tiltMax
   const focusScale = debug.focusScale
   const dimBlur = debug.dimBlur
 
-  // live 对象用 useMemo 稳定：只在真实参数变化时才新建引用，
-  // 避免每次 render 都触发 StampMesh 的 requestRender（无谓重绘一帧）
+  // live 对象用 useMemo 稳定：指针坐标写进同一个 lightUV 引用，
+  // 避免每次移动都新建对象并触发 StampMesh 的 React 重渲。
   const live = useMemo(
     () =>
       liveFromDebug(
         debug,
         showShader ? 1 : 0,
-        lightUV,
+        lightUVRef.current,
         reveal,
         reduce || isPreviewTarget ? 0 : debug.burnDuration,
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [debug, showShader, lightUV, reveal, reduce, isPreviewTarget],
+    [debug, showShader, reveal, reduce, isPreviewTarget],
   )
 
   return (
     <motion.button
       ref={rootRef}
       type="button"
-      className={`stamp-card ${isFocused ? 'is-focused' : ''} ${isDimmed ? 'is-dimmed' : ''}`}
+      className={`stamp-card${isFocused ? ' is-focused' : ''}${isDimmed ? ' is-dimmed' : ''}${isViewerActive ? ' is-viewer-active' : ''}${inView ? '' : ' is-offscreen'}`}
+      data-depth={(stamp.z - 3.5) / 3}
       style={{
         left: `${stamp.x}%`,
         top: `${stamp.y}%`,
@@ -206,8 +268,11 @@ export function StampCard({
         zIndex: isFocused ? 40 : stamp.z,
         filter: isDimmed
           ? `blur(${reduce ? Math.max(0, dimBlur - 2) : dimBlur}px)`
-          : 'blur(0px)',
+          : undefined,
         ['--rot' as string]: `${stamp.rotation}deg`,
+        ['--bob-up' as string]: `${-5 - phase * 4}px`,
+        ['--bob-down' as string]: `${4 + phase * 3}px`,
+        ['--bob-dur' as string]: `${7 + phase * 3}s`,
       }}
       initial={false}
       animate={
@@ -247,55 +312,20 @@ export function StampCard({
       aria-label={`${stamp.label} stamp`}
       aria-expanded={isOpen}
     >
-      <div className="stamp-perspective">
+      <div className="stamp-scroll-layer">
+        <div className="stamp-perspective">
         <motion.div
           className="stamp-tilt"
-          initial={false}
-          animate={{
-            rotateX: tiltX,
-            rotateY: tiltY,
+          style={{
+            transformStyle: 'preserve-3d',
+            rotateX: reduce ? 0 : tiltX,
+            rotateY: reduce ? 0 : tiltY,
           }}
-          transition={
-            reduce
-              ? { duration: 0 }
-              : {
-                  type: 'spring',
-                  stiffness: debug.springStiffness,
-                  damping: debug.springDamping,
-                  mass: 0.55,
-                }
-          }
-          style={{ transformStyle: 'preserve-3d' }}
         >
-          <motion.div
-            className="stamp-float"
-            animate={
-              reduce || isFocused || isViewerActive
-                ? { y: 0, rotate: 0 }
-                : {
-                    y: [0, -5 - phase * 4, 0, 4 + phase * 3, 0],
-                    rotate: [0, 0.6, 0, -0.5, 0],
-                  }
-            }
-            transition={
-              reduce || isFocused || isViewerActive
-                ? { duration: 0.2 }
-                : {
-                    duration: 7 + phase * 3,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }
-            }
-          >
-            <div
+          <div className="stamp-float">
+            <motion.div
               className={`stamp-shadow ${isFocused ? 'deep' : ''}`}
-              style={
-                isFocused && !reduce
-                  ? {
-                      transform: `translateY(14px) translateX(${tilt.x * 6}px) scale(0.98)`,
-                    }
-                  : undefined
-              }
+              style={isFocused && !reduce ? { transform: shadowTransform } : undefined}
             />
             {ready && textures ? (
               <>
@@ -311,14 +341,15 @@ export function StampCard({
                     opacity: showShader ? 0.88 : 1,
                   }}
                 />
-            {ready && textures && shaderAlive && (
+            {shaderAlive && (
               <div
                 className="stamp-shader-layer"
                 style={{ opacity: showShader ? 1 : 0, visibility: showShader ? 'visible' : 'hidden' }}
               >
                 <StampMesh
-                  albedoUrl={textures.albedoUrl}
-                  heightUrl={textures.heightUrl}
+                  ref={meshRef}
+                  albedoUrl={textures.albedoCanvas}
+                  heightUrl={textures.heightCanvas}
                   width={textures.width}
                   height={textures.height}
                   live={live}
@@ -347,8 +378,9 @@ export function StampCard({
                 {stamp.label}
               </motion.span>
             )}
-          </motion.div>
+          </div>
         </motion.div>
+        </div>
       </div>
     </motion.button>
   )

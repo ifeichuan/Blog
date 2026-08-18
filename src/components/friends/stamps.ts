@@ -23,9 +23,11 @@ export type StampDef = {
   url: string
   /** 一句话简介 */
   desc: string
-  /** Rest position as % of stage (x,y from top-left) */
+  /** Rest position as % of the tall field (x,y from top-left) */
   x: number
   y: number
+  /** 0-based viewport band；第 0 屏与旧撒点一致 */
+  band: number
   /** Degrees */
   rotation: number
   /** Relative size multiplier */
@@ -42,37 +44,47 @@ const KINDS: StampDef['kind'][] = ['new-craft', 'kensho', 'specimen', 'gaoling',
 const ASPECTS = [0.78, 0.82, 0.76, 0.8, 0.78]
 
 /**
- * 俯视撒开的 11 个位置（票心 %）。手写死比随机可控：
- * 左上给页面头部留出呼吸，右侧和下方铺满。
- * rot/scale/z 交错避免呆板，z 大的在上。
+ * 一屏俯视撒开的 11 个位置（票心 %，相对该屏）。
+ * 超过 11 张时按屏往下接，不叠在同一点上。
+ * x 收在 22–84、y 收在 16–84；rot/scale/z 交错，z 大的在上。
  */
 const SCATTER = [
-  { x: 31, y: 26, rotation: -8, scale: 1.0, z: 3 },
-  { x: 49, y: 20, rotation: 6, scale: 1.02, z: 5 },
-  { x: 66, y: 24, rotation: -4, scale: 1.0, z: 2 },
-  { x: 80, y: 40, rotation: 9, scale: 1.05, z: 4 },
-  { x: 42, y: 44, rotation: -7, scale: 0.98, z: 6 },
-  { x: 60, y: 44, rotation: 5, scale: 1.0, z: 1 },
-  { x: 28, y: 62, rotation: 12, scale: 0.97, z: 3 },
-  { x: 46, y: 66, rotation: -10, scale: 0.98, z: 5 },
-  { x: 64, y: 62, rotation: 7, scale: 0.95, z: 2 },
-  { x: 82, y: 62, rotation: -6, scale: 0.94, z: 4 },
-  { x: 55, y: 80, rotation: -3, scale: 0.92, z: 1 },
+  { x: 50, y: 20, rotation: 6, scale: 1.06, z: 5 },
+  { x: 72, y: 16, rotation: -8, scale: 1.0, z: 2 },
+  { x: 84, y: 34, rotation: 10, scale: 1.08, z: 4 },
+  { x: 28, y: 38, rotation: -6, scale: 1.0, z: 3 },
+  { x: 54, y: 44, rotation: 5, scale: 1.1, z: 6 },
+  { x: 74, y: 50, rotation: -9, scale: 0.98, z: 1 },
+  { x: 22, y: 62, rotation: 11, scale: 0.97, z: 3 },
+  { x: 44, y: 68, rotation: -7, scale: 1.0, z: 5 },
+  { x: 66, y: 66, rotation: 8, scale: 0.96, z: 2 },
+  { x: 82, y: 74, rotation: -4, scale: 0.95, z: 4 },
+  { x: 36, y: 84, rotation: 3, scale: 0.92, z: 1 },
 ]
+
+export const STAMPS_PER_BAND = SCATTER.length
+
+export function stampFieldBands(count: number) {
+  return Math.max(1, Math.ceil(count / STAMPS_PER_BAND))
+}
 
 /**
  * 由友链数据生成邮票定义。id 用 URL 保证稳定（纹理缓存按 id 存）。
+ * y 是整张长桌的百分比：第 0 屏坐标与旧版相同，多出来的票落到下一屏。
  */
 export function buildStamps(items: FriendItem[]): StampDef[] {
+  const bands = stampFieldBands(items.length)
   return items.map((item, i) => {
-    const slot = SCATTER[i % SCATTER.length]
+    const slot = SCATTER[i % STAMPS_PER_BAND]
+    const band = Math.floor(i / STAMPS_PER_BAND)
     return {
       id: item.url,
       label: item.name,
       url: item.url,
       desc: item.desc,
       x: slot.x,
-      y: slot.y,
+      y: (band * 100 + slot.y) / bands,
+      band,
       rotation: slot.rotation,
       scale: slot.scale,
       z: slot.z,

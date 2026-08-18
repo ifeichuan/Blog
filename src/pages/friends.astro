@@ -1,11 +1,14 @@
 ---
 // Friends —— 邮票墙友链页。
 // 技术来自 quickDemos/stamp-impasto（React + three.js 烫金/喷砂 shader），
-// 数据换成朋友与常读站点。邮票由 StampGallery 组件渲染，本页负责
-// paper 基底、页头文案与交换友链区（与 About 同一种纸面语言）。
+// 数据换成朋友与常读站点。邮票墙按屏往下接，滚动跟同一条时间线；
+// 友链表单是右下角 Motion layoutId 翻转按钮。
 import BaseHead from "@/components/layout/BaseHead.astro";
 import SiteMenu from "@/components/layout/SiteMenu.astro";
+import ThemeToggle from "@/components/layout/ThemeToggle.astro";
+import { FriendFormDock } from "@/components/friends/FriendFormDock";
 import { StampGallery } from "@/components/friends/StampGallery";
+import "@/styles/tailwind.css";
 import type { FriendItem } from "@/components/friends/stamps";
 
 const friends: FriendItem[] = [
@@ -39,64 +42,18 @@ const all: FriendItem[] = [...friends, ...reading];
   </head>
   <body class="friends-page">
     <SiteMenu />
+    <ThemeToggle />
 
     <main>
-      <div class="paper-container">
+      <section class="stamp-hero" aria-label="朋友与常读站点">
         <header class="page-head">
+          <p class="stamp-kicker">{friends.length} sites · {reading.length} reading</p>
           <h1>Friends</h1>
           <article><p>一版寄给彼此的邮票。鼠标扫过去看烫金，点一张它会浮到眼前。</p></article>
         </header>
-
-        <section class="stamp-section" aria-label="朋友与常读站点">
-          <div class="section-heading"><h2>互链</h2><span>{friends.length} sites · {reading.length} reading</span></div>
-          <StampGallery client:only="react" items={all} />
-        </section>
-
-        <section class="paper-section">
-          <div class="section-heading"><h2>也想贴一张？</h2></div>
-          <article><p>把站名、地址、头像和一句话填好，我会寄一张回去。提交后自动生成标准格式，复制或一键发邮件即可。</p></article>
-          <pre class="code-card"><code>{`name   Feichuan
-url    https://feichuans.com
-avatar https://feichuans.com/avatar.webp
-desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
-          <form class="friend-form" data-friend-form novalidate>
-            <div class="form-grid">
-              <label class="form-field">
-                <span class="form-label">站名 <em class="req">必填</em></span>
-                <input type="text" name="name" required maxlength="30" placeholder="如：Feichuan" autocomplete="off" />
-              </label>
-              <label class="form-field">
-                <span class="form-label">网址 <em class="req">必填</em></span>
-                <input type="url" name="url" required placeholder="https://example.com" inputmode="url" />
-              </label>
-              <label class="form-field">
-                <span class="form-label">头像</span>
-                <input type="url" name="avatar" placeholder="https://example.com/avatar.webp" inputmode="url" />
-              </label>
-              <label class="form-field">
-                <span class="form-label">一句话 <em class="req">必填</em></span>
-                <input type="text" name="desc" required maxlength="60" placeholder="用一句话介绍你的站点" />
-              </label>
-              <label class="form-field">
-                <span class="form-label">邮箱（选填，用于回信）</span>
-                <input type="email" name="email" placeholder="you@example.com" autocomplete="email" />
-              </label>
-            </div>
-            <p class="form-error" data-form-error hidden></p>
-            <div class="form-actions">
-              <button type="submit" class="form-submit">生成友链信息</button>
-              <span class="form-hint">不经过任何服务器，信息只在你浏览器里</span>
-            </div>
-            <div class="form-result" data-form-result hidden>
-              <pre class="form-result-code" data-form-result-code></pre>
-              <div class="form-result-actions">
-                <button type="button" data-copy>复制</button>
-                <a href="#" data-mailto>用邮件发送</a>
-              </div>
-            </div>
-          </form>
-        </section>
-      </div>
+        <StampGallery client:only="react" items={all} />
+        <FriendFormDock client:only="react" />
+      </section>
     </main>
   </body>
 </html>
@@ -120,7 +77,8 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
     --paper-wash: color-mix(in oklab, var(--fc-ink) 6%, transparent);
   }
   html {
-    overflow-y: scroll;
+    overflow-x: clip;
+    overflow-y: auto;
     background: var(--paper-bg);
   }
   body {
@@ -142,285 +100,78 @@ desc   专注 AI Agent 与前端交互的开发者`}</code></pre>
   a:hover { color: var(--paper-strong); text-decoration-color: currentColor; }
   a:focus-visible, button:focus-visible { outline: 2px solid var(--fc-border-focus); outline-offset: 3px; }
 
-  main { position: relative; min-height: 100vh; padding: 128px 0; }
+  main { position: relative; }
 
-  /* 邮票墙全宽，其余区块收回到 640px 正文栏 */
-  .paper-container { width: 100%; max-width: none; margin-inline: auto; padding-inline: 0; }
-  .page-head,
-  .paper-section,
-  .stamp-section > .section-heading {
+  /* 邮票墙按屏往下接；页头浮在第一屏上 */
+  .stamp-hero {
+    position: relative;
     width: 100%;
-    max-width: 640px;
-    margin-inline: auto;
-    padding-inline: 20px;
+    min-height: 100svh;
+    padding-bottom: 28vh;
   }
-
-  .paper-section { display: flex; flex-direction: column; gap: 24px; }
-  .stamp-section { display: flex; flex-direction: column; gap: 24px; }
-  .section-heading { display: flex; min-height: 24px; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
-  .section-heading h2 { margin: 0; color: var(--paper-strong); font-size: 16px; font-weight: 600; line-height: 24px; }
-  .section-heading > a, .section-heading > span { font-size: 16px; line-height: 24px; }
-  article { font-size: 16px; line-height: 28px; }
-  article p { margin: 0; }
-  .page-head { display: flex; flex-direction: column; gap: 16px; }
-  .page-head h1 { margin: 0; color: var(--paper-strong); font-size: 16px; font-weight: 600; line-height: 24px; }
-
-  .code-card {
-    margin: 0;
-    padding: 16px;
-    overflow-x: auto;
-    border: 1px solid var(--paper-line);
-    border-radius: 8px;
-    background: var(--paper-surface);
-    font-family: inherit;
-    font-size: 13px;
-    line-height: 22px;
+  .stamp-hero .stamp-stage {
+    position: relative;
   }
-  .comment-stub {
-    display: grid;
-    height: 120px;
-    place-items: center;
-    border: 1px dashed var(--paper-line);
-    border-radius: 8px;
-    font-size: 14px;
-  }
-
-  /* 友链申请表单 — 纸面语言，纯前端生成 + 复制/邮件 */
-  .friend-form {
+  .page-head {
+    position: absolute;
+    z-index: 4;
+    top: max(88px, calc(env(safe-area-inset-top, 0px) + 72px));
+    inset-inline-start: 0;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-  }
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 12px;
+    width: min(36rem, calc(100% - 40px));
+    max-width: 640px;
+    padding-inline: 24px;
+    pointer-events: none;
   }
-  .form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-  }
-  .form-field:nth-child(4),
-  .form-field:nth-child(5) {
-    grid-column: 1 / -1;
-  }
-  .form-label {
-    color: var(--paper-strong);
-    font-size: 13px;
+  .stamp-kicker {
+    margin: 0;
+    color: var(--paper-text);
+    font-size: 12px;
+    letter-spacing: 0.08em;
     line-height: 18px;
   }
-  /* 原来是写死的暖红 #b3542e，在暗底上 2.6:1 读不出来 */
-  .req {
-    font-style: normal;
-    font-size: 11px;
-    color: var(--fc-danger);
-  }
-  .friend-form input {
-    width: 100%;
-    padding: 9px 11px;
-    border: 1px solid var(--paper-line);
-    border-radius: 8px;
-    background: var(--paper-surface);
-    color: var(--paper-strong);
-    font: inherit;
-    font-size: 14px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-  .friend-form input::placeholder {
-    color: var(--fc-ink-meta);
-  }
-  .friend-form input:focus {
-    outline: none;
-    border-color: var(--fc-border-focus);
-    box-shadow: var(--fc-elev-focus);
-  }
-  .form-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  /* 实心反相按钮。原本是「85% 黑 + 纸色字」，暗色下会变成深底深字。
-   * 走 ink / surface-page 这一对，两套 palette 下都自动反相。
-   * hover 不用 ink-2 —— 暗色下 ink 与 ink-2 只差 1.14:1，反馈看不见；
-   * 换成品牌蓝，两套下都是明确位移（字面对比 6.3:1 / 6.4:1）。 */
-  .form-submit {
-    padding: 9px 18px;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    background: var(--fc-ink);
-    color: var(--fc-surface-page);
-    font: inherit;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease;
-  }
-  .form-submit:hover {
-    background: var(--fc-accent);
-    color: var(--fc-ink-on-accent);
-  }
-  .form-hint {
-    font-size: 12px;
-    color: var(--paper-text);
-  }
-  .form-error {
+  .page-head h1 {
     margin: 0;
-    font-size: 13px;
-    color: var(--fc-danger);
-  }
-  .form-result {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .form-result[hidden] {
-    display: none;
-  }
-  .form-result-code {
-    margin: 0;
-    padding: 12px 14px;
-    border: 1px solid var(--paper-line);
-    border-radius: 8px;
-    background: var(--paper-surface);
-    font-family: inherit;
-    font-size: 13px;
-    line-height: 22px;
-    white-space: pre-wrap;
-  }
-  .form-result-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .form-result-actions button,
-  .form-result-actions a {
-    font-size: 13px;
-    padding: 6px 14px;
-    border: 1px solid var(--paper-line);
-    border-radius: 8px;
-    background: transparent;
     color: var(--paper-strong);
-    text-decoration: none;
-    cursor: pointer;
-    transition: background 0.2s ease;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
   }
-  .form-result-actions button:hover,
-  .form-result-actions a:hover {
-    background: var(--paper-wash);
-  }
+  article { font-size: 16px; line-height: 28px; }
+  article p { margin: 0; max-width: 36ch; }
 
-  @media (max-width: 480px) {
-    .form-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* 灯箱打开时，页面文字退到后面去（状态由组件写到 body.has-stamp-viewer） */
+  /* 灯箱打开时，浮层文字和友链入口退到后面去 */
   .page-head,
-  .stamp-section > .section-heading,
-  .paper-section {
+  .friend-dock,
+  .friend-dock-backdrop {
     transition: filter 0.28s ease, opacity 0.28s ease;
   }
+  body.has-stamp-viewer {
+    overflow: hidden;
+  }
+  html:has(body.has-stamp-viewer) {
+    overflow: hidden;
+  }
   body.has-stamp-viewer .page-head,
-  body.has-stamp-viewer .stamp-section > .section-heading,
-  body.has-stamp-viewer .paper-section {
+  body.has-stamp-viewer .friend-dock,
+  body.has-stamp-viewer .friend-dock-backdrop {
     filter: blur(14px);
     opacity: 0.58;
+    pointer-events: none;
   }
 
   @media (max-width: 640px) {
-    main { padding: 112px 0 96px; }
+    .page-head {
+      top: max(76px, calc(env(safe-area-inset-top, 0px) + 60px));
+      width: min(100%, calc(100% - 32px));
+      padding-inline: 20px;
+      gap: 10px;
+    }
+    article { font-size: 14px; line-height: 22px; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
   }
 </style>
-
-<script>
-  const form = document.querySelector<HTMLFormElement>("[data-friend-form]");
-  if (form) {
-    const errorEl = form.querySelector<HTMLElement>("[data-form-error]")!;
-    const resultEl = form.querySelector<HTMLElement>("[data-form-result]")!;
-    const codeEl = form.querySelector<HTMLElement>("[data-form-result-code]")!;
-    const mailtoLink = form.querySelector<HTMLAnchorElement>("[data-mailto]")!;
-    const copyBtn = form.querySelector<HTMLButtonElement>("[data-copy]")!;
-
-    const clean = (v: string) => v.trim().replace(/\s+/g, " ");
-    const toUrl = (v: string) => {
-      const t = clean(v);
-      if (!t) return "";
-      return /^https?:\/\//i.test(t) ? t : `https://${t}`;
-    };
-    const isHttpUrl = (v: string) => /^https?:\/\/[^\s]+\.[^\s]+$/i.test(v);
-
-    const setCopyState = (label: string) => {
-      copyBtn.textContent = label;
-      window.setTimeout(() => (copyBtn.textContent = "复制"), 1600);
-    };
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const fd = new FormData(form);
-      const name = clean(String(fd.get("name") ?? ""));
-      const url = toUrl(String(fd.get("url") ?? ""));
-      const avatar = toUrl(String(fd.get("avatar") ?? ""));
-      const desc = clean(String(fd.get("desc") ?? ""));
-      const email = clean(String(fd.get("email") ?? ""));
-
-      errorEl.hidden = true;
-      resultEl.hidden = true;
-
-      const errors: string[] = [];
-      if (!name) errors.push("站名不能为空");
-      if (!url) errors.push("网址不能为空");
-      else if (!isHttpUrl(url)) errors.push("网址需是完整的 http(s) 地址");
-      if (!desc) errors.push("一句话不能为空");
-      if (avatar && !isHttpUrl(avatar)) errors.push("头像地址需是完整的 http(s) 地址");
-
-      if (errors.length > 0) {
-        errorEl.textContent = errors.join("；");
-        errorEl.hidden = false;
-        errorEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
-        return;
-      }
-
-      const lines = [
-        `name   ${name}`,
-        `url    ${url}`,
-        avatar ? `avatar ${avatar}` : "",
-        `desc   ${desc}`,
-        email ? `email  ${email}` : "",
-      ].filter(Boolean);
-      const text = lines.join("\n");
-      codeEl.textContent = text;
-
-      const subject = encodeURIComponent(`友链申请：${name}`);
-      const body = encodeURIComponent(text);
-      mailtoLink.href = `mailto:feichuan05@gmail.com?subject=${subject}&body=${body}`;
-
-      resultEl.hidden = false;
-      resultEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    });
-
-    copyBtn.addEventListener("click", async () => {
-      const text = codeEl.textContent ?? "";
-      try {
-        await navigator.clipboard.writeText(text);
-        setCopyState("已复制 ✓");
-      } catch {
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-        setCopyState("已复制 ✓");
-      }
-    });
-  }
-</script>

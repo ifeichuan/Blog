@@ -131,10 +131,17 @@ vec3 foilHue(float t) {
 
 void main() {
   vec4 albedo = texture2D(uAlbedo, vUv);
-  if (albedo.a < 0.08) discard;
+  if (albedo.a < 0.08) {
+    gl_FragColor = vec4(0.0);
+    return;
+  }
 
   float intensity = clamp(uIntensity, 0.0, 1.0);
   float progress = clamp(uReveal, 0.0, 1.0);
+  if (progress < 0.001) {
+    gl_FragColor = vec4(albedo.rgb, albedo.a);
+    return;
+  }
 
   // ── Original reveal method, organic boundary ──────────────────────
   // Once reveal is complete this uniform branch skips all FBM work.
@@ -181,6 +188,11 @@ void main() {
     innerSeam = (1.0 - smoothstep(0.0, edge * 0.62, abs(signedFront))) * travel;
   }
 
+  if (revealed < 0.001 && seam < 0.001) {
+    gl_FragColor = vec4(albedo.rgb, albedo.a);
+    return;
+  }
+
   // ── Sandblasted foil material ─────────────────────────────────────
   float bump = mix(0.35, uBumpScale, intensity * revealed);
   vec3 N = heightNormal(vUv, bump);
@@ -199,7 +211,6 @@ void main() {
   vec3 L = normalize(lightPos - fragPos);
   vec3 V = normalize(vec3(0.5 - vUv.x, 0.5 - vUv.y, 1.35));
   vec3 H = normalize(L + V);
-  vec3 R = reflect(-L, N);
 
   float lightDistance = distance(vUv, uLightUV);
   float spotRadius = max(uLightRadius, 0.015);
@@ -207,8 +218,9 @@ void main() {
   spot = pow(spot, 1.35);
 
   float ndl = max(dot(N, L), 0.0);
-  float frosted = pow(max(dot(N, H), 0.0), max(uFrostSharpness, 2.0));
-  float foilFlash = pow(max(dot(N, H), 0.0), max(uFoilSharpness, 2.0));
+  float ndh = max(dot(N, H), 0.0);
+  float frosted = pow(ndh, max(uFrostSharpness, 2.0));
+  float foilFlash = pow(ndh, max(uFoilSharpness, 2.0));
   float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0);
   float grit = sampleHeight(vUv);
   float gritMask = mix(0.65, 1.2, grit);
@@ -226,8 +238,7 @@ void main() {
   float g = fineGrain(glitterUv + floor(uLightUV * 3.0));
   float glitterThreshold = mix(0.985, 0.72, clamp(uGlitterDensity, 0.0, 1.0));
   float sparkleField = smoothstep(glitterThreshold, min(0.999, glitterThreshold + 0.08), g);
-  float spark = sparkleField *
-    pow(max(dot(N, H), 0.0), max(uGlitterSharpness, 4.0));
+  float spark = sparkleField * pow(ndh, max(uGlitterSharpness, 4.0));
   spark *= spot;
 
   vec3 lighting =
@@ -241,28 +252,26 @@ void main() {
   vec3 glitterCol = vec3(1.0, 0.98, 1.0) * spark * uGlitter * intensity * revealed;
   glitterCol += holo * spark * 0.38 * intensity * revealed;
 
-  // Two continuous scales echo the Blog dappled-light canopy: broad soft
-  // patches plus a smaller breakup layer, with no hard cell boundaries.
-  vec2 dappleUv = vUv * vec2(uResolution.x / uResolution.y, 1.0);
-  float dappleBroad = fbm3(dappleUv * 3.2 + uLightUV * 0.35 + uTime * 0.012);
-  float dappleDetail = fbm3(dappleUv * 6.0 - uLightUV * 0.18 - uTime * 0.008);
-  float dappleField = dappleBroad * 0.72 + dappleDetail * 0.38;
-  float dapplePatches = smoothstep(0.57, 0.76, dappleField);
-  float dapple = mix(
-    1.0,
-    0.90 + 0.16 * dapplePatches,
-    uDapple * intensity * 0.58 * revealed
-  );
+  float dappleAmt = uDapple * intensity * 0.58 * revealed;
+  float dapple = 1.0;
+  if (dappleAmt > 0.001) {
+    vec2 dappleUv = vUv * vec2(uResolution.x / uResolution.y, 1.0);
+    float dappleBroad = fbm3(dappleUv * 3.2 + uLightUV * 0.35 + uTime * 0.012);
+    float dappleDetail = fbm3(dappleUv * 6.0 - uLightUV * 0.18 - uTime * 0.008);
+    float dappleField = dappleBroad * 0.72 + dappleDetail * 0.38;
+    float dapplePatches = smoothstep(0.57, 0.76, dappleField);
+    dapple = mix(1.0, 0.90 + 0.16 * dapplePatches, dappleAmt);
+  }
 
   vec3 lit = albedo.rgb * lighting * dapple + frostCol + foilCol + glitterCol;
   lit = mix(lit, lit + foilCol * 0.15, clamp(length(foilCol) * 1.2, 0.0, 0.35));
   vec3 color = mix(albedo.rgb, lit, revealed);
 
-  // Subtle dark undercut + warm halo define the irregular notch without
-  // turning the transition into literal orange flames.
-  color *= 1.0 - seam * uBurnShadow;
-  vec3 seamTint = mix(vec3(1.0, 0.67, 0.25), vec3(1.0, 0.94, 0.68), innerSeam);
-  color += seamTint * seam * uBurnGlow;
+  if (seam > 0.001) {
+    color *= 1.0 - seam * uBurnShadow;
+    vec3 seamTint = mix(vec3(1.0, 0.67, 0.25), vec3(1.0, 0.94, 0.68), innerSeam);
+    color += seamTint * seam * uBurnGlow;
+  }
 
   gl_FragColor = vec4(color, albedo.a);
 }

@@ -1,10 +1,11 @@
 import { AnimatePresence } from 'motion/react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DebugPanel } from './DebugPanel'
 import { DEFAULT_DEBUG, type DebugParams } from './debugParams'
 import { Lightbox } from './Lightbox'
+import { startStampScrollBus } from './scrollBus'
 import { StampCard, type CardOrigin } from './StampCard'
-import { buildStamps, type FriendItem, type StampDef, type StampId } from './stamps'
+import { buildStamps, stampFieldBands, type FriendItem, type StampDef, type StampId } from './stamps'
 import './stamp-gallery.css'
 
 type ViewerState = {
@@ -25,12 +26,14 @@ type Props = {
  * 数据由 props 传入（友链），调色面板仅 DEV 构建可见。
  */
 export function StampGallery({ items, className }: Props) {
+  const stageRef = useRef<HTMLDivElement>(null)
   const [focused, setFocused] = useState<StampId | null>(null)
   const [viewer, setViewer] = useState<ViewerState | null>(null)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [debug, setDebug] = useState<DebugParams>(DEFAULT_DEBUG)
 
   const stamps: StampDef[] = useMemo(() => buildStamps(items), [items])
+  const bands = useMemo(() => stampFieldBands(items.length), [items.length])
 
   const openStamp = useMemo(
     () => stamps.find((stamp) => stamp.id === viewer?.id) ?? null,
@@ -48,8 +51,9 @@ export function StampGallery({ items, className }: Props) {
   }, [])
 
   const baseWidth = useMemo(() => {
-    if (typeof window === 'undefined') return 168
-    return Math.max(132, Math.min(188, window.innerWidth * 0.12))
+    if (typeof window === 'undefined') return 176
+    const { innerWidth: w, innerHeight: h } = window
+    return Math.max(132, Math.min(220, w * 0.14, h * 0.22))
   }, [])
 
   const viewerActive = viewer !== null
@@ -62,10 +66,20 @@ export function StampGallery({ items, className }: Props) {
     return () => document.body.classList.remove('has-stamp-viewer')
   }, [viewerActive])
 
+  useEffect(() => {
+    const stage = stageRef.current
+    if (!stage) return
+    return startStampScrollBus(stage)
+  }, [])
+
   return (
     <div
+      ref={stageRef}
       className={`stamp-stage${viewerActive ? ' has-viewer' : ''}${className ? ` ${className}` : ''}`}
-      style={{ ['--viewer-blur' as string]: `${debug.dimBlur}px` }}
+      style={{
+        ['--viewer-blur' as string]: `${debug.dimBlur}px`,
+        ['--stamp-bands' as string]: bands,
+      }}
     >
       <div className="stamp-field" aria-label="邮票作品集">
         {stamps.map((stamp) => (

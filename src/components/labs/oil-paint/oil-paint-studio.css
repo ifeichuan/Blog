@@ -1,0 +1,293 @@
+.oil-studio {
+  --bitumen: #1a1410;
+  --linen: #cbb89a;
+  --oak: #6b4428;
+  --oak-dark: #3a2416;
+  --ultramarine: #2a4d86;
+  --varnish: #efe2c2;
+  --cadmium: #c4562a;
+  --ink: #f4ead6;
+  --mute: rgb(244 234 214 / 0.56);
+  --line: rgb(244 234 214 / 0.12);
+
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  background:
+    radial-gradient(ellipse 70% 50% at 38% 42%, rgb(80 52 28 / 0.28), transparent 62%),
+    radial-gradient(ellipse 40% 30% at 80% 10%, rgb(42 77 134 / 0.14), transparent 55%),
+    var(--bitumen);
+  color: var(--ink);
+  font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.oil-studio::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.09;
+  background-image:
+    linear-gradient(rgb(203 184 154 / 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(203 184 154 / 0.28) 1px, transparent 1px);
+  background-size: 3px 3px;
+  mix-blend-mode: overlay;
+}
+
+.oil-stage {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 4.5rem 2rem 2rem;
+  touch-action: none;
+}
+
+.oil-stage canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.oil-stage-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.oil-mast {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.5rem;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-width: 28rem;
+}
+
+.oil-mast a {
+  color: var(--mute);
+  text-decoration: none;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.oil-mast a:hover {
+  color: var(--varnish);
+}
+
+.oil-mast h1 {
+  margin: 0.15rem 0 0;
+  font-family: "EB Garamond", "Iowan Old Style", "Palatino Linotype", serif;
+  font-weight: 500;
+  font-style: italic;
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+
+.oil-mast p {
+  margin: 0.45rem 0 0;
+  color: var(--mute);
+  font-size: 12px;
+  line-height: 1.55;
+  max-width: 22rem;
+}
+
+.oil-compare {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 1.5rem;
+  z-index: 3;
+  color: var(--mute);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.oil-compare kbd {
+  display: inline-block;
+  padding: 0.08rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--varnish);
+  font: inherit;
+}
+
+.oil-palette {
+  position: relative;
+  z-index: 4;
+  height: 100svh;
+  overflow: auto;
+  padding: 1.15rem 1.1rem 1.6rem;
+  background:
+    linear-gradient(180deg, rgb(58 36 22 / 0.92), rgb(32 22 16 / 0.96));
+  border-left: 1px solid rgb(203 184 154 / 0.16);
+  box-shadow: inset 1px 0 0 rgb(255 230 180 / 0.04);
+}
+
+.oil-palette h2 {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--linen);
+}
+
+.oil-palette .oil-lead {
+  margin: 0.35rem 0 0.9rem;
+  color: var(--mute);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.oil-sources,
+.oil-presets,
+.oil-layers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+}
+
+.oil-chip,
+.oil-upload {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: rgb(244 234 214 / 0.04);
+  color: var(--ink);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 0.32rem 0.55rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.oil-chip[data-on="true"],
+.oil-chip:hover,
+.oil-upload:hover {
+  background: rgb(244 234 214 / 0.12);
+  border-color: rgb(244 234 214 / 0.28);
+}
+
+.oil-chip[data-on="true"] {
+  color: var(--varnish);
+}
+
+.oil-upload {
+  position: relative;
+}
+
+.oil-upload input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.oil-group {
+  margin: 0 0 0.85rem;
+  padding: 0;
+  border: 0;
+}
+
+.oil-group + .oil-group {
+  border-top: 1px solid var(--line);
+  padding-top: 0.85rem;
+}
+
+.oil-group legend {
+  padding: 0;
+  color: var(--linen);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.oil-group .oil-hint {
+  margin: 0.25rem 0 0.55rem;
+  color: var(--mute);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.oil-control {
+  display: grid;
+  gap: 0.18rem;
+  margin: 0 0 0.55rem;
+}
+
+.oil-control-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 11px;
+}
+
+.oil-control-head em {
+  font-style: normal;
+  color: var(--varnish);
+  font-variant-numeric: tabular-nums;
+}
+
+.oil-control small {
+  color: var(--mute);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.oil-control input[type="range"] {
+  width: 100%;
+  accent-color: var(--cadmium);
+  cursor: pointer;
+}
+
+.oil-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.oil-actions button {
+  flex: 1;
+  appearance: none;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 11px;
+  padding: 0.45rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.oil-actions button:hover {
+  background: rgb(244 234 214 / 0.08);
+}
+
+@media (max-width: 860px) {
+  .oil-studio {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(70svh, 1fr) auto;
+  }
+
+  .oil-stage {
+    min-height: 70svh;
+    padding-top: 5.5rem;
+  }
+
+  .oil-palette {
+    height: auto;
+    border-left: 0;
+    border-top: 1px solid rgb(203 184 154 / 0.16);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oil-chip,
+  .oil-upload,
+  .oil-actions button {
+    transition: none;
+  }
+}

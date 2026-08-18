@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import "./hover-preview.css";
 
 interface PreviewData {
   screenshotUrl: string;
@@ -6,8 +7,82 @@ interface PreviewData {
   description?: string;
 }
 
+const CARD_MAX_WIDTH = 400;
+const CARD_FALLBACK_HEIGHT = 310;
+const VIEWPORT_PAD = 16;
+const CURSOR_GAP = 18;
+const SHOW_DELAY = 220;
+const HIDE_DELAY = 80;
+
 const previewCache = new Map<string, PreviewData | null>();
 const inflightRequests = new Map<string, Promise<PreviewData | null>>();
+const loadedShots = new Set<string>();
+
+const CACHE_STORAGE_KEY = "fc-hover-preview";
+const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const CACHE_MAX_ENTRIES = 80;
+
+type StoredCache = {
+  v: 1;
+  savedAt: number;
+  entries: [string, PreviewData | null][];
+};
+
+function prefetchShot(url: string) {
+  if (!url || loadedShots.has(url)) return;
+  const img = new Image();
+  img.onload = () => {
+    loadedShots.add(url);
+  };
+  img.src = url;
+}
+
+function persistPreviewCache() {
+  try {
+    const entries = [...previewCache].slice(-CACHE_MAX_ENTRIES);
+    const payload: StoredCache = {
+      v: 1,
+      savedAt: Date.now(),
+      entries,
+    };
+    localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+function hydratePreviewCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw) as StoredCache;
+    if (data?.v !== 1 || !Array.isArray(data.entries)) return;
+    if (Date.now() - data.savedAt > CACHE_TTL_MS) {
+      localStorage.removeItem(CACHE_STORAGE_KEY);
+      return;
+    }
+    for (const [url, preview] of data.entries) {
+      previewCache.set(url, preview);
+      if (preview?.screenshotUrl) prefetchShot(preview.screenshotUrl);
+    }
+  } catch {
+    /* ignore broken payload */
+  }
+}
+
+hydratePreviewCache();
+
+function hostnameOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+function prefersFineHover(): boolean {
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
 
 async function fetchMicrolink(url: string): Promise<PreviewData | null> {
   if (previewCache.has(url)) return previewCache.get(url)!;
@@ -18,18 +93,20 @@ async function fetchMicrolink(url: string): Promise<PreviewData | null> {
       const params = new URLSearchParams({
         url,
         screenshot: "true",
-        "screenshot.width": "1280",
-        "screenshot.height": "800",
+        "screenshot.width": "800",
+        "screenshot.height": "500",
         "screenshot.type": "jpeg",
       });
       const res = await fetch(`https://api.microlink.io?${params}`);
       if (!res.ok) {
         previewCache.set(url, null);
+        persistPreviewCache();
         return null;
       }
       const json = await res.json();
       if (json.status !== "success" || !json.data?.screenshot?.url) {
         previewCache.set(url, null);
+        persistPreviewCache();
         return null;
       }
       const result: PreviewData = {
@@ -38,6 +115,8 @@ async function fetchMicrolink(url: string): Promise<PreviewData | null> {
         description: json.data.description,
       };
       previewCache.set(url, result);
+      prefetchShot(result.screenshotUrl);
+      persistPreviewCache();
       return result;
     } catch {
       previewCache.set(url, null);
@@ -53,144 +132,260 @@ async function fetchMicrolink(url: string): Promise<PreviewData | null> {
 
 export function HoverLinkEnhancer() {
   const [preview, setPreview] = useState<PreviewData | null>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isVisible, setIsVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const hoverTimeout = useRef<ReturnType<typeof setTimeout>>(null);
-  const isVisibleRef = useRef(false);
+  const [hostname, setHostname] = useState("");
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const showTimer = useRef<number>(0);
+  const hideTimer = useRef<number>(0);
+  const raf = useRef<number>(0);
+  const requestGen = useRef(0);
+  const pointer = useRef({ x: 0, y: 0 });
+  const openRef = useRef(false);
+  const hrefRef = useRef<string | null>(null);
 
   useEffect(() => {
-    isVisibleRef.current = isVisible;
-  }, [isVisible]);
+    openRef.current = open;
+  }, [open]);
 
-  const fetchPreview = useCallback(async (url: string) => {
-    if (previewCache.has(url)) {
-      const cached = previewCache.get(url);
-      if (cached) setPreview(cached);
-      return;
+  const place = useCallback(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cardW = Math.min(CARD_MAX_WIDTH, Math.max(0, vw - VIEWPORT_PAD * 2));
+    root.style.setProperty("--hp-w", `${cardW}px`);
+
+    const cardH = cardRef.current?.offsetHeight || CARD_FALLBACK_HEIGHT;
+    const { x: cx, y: cy } = pointer.current;
+
+    let x = cx - cardW / 2;
+    x = Math.min(Math.max(x, VIEWPORT_PAD), vw - cardW - VIEWPORT_PAD);
+
+    let y = cy - cardH - CURSOR_GAP;
+    if (y < VIEWPORT_PAD) y = cy + CURSOR_GAP;
+    if (y + cardH > vh - VIEWPORT_PAD) {
+      y = Math.max(VIEWPORT_PAD, vh - cardH - VIEWPORT_PAD);
     }
 
-    setIsLoading(true);
-    try {
-      const result = await fetchMicrolink(url);
-      if (result) {
-        setPreview(result);
+    root.style.setProperty("--hp-x", `${x}px`);
+    root.style.setProperty("--hp-y", `${y}px`);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (open) place();
+  }, [open, preview, loading, hostname, place]);
+
+  const schedulePlace = useCallback(() => {
+    if (raf.current) return;
+    raf.current = requestAnimationFrame(() => {
+      raf.current = 0;
+      place();
+    });
+  }, [place]);
+
+  const hide = useCallback(() => {
+    window.clearTimeout(showTimer.current);
+    showTimer.current = 0;
+    window.clearTimeout(hideTimer.current);
+    hideTimer.current = 0;
+    requestGen.current += 1;
+    hrefRef.current = null;
+    setOpen(false);
+    setLoading(false);
+  }, []);
+
+  const reveal = useCallback(
+    (href: string) => {
+      window.clearTimeout(hideTimer.current);
+      hideTimer.current = 0;
+      if (hrefRef.current === href && openRef.current) {
+        place();
+        return;
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
-  const updatePosition = useCallback((e: MouseEvent) => {
-    const cardWidth = 320;
-    const cardHeight = 220;
-    const offsetY = 16;
+      hrefRef.current = href;
+      requestGen.current += 1;
+      const gen = requestGen.current;
+      const cached = previewCache.get(href) ?? null;
 
-    let x = e.clientX - cardWidth / 2;
-    let y = e.clientY - cardHeight - offsetY;
+      const shotReady = Boolean(
+        cached?.screenshotUrl && loadedShots.has(cached.screenshotUrl),
+      );
 
-    if (x + cardWidth > window.innerWidth - 16) {
-      x = window.innerWidth - cardWidth - 16;
-    }
-    if (x < 16) x = 16;
-    if (y < 16) y = e.clientY + offsetY;
+      setHostname(hostnameOf(href));
+      setPreview(cached);
+      setImageLoaded(shotReady);
+      setLoading(!cached);
+      setOpen(true);
+      place();
 
-    setPosition({ x, y });
-  }, []);
+      if (cached) {
+        if (cached.screenshotUrl) prefetchShot(cached.screenshotUrl);
+        return;
+      }
+
+      void fetchMicrolink(href).then((result) => {
+        if (gen !== requestGen.current) return;
+        if (result) {
+          setPreview(result);
+          setLoading(false);
+        } else {
+          setPreview(null);
+          setLoading(false);
+          setOpen(false);
+        }
+      });
+    },
+    [place],
+  );
 
   useEffect(() => {
     const article = document.querySelector(".reader-article");
-    if (!article) return;
+    if (!article || !prefersFineHover()) return;
 
     const hostname = window.location.hostname;
 
+    const externalFrom = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) return null;
+      const link = target.closest<HTMLAnchorElement>("a[href^='http']");
+      if (!link?.href || link.hostname === hostname) return null;
+      return link;
+    };
+
     const handleEnter = (e: Event) => {
-      const link = e.currentTarget as HTMLAnchorElement;
+      const link = externalFrom(e.target);
+      if (!link) return;
+
+      link.setAttribute("target", "_blank");
+      link.setAttribute("rel", "noopener noreferrer");
+
+      if (e instanceof MouseEvent) {
+        pointer.current = { x: e.clientX, y: e.clientY };
+        place();
+      }
+
+      window.clearTimeout(hideTimer.current);
+      hideTimer.current = 0;
+      window.clearTimeout(showTimer.current);
+
       const href = link.href;
-      if (!href || link.hostname === hostname) return;
-
-      updatePosition(e as MouseEvent);
-
-      hoverTimeout.current = setTimeout(() => {
-        setIsVisible(true);
-        setPreview(previewCache.get(href) || null);
-        fetchPreview(href);
-      }, 300);
+      const delay = openRef.current ? 0 : SHOW_DELAY;
+      showTimer.current = window.setTimeout(() => {
+        showTimer.current = 0;
+        reveal(href);
+      }, delay);
     };
 
     const handleMove = (e: Event) => {
-      if (isVisibleRef.current) {
-        updatePosition(e as MouseEvent);
-      }
+      if (!(e instanceof MouseEvent)) return;
+      pointer.current = { x: e.clientX, y: e.clientY };
+      if (openRef.current || showTimer.current) schedulePlace();
     };
 
-    const handleLeave = () => {
-      if (hoverTimeout.current) {
-        clearTimeout(hoverTimeout.current);
-        hoverTimeout.current = null;
+    const handleLeave = (e: Event) => {
+      const next = (e as MouseEvent).relatedTarget;
+      if (next instanceof Element && article.contains(next)) {
+        const stillOnLink = externalFrom(next);
+        if (stillOnLink) return;
       }
-      setIsVisible(false);
-      setIsLoading(false);
+      window.clearTimeout(showTimer.current);
+      showTimer.current = 0;
+      window.clearTimeout(hideTimer.current);
+      hideTimer.current = window.setTimeout(hide, HIDE_DELAY);
     };
 
-    const links = article.querySelectorAll<HTMLAnchorElement>(
-      'a[href^="http"]',
-    );
+    const handleResize = () => {
+      if (openRef.current) place();
+    };
 
-    links.forEach((link) => {
-      if (link.hostname === hostname) return;
-      link.setAttribute("target", "_blank");
-      link.setAttribute("rel", "noopener noreferrer");
-      link.addEventListener("mouseenter", handleEnter);
-      link.addEventListener("mousemove", handleMove);
-      link.addEventListener("mouseleave", handleLeave);
-    });
+    article.addEventListener("mouseover", handleEnter);
+    article.addEventListener("mousemove", handleMove);
+    article.addEventListener("mouseout", handleLeave);
+    window.addEventListener("scroll", hide, { passive: true });
+    window.addEventListener("lenis-scroll", hide);
+    window.addEventListener("blur", hide);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      links.forEach((link) => {
-        link.removeEventListener("mouseenter", handleEnter);
-        link.removeEventListener("mousemove", handleMove);
-        link.removeEventListener("mouseleave", handleLeave);
-      });
+      article.removeEventListener("mouseover", handleEnter);
+      article.removeEventListener("mousemove", handleMove);
+      article.removeEventListener("mouseout", handleLeave);
+      window.removeEventListener("scroll", hide);
+      window.removeEventListener("lenis-scroll", hide);
+      window.removeEventListener("blur", hide);
+      window.removeEventListener("resize", handleResize);
+      window.clearTimeout(showTimer.current);
+      window.clearTimeout(hideTimer.current);
+      if (raf.current) cancelAnimationFrame(raf.current);
     };
-  }, [fetchPreview, updatePosition]);
+  }, [hide, place, reveal, schedulePlace]);
 
-  if (!isVisible) return null;
+  const showCard = open && (Boolean(preview) || loading);
+  const shot = preview?.screenshotUrl;
 
   return (
     <div
-      className={`fixed pointer-events-none z-[1000] transition-all duration-200 ease-out ${
-        preview || isLoading
-          ? "opacity-100 translate-y-0 scale-100"
-          : "opacity-0 translate-y-2 scale-95"
-      }`}
-      style={{ left: `${position.x}px`, top: `${position.y}px` }}
+      ref={rootRef}
+      className="hover-preview"
+      data-open={showCard ? "true" : "false"}
+      aria-hidden="true"
     >
-      <div className="bg-[#1a1a1a] rounded-xl p-1.5 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.1)] backdrop-blur-sm overflow-hidden">
-        {isLoading && !preview ? (
-          <div className="w-[300px] h-[180px] rounded-lg bg-[#2a2a2a] animate-pulse flex items-center justify-center">
-            <div className="w-5 h-5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-          </div>
-        ) : preview ? (
-          <>
+      <div ref={cardRef} className="hover-preview__card">
+        <div className="hover-preview__shot-wrap">
+          {(loading || !imageLoaded) && (
+            <div className="hover-preview__skeleton">
+              <div className="hover-preview__skel-chrome">
+                <i />
+                <i />
+                <i />
+                <span />
+              </div>
+              <div className="hover-preview__skel-page">
+                <b />
+                <em />
+                <em />
+                <div>
+                  <u />
+                  <u />
+                  <u />
+                </div>
+              </div>
+              <div className="hover-preview__skel-scan" />
+            </div>
+          )}
+          {shot && (
             <img
-              src={preview.screenshotUrl}
-              alt={preview.title || ""}
-              className="w-[300px] h-auto rounded-lg block"
-              loading="lazy"
+              key={shot}
+              src={shot}
+              alt=""
+              className="hover-preview__shot"
+              data-loaded={imageLoaded ? "true" : "false"}
+              decoding="async"
+              onLoad={(e) => {
+                if (e.currentTarget.naturalWidth > 0) {
+                  loadedShots.add(shot);
+                  setImageLoaded(true);
+                }
+              }}
             />
-            {preview.title && (
-              <div className="px-2 pt-2 pb-1 text-xs text-white font-semibold truncate">
-                {preview.title}
-              </div>
+          )}
+        </div>
+        {(hostname || preview?.title || preview?.description) && (
+          <div className="hover-preview__meta">
+            {hostname && <div className="hover-preview__host">{hostname}</div>}
+            {preview?.title && (
+              <div className="hover-preview__title">{preview.title}</div>
             )}
-            {preview.description && (
-              <div className="px-2 pb-2 text-[11px] text-[#888] truncate">
-                {preview.description}
-              </div>
+            {preview?.description && (
+              <div className="hover-preview__desc">{preview.description}</div>
             )}
-          </>
-        ) : null}
+          </div>
+        )}
       </div>
     </div>
   );

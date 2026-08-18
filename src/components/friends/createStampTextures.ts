@@ -307,21 +307,52 @@ function createSandGritHeight(
 
 export type StampTextures = {
   albedoUrl: string
-  heightUrl: string
+  albedoCanvas: HTMLCanvasElement
+  heightCanvas: HTMLCanvasElement
   width: number
   height: number
 }
 
 const textureCache = new Map<StampDef['id'], StampTextures>()
+const inflight = new Map<StampDef['id'], Promise<StampTextures>>()
+
+export function getCachedStampTextures(id: StampDef['id']) {
+  return textureCache.get(id)
+}
+
+function canvasPngUrl(canvas: HTMLCanvasElement) {
+  return new Promise<string>((resolve) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(URL.createObjectURL(blob))
+        return
+      }
+      resolve(canvas.toDataURL('image/png'))
+    }, 'image/png')
+  })
+}
 
 /**
  * Build albedo (perforation alpha) + sand-grit microheight for foil/glitter lighting.
  * Cached per stamp so the source card and flying viewer share the exact surface.
+ * WebGL reads the canvases directly; only the <img> face goes through a PNG blob.
  */
-export function createStampTextures(stamp: StampDef): StampTextures {
+export async function createStampTextures(stamp: StampDef): Promise<StampTextures> {
   const cached = textureCache.get(stamp.id)
   if (cached) return cached
+  const pending = inflight.get(stamp.id)
+  if (pending) return pending
 
+  const work = buildStampTextures(stamp)
+  inflight.set(stamp.id, work)
+  try {
+    return await work
+  } finally {
+    inflight.delete(stamp.id)
+  }
+}
+
+async function buildStampTextures(stamp: StampDef): Promise<StampTextures> {
   const w = SIZE
   const h = Math.round(SIZE / stamp.aspect)
 
@@ -341,19 +372,16 @@ export function createStampTextures(stamp: StampDef): StampTextures {
   const mctx = mask.getContext('2d')!
   drawPerforationMask(mctx, w, h)
 
-  const masked = document.createElement('canvas')
-  masked.width = w
-  masked.height = h
-  const xctx = masked.getContext('2d')!
-  xctx.drawImage(albedo, 0, 0)
-  xctx.globalCompositeOperation = 'destination-in'
-  xctx.drawImage(mask, 0, 0)
+  actx.globalCompositeOperation = 'destination-in'
+  actx.drawImage(mask, 0, 0)
 
   const grit = createSandGritHeight(w, h, mask)
+  const albedoUrl = await canvasPngUrl(albedo)
 
   const textures: StampTextures = {
-    albedoUrl: masked.toDataURL('image/png'),
-    heightUrl: grit.toDataURL('image/png'),
+    albedoUrl,
+    albedoCanvas: albedo,
+    heightCanvas: grit,
     width: w,
     height: h,
   }

@@ -1,6 +1,22 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { IMPASTO_FRAGMENT, IMPASTO_VERTEX } from './impastoShader'
+
+export type StampMeshHandle = {
+  requestRender: () => void
+}
+
+type TextureSource = string | HTMLCanvasElement
+
+function loadTexture(source: TextureSource, loader: THREE.TextureLoader | null) {
+  if (typeof source !== 'string') {
+    return Promise.resolve(new THREE.CanvasTexture(source))
+  }
+  if (!loader) {
+    return Promise.reject(new Error('TextureLoader missing'))
+  }
+  return loader.loadAsync(source)
+}
 
 export type ShaderLive = {
   intensity: number
@@ -38,8 +54,8 @@ export type ShaderLive = {
 }
 
 type Props = {
-  albedoUrl: string
-  heightUrl: string
+  albedoUrl: TextureSource
+  heightUrl: TextureSource
   width: number
   height: number
   live: ShaderLive
@@ -52,23 +68,34 @@ type Props = {
 }
 
 /** Single-plane WebGL stamp: sand-grit + foil + organic reveal seam. */
-export function StampMesh({
-  albedoUrl,
-  heightUrl,
-  width,
-  height,
-  live,
-  className,
-  displayWidth,
-  active = true,
-  fluidWidth = false,
-}: Props) {
+export const StampMesh = forwardRef<StampMeshHandle, Props>(function StampMesh(
+  {
+    albedoUrl,
+    heightUrl,
+    width,
+    height,
+    live,
+    className,
+    displayWidth,
+    active = true,
+    fluidWidth = false,
+  },
+  ref,
+) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stateRef = useRef(live)
   const activeRef = useRef(active)
   const requestRenderRef = useRef<(() => void) | null>(null)
   stateRef.current = live
   activeRef.current = active
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      requestRender: () => requestRenderRef.current?.(),
+    }),
+    [],
+  )
 
   const displayHeight = displayWidth * (height / width)
 
@@ -124,10 +151,14 @@ export function StampMesh({
     const renderer = new THREE.WebGLRenderer({
       canvas,
       alpha: true,
-      antialias: true,
+      // discard + MSAA 互相抵消，关抗锯齿不改票面，省一层多重采样。
+      antialias: false,
+      depth: false,
+      stencil: false,
       premultipliedAlpha: false,
       powerPreference: 'high-performance',
     })
+    renderer.sortObjects = false
     const maxDpr = displayWidth >= 300 ? 1.5 : 1.2
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDpr))
     renderer.setSize(displayWidth, displayHeight, false)
@@ -137,7 +168,10 @@ export function StampMesh({
     const camera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0.1, 10)
     camera.position.z = 1
 
-    const loader = new THREE.TextureLoader()
+    const loader =
+      typeof albedoUrl === 'string' || typeof heightUrl === 'string'
+        ? new THREE.TextureLoader()
+        : null
     let disposed = false
     let albedoTex: THREE.Texture | null = null
     let heightTex: THREE.Texture | null = null
@@ -152,7 +186,7 @@ export function StampMesh({
     let revealTarget = initialTarget
     let revealStartedAt = start
 
-    Promise.all([loader.loadAsync(albedoUrl), loader.loadAsync(heightUrl)]).then(
+    Promise.all([loadTexture(albedoUrl, loader), loadTexture(heightUrl, loader)]).then(
       ([albedo, heightMap]) => {
         if (disposed) {
           albedo.dispose()
@@ -178,11 +212,13 @@ export function StampMesh({
           fragmentShader: IMPASTO_FRAGMENT,
           uniforms,
           transparent: true,
+          depthTest: false,
           depthWrite: false,
         })
 
         const geo = new THREE.PlaneGeometry(1, 1)
         mesh = new THREE.Mesh(geo, material)
+        mesh.frustumCulled = false
         scene.add(mesh)
 
         const loop = (now: number) => {
@@ -289,4 +325,4 @@ export function StampMesh({
       }
     />
   )
-}
+})

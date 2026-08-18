@@ -1,10 +1,14 @@
-import { motion, useReducedMotion } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
-import { createStampTextures, type StampTextures } from './createStampTextures'
+import { motion, useMotionValue, useReducedMotion, useSpring } from 'motion/react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  createStampTextures,
+  getCachedStampTextures,
+  type StampTextures,
+} from './createStampTextures'
 import type { DebugParams } from './debugParams'
 import { liveFromDebug } from './shaderLive'
 import type { CardOrigin } from './StampCard'
-import { StampMesh } from './StampMesh'
+import { StampMesh, type StampMeshHandle } from './StampMesh'
 import type { StampDef } from './stamps'
 import { SWAP_DELAY_S, SWAP_FADE_S } from './viewerTiming'
 
@@ -17,13 +21,38 @@ type Props = {
 
 export function Lightbox({ stamp, origin, debug, onClose }: Props) {
   const reduce = useReducedMotion()
-  const [textures] = useState<StampTextures>(() => createStampTextures(stamp))
-  const [lightUV, setLightUV] = useState({ x: 0.5, y: 0.42 })
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
+  const stampBoxRef = useRef<HTMLDivElement>(null)
+  const meshRef = useRef<StampMeshHandle>(null)
+  const [textures, setTextures] = useState<StampTextures | null>(
+    () => getCachedStampTextures(stamp.id) ?? null,
+  )
   const [shaderReady, setShaderReady] = useState(Boolean(reduce))
   const pointerFrameRef = useRef<number | null>(null)
   const pendingPointerRef = useRef({ x: 0.5, y: 0.42 })
+  const lightUVRef = useRef({ x: 0.5, y: 0.42 })
+  const tiltXRaw = useMotionValue(0)
+  const tiltYRaw = useMotionValue(0)
+  const tiltSpring = useMemo(
+    () => ({
+      stiffness: debug.springStiffness,
+      damping: debug.springDamping,
+      mass: 0.55,
+    }),
+    [debug.springStiffness, debug.springDamping],
+  )
+  const tiltXSpring = useSpring(tiltXRaw, tiltSpring)
+  const tiltYSpring = useSpring(tiltYRaw, tiltSpring)
   const size = Math.min(420, typeof window !== 'undefined' ? window.innerWidth * 0.72 : 420)
+
+  useEffect(() => {
+    let cancelled = false
+    void createStampTextures(stamp).then((next) => {
+      if (!cancelled) setTextures(next)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [stamp])
 
   useEffect(() => {
     if (reduce) return
@@ -33,11 +62,15 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') {
+        tiltXRaw.set(0)
+        tiltYRaw.set(0)
+        onClose()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [onClose, tiltXRaw, tiltYRaw])
 
   useEffect(
     () => () => {
@@ -46,8 +79,14 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
     [],
   )
 
+  const close = () => {
+    tiltXRaw.set(0)
+    tiltYRaw.set(0)
+    onClose()
+  }
+
   const onMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const stampBox = event.currentTarget.querySelector('.lightbox-stamp') as HTMLElement | null
+    const stampBox = stampBoxRef.current
     if (!stampBox) return
     const bounds = stampBox.getBoundingClientRect()
     const nx = (event.clientX - bounds.left) / bounds.width
@@ -57,11 +96,16 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
     pointerFrameRef.current = requestAnimationFrame(() => {
       pointerFrameRef.current = null
       const point = pendingPointerRef.current
-      setLightUV(point)
-      setTilt({
-        x: Math.max(-1, Math.min(1, point.x * 2 - 1)),
-        y: Math.max(-1, Math.min(1, point.y * 2 - 1)),
-      })
+      lightUVRef.current.x = point.x
+      lightUVRef.current.y = point.y
+      if (!reduce) {
+        const tx = Math.max(-1, Math.min(1, point.x * 2 - 1))
+        const ty = Math.max(-1, Math.min(1, point.y * 2 - 1))
+        const tiltMax = debug.tiltMax + 2
+        tiltXRaw.set(-ty * tiltMax)
+        tiltYRaw.set(tx * tiltMax)
+      }
+      meshRef.current?.requestRender()
     })
   }
 
@@ -69,10 +113,10 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
   const viewportCenterY = typeof window !== 'undefined' ? window.innerHeight / 2 : 0
   const sourceOffsetX = origin.centerX - viewportCenterX
   const sourceOffsetY = origin.centerY - viewportCenterY
-  const tiltMax = debug.tiltMax + 2
-  const tiltX = reduce ? 0 : -tilt.y * tiltMax
-  const tiltY = reduce ? 0 : tilt.x * tiltMax
-  const live = liveFromDebug(debug, 1, lightUV, 1, 0)
+  const live = useMemo(
+    () => liveFromDebug(debug, 1, lightUVRef.current, 1, 0),
+    [debug],
+  )
 
   // 根节点不再整体淡出：遮罩独立成层，邮票保持不透明飞回落点，
   // 否则邮票还没到落点就先透明了，墙上原卡又还没淡入 —— 中间的空窗就是闪烁
@@ -83,7 +127,7 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
       aria-modal="true"
       aria-label={`${stamp.label} 详情`}
       initial={false}
-      onClick={onClose}
+      onClick={close}
       onPointerMove={onMove}
     >
       <motion.div
@@ -95,8 +139,13 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
       />
       <div className="lightbox-perspective" onClick={(event) => event.stopPropagation()}>
         <motion.div
+          ref={stampBoxRef}
           className="lightbox-stamp"
-          style={{ transformStyle: 'preserve-3d' }}
+          style={{
+            transformStyle: 'preserve-3d',
+            rotateX: reduce ? 0 : tiltXSpring,
+            rotateY: reduce ? 0 : tiltYSpring,
+          }}
           initial={
             reduce
               ? { width: size }
@@ -113,8 +162,6 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
             y: 0,
             width: size,
             rotate: 0,
-            rotateX: tiltX,
-            rotateY: tiltY,
             scale: 1,
           }}
           exit={
@@ -126,8 +173,6 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
                   // 落回时用未缩放的布局宽度：原卡以 scale 1 接棒，落点尺寸才一致
                   width: origin.baseWidth,
                   rotate: origin.rotation,
-                  rotateX: 0,
-                  rotateY: 0,
                   scale: 1,
                 }
           }
@@ -153,17 +198,20 @@ export function Lightbox({ stamp, origin, debug, onClose }: Props) {
             }}
             transition={{ duration: reduce ? 0.12 : SWAP_FADE_S }}
           >
-            <img
-              className="lightbox-static-face"
-              src={textures.albedoUrl}
-              alt=""
-              draggable={false}
-            />
-            {shaderReady && (
+            {textures && (
+              <img
+                className="lightbox-static-face"
+                src={textures.albedoUrl}
+                alt=""
+                draggable={false}
+              />
+            )}
+            {textures && shaderReady && (
               <div className="lightbox-shader-face">
                 <StampMesh
-                  albedoUrl={textures.albedoUrl}
-                  heightUrl={textures.heightUrl}
+                  ref={meshRef}
+                  albedoUrl={textures.albedoCanvas}
+                  heightUrl={textures.heightCanvas}
                   width={textures.width}
                   height={textures.height}
                   live={live}

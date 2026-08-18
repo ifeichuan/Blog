@@ -134,7 +134,9 @@ const bannerURL = typeof banner === "string" ? banner : banner?.src;
           {/* 正文 */}
           <slot />
         </div>
-        <HoverLinkEnhancer client:only="react" />
+        <div class="hover-preview-slot">
+          <HoverLinkEnhancer client:only="react" />
+        </div>
       </div>
 
       {/* 右侧栏：设置 */}
@@ -196,6 +198,15 @@ const bannerURL = typeof banner === "string" ? banner : banner?.src;
     background: var(--reader-link);
     z-index: 50;
     transition: width 0.1s linear;
+    pointer-events: none;
+  }
+
+  /* 预览岛不能占 flex 宽度，否则正文 max-w-3xl 会被挤窄 */
+  .hover-preview-slot {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: visible;
     pointer-events: none;
   }
 

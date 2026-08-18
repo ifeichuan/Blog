@@ -2,6 +2,7 @@
 import BaseHead from "@/components/layout/BaseHead.astro";
 import ParticleAvatar from "@/components/about/ParticleAvatar.astro";
 import SiteMenu from "@/components/layout/SiteMenu.astro";
+import ThemeToggle from "@/components/layout/ThemeToggle.astro";
 import "@/styles/tailwind.css";
 
 const posts = [
@@ -55,6 +56,7 @@ const projects = [
   </head>
   <body>
     <SiteMenu />
+    <ThemeToggle />
 
     <main>
       <div class="paper-container">
@@ -130,15 +132,30 @@ const projects = [
     <script is:inline src="/vendor/glass-voice-orb-study/src/audio.js"></script>
     <script is:inline src="/vendor/glass-voice-orb-study/src/renderer.js"></script>
     <script is:inline src="/vendor/glass-voice-orb-study/src/embed-main.js"></script>
+    <script>
+      import { applyFcTheme, watchSystemTheme } from "@/lib/theme";
+      applyFcTheme();
+      watchSystemTheme();
+    </script>
   </body>
 </html>
 
 <style is:global>
-  :root { --paper-bg:#f5f4ed; --paper-text:rgba(0,0,0,.5); --paper-strong:#000; --paper-line:rgba(0,0,0,.15); }
+  /* 纸色原本写死成亮面（#f5f4ed / 黑色 alpha）。暗色下会和
+   * new.css 里 main 的 --fc-surface-page 对不上：底已经是深的，
+   * 字还是 #000，整页发黑；菜单按钮又走 --fc-ink，局部颜色再跑偏。
+   * 四个变量改成引用 --fc-*，跟着 data-fc-theme 切。 */
+  :root {
+    --paper-bg: var(--fc-surface-page);
+    --paper-text: var(--fc-ink-meta);
+    --paper-strong: var(--fc-ink);
+    --paper-line: var(--fc-border-strong);
+  }
   html { overflow-y:scroll;color-scheme:light;background:var(--paper-bg); }
+  html[data-fc-theme="dark"] { color-scheme: dark; }
   body { min-height:100%;margin:0;color:var(--paper-text);background:var(--paper-bg);font-family:"Maple Mono NF CN",system-ui,sans-serif;-webkit-font-smoothing:antialiased; }
-  * { box-sizing:border-box; } a { color:inherit;text-decoration:underline;text-decoration-color:rgba(0,0,0,.15);text-underline-offset:2px;transition:color .3s ease,text-decoration-color .3s ease; } a:hover { color:var(--paper-strong);text-decoration-color:rgba(0,0,0,.25); }
-  main { min-height:100vh;padding:128px 0; }.paper-container { width:100%;max-width:640px;margin-inline:auto;padding-inline:20px; }.about-heading { --avatar-size:128px;display:flex;min-height:128px;align-items:center;justify-content:space-between;gap:24px; }.about-heading>h1 { margin:0;color:var(--paper-strong);font-size:16px;font-weight:600;line-height:24px;letter-spacing:0; }.about-heading>h1 span { font-size:20px; }.paper-flow { display:flex;flex-direction:column;gap:64px;margin-top:20px; }
+  * { box-sizing:border-box; } a { color:inherit;text-decoration:underline;text-decoration-color:var(--paper-line);text-underline-offset:2px;transition:color .3s ease,text-decoration-color .3s ease; } a:hover { color:var(--paper-strong);text-decoration-color:currentColor; }
+  main { min-height:100vh;padding:128px 0; }.paper-container { position:relative;z-index:1;width:100%;max-width:640px;margin-inline:auto;padding-inline:20px; }.about-heading { --avatar-size:128px;display:flex;min-height:128px;align-items:center;justify-content:space-between;gap:24px; }.about-heading>h1 { margin:0;color:var(--paper-strong);font-size:16px;font-weight:600;line-height:24px;letter-spacing:0; }.about-heading>h1 span { font-size:20px; }.paper-flow { display:flex;flex-direction:column;gap:64px;margin-top:20px; }
   article { max-width:100%;font-size:16px;line-height:28px; } article p { margin:0; }.intro-section article { display:flex;flex-direction:column;gap:16px; }
   .paper-section { display:flex;flex-direction:column;gap:24px; }.section-heading { display:flex;min-height:24px;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px; }.section-heading h2,.connect-section h2 { margin:0;color:var(--paper-strong);font-size:16px;font-weight:600;line-height:24px; }.section-heading>a,.section-heading>span { font-size:16px;line-height:24px; }
   .sr-only { position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap; }
@@ -164,16 +181,16 @@ const projects = [
   .siri-mic { position:absolute;right:var(--dialog-edge-gap);top:50%;width:30px;height:30px;transform:translateY(-50%);color:rgba(255,255,255,.58); }
   .siri-mic svg { width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round; }
   .siri-answer { max-height:86px;overflow:hidden;padding:0 var(--dialog-reply-pad);white-space:pre-wrap; }
-  .siri-control { position:absolute;left:50%;bottom:10px;z-index:3;min-width:136px;max-width:calc(100% - 32px);margin:0;padding:8px 14px;transform:translateX(-50%);border:1px solid rgba(0,0,0,.14);border-radius:999px;background:rgba(255,255,255,.42);backdrop-filter:blur(14px);color:rgba(0,0,0,.62);font:500 14px/1 "Inter",ui-sans-serif,system-ui,sans-serif;letter-spacing:0;white-space:nowrap;cursor:pointer;pointer-events:auto; }
-  .siri-control[data-active="true"] { color:rgba(0,0,0,.84); }
-  .siri-control:focus-visible,.siri-hit-target:focus-visible { outline:2px solid #4385be;outline-offset:4px; }
+  .siri-control { position:absolute;left:50%;bottom:10px;z-index:3;min-width:136px;max-width:calc(100% - 32px);margin:0;padding:8px 14px;transform:translateX(-50%);border:1px solid var(--paper-line);border-radius:999px;background:color-mix(in oklab, var(--fc-surface-raised) 72%, transparent);backdrop-filter:blur(14px);color:var(--paper-text);font:500 14px/1 "Inter",ui-sans-serif,system-ui,sans-serif;letter-spacing:0;white-space:nowrap;cursor:pointer;pointer-events:auto; }
+  .siri-control[data-active="true"] { color:var(--paper-strong); }
+  .siri-control:focus-visible,.siri-hit-target:focus-visible { outline:2px solid var(--fc-border-focus);outline-offset:4px; }
   @keyframes caret-glow { 0%,100%{opacity:.45;transform:translate(-50%,-50%) scaleY(.92)}50%{opacity:1;transform:translate(-50%,-50%) scaleY(1.08)} }
   @keyframes dialog-opacity-breathe { 0%,100%{opacity:.9}50%{opacity:1} }
   .arrow-list,.experience-list,.connect-links { display:flex;margin:0;padding:0;list-style:none; }.arrow-list { flex-direction:column;gap:16px; }.arrow-card { position:relative;display:flex;width:100%;height:70px;align-items:center;padding:12px 40px 12px 16px;overflow:hidden;border:1px solid var(--paper-line);border-radius:8px;text-decoration:none; }.arrow-card>span { display:flex;min-width:0;flex:1;flex-direction:column;overflow:hidden; }.arrow-card strong { overflow:hidden;color:var(--paper-strong);font-size:16px;font-weight:600;line-height:24px;text-overflow:ellipsis;white-space:nowrap; }.arrow-card small { overflow:hidden;font-size:14px;line-height:20px;text-overflow:ellipsis;white-space:nowrap; }.arrow-card b { position:absolute;right:16px;color:var(--paper-text);font-size:28px;font-weight:400;transition:transform .3s ease; }.arrow-card:hover b { transform:translateX(3px); }
   .experience-list { flex-direction:column;gap:16px; }.experience-list li { min-height:216px; }.entry-date,.entry-role { font-size:14px;line-height:20px; }.entry-company { color:var(--paper-strong);font-size:16px;font-weight:600;line-height:24px; }.experience-list article { margin-top:16px; }
-  .stack-list { margin:0; }.stack-list>div { display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.08); }.stack-list>div:first-child { padding-top:0; }.stack-list>div:last-child { padding-bottom:0;border-bottom:0; }.stack-list dt { color:var(--paper-strong);font-size:14px;font-weight:600;line-height:22px; }.stack-list dd { margin:0;font-size:14px;line-height:22px; }
+  .stack-list { margin:0; }.stack-list>div { display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid var(--paper-line); }.stack-list>div:first-child { padding-top:0; }.stack-list>div:last-child { padding-bottom:0;border-bottom:0; }.stack-list dt { color:var(--paper-strong);font-size:14px;font-weight:600;line-height:22px; }.stack-list dd { margin:0;font-size:14px;line-height:22px; }
   .connect-section { display:flex;flex-direction:column;gap:16px; }.connect-links { flex-wrap:wrap;gap:8px; }.connect-links li { display:flex;gap:8px;white-space:nowrap; }
-  a:focus-visible { outline:2px solid #4385be;outline-offset:3px; }
+  a:focus-visible { outline:2px solid var(--fc-border-focus);outline-offset:3px; }
   @media(max-width:640px){main{padding:112px 0 96px}.about-heading{--avatar-size:104px;min-height:104px}.paper-flow{gap:56px}.stack-list>div{grid-template-columns:92px minmax(0,1fr)}.orb-stage{height:280px}.orb-surface{--dialog-edge-gap:24px;--dialog-control-gap:34px}}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important}}
 </style>

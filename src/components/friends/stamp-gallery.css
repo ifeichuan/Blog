@@ -14,11 +14,12 @@
 
 .stamp-stage {
   position: relative;
-  height: min(72vh, 640px);
-  overflow: hidden;
+  width: 100%;
+  height: calc(var(--stamp-bands, 1) * 100dvh);
+  min-height: 100svh;
+  overflow: visible;
   background: var(--paper-bg, #f6f2ea);
   color: #1c1b19;
-  border-radius: 12px;
 }
 
 .stamp-stage button {
@@ -28,6 +29,12 @@
 .stamp-field {
   position: absolute;
   inset: 0;
+}
+
+.stamp-scroll-layer {
+  width: 100%;
+  height: 100%;
+  transform: translate3d(0, var(--stamp-par, 0px), 0) rotate(var(--stamp-curl, 0deg));
 }
 
 .stamp-card {
@@ -40,6 +47,11 @@
   cursor: pointer;
   transform-origin: center center;
   touch-action: manipulation;
+  contain: layout;
+}
+
+.stamp-card.is-dimmed {
+  will-change: filter;
 }
 
 .stamp-card:focus-visible {
@@ -60,12 +72,12 @@
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  will-change: transform;
 }
 
 .stamp-card.is-focused .stamp-tilt {
   /* slight lift off the desk while tilting */
   translate: 0 0 18px;
+  will-change: transform;
 }
 
 .stamp-float {
@@ -73,6 +85,36 @@
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
+  animation: stamp-bob var(--bob-dur, 8s) ease-in-out infinite;
+}
+
+.stamp-card.is-focused .stamp-float,
+.stamp-card.is-dimmed .stamp-float,
+.stamp-card.is-viewer-active .stamp-float,
+.stamp-card.is-offscreen .stamp-float {
+  animation-play-state: paused;
+}
+
+.stamp-card.is-focused .stamp-float {
+  animation: none;
+  transform: none;
+  transition: transform 0.2s ease;
+}
+
+@keyframes stamp-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(var(--bob-up, -5px)) rotate(0.6deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(var(--bob-down, 4px)) rotate(-0.5deg);
+  }
 }
 
 .stamp-shadow {
@@ -496,5 +538,10 @@
 
   .stamp-card.is-focused .stamp-tilt {
     translate: none;
+  }
+
+  .stamp-float {
+    animation: none;
+    transform: none;
   }
 }

@@ -1,0 +1,259 @@
+/* 右下角友链入口。尺寸/位置由 Motion layoutId 插值，这里只定两端外观。 */
+
+.friend-dock-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: color-mix(in oklab, var(--paper-bg, #f6f2ea) 42%, transparent);
+  cursor: zoom-out;
+}
+
+.friend-dock {
+  position: fixed;
+  z-index: 40;
+  right: max(20px, env(safe-area-inset-right, 0px));
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+}
+
+.friend-dock-trigger {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--fc-ink);
+  color: var(--fc-surface-page);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  line-height: 18px;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 10px 28px color-mix(in oklab, var(--fc-ink) 22%, transparent);
+}
+
+.friend-dock-popover {
+  width: min(22.5rem, calc(100vw - 40px));
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid var(--paper-line);
+  border-radius: 20px;
+  background: var(--paper-surface);
+  color: var(--paper-strong);
+  box-shadow: 0 22px 56px color-mix(in oklab, var(--fc-ink) 20%, transparent);
+  scrollbar-width: thin;
+}
+
+.friend-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.friend-form-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.friend-form-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.friend-form-head p {
+  margin: 6px 0 0;
+  color: var(--paper-text);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.friend-form-close {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: -4px -4px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--paper-text);
+  cursor: pointer;
+}
+
+.friend-form-close:hover {
+  background: var(--paper-wash);
+  color: var(--paper-strong);
+}
+
+.friend-form-close svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.form-field-wide {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  color: var(--paper-strong);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.req {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--fc-danger);
+}
+
+.friend-form input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--paper-line);
+  border-radius: 8px;
+  background: var(--paper-bg);
+  color: var(--paper-strong);
+  font: inherit;
+  font-size: 13px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.friend-form input::placeholder {
+  color: var(--fc-ink-meta);
+}
+
+.friend-form input:focus {
+  outline: none;
+  border-color: var(--fc-border-focus);
+  box-shadow: var(--fc-elev-focus);
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-submit {
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--fc-ink);
+  color: var(--fc-surface-page);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.form-submit:hover {
+  background: var(--fc-accent);
+  color: var(--fc-ink-on-accent);
+}
+
+.form-hint {
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--paper-text);
+}
+
+.form-error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fc-danger);
+}
+
+.form-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-result-code {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--paper-line);
+  border-radius: 8px;
+  background: var(--paper-bg);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: pre-wrap;
+}
+
+.form-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.form-result-actions button,
+.form-result-actions a {
+  padding: 6px 12px;
+  border: 1px solid var(--paper-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--paper-strong);
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.form-result-actions button:hover,
+.form-result-actions a:hover {
+  background: var(--paper-wash);
+}
+
+body:has(.staggered-menu-wrapper[data-open]) .friend-dock,
+body:has(.staggered-menu-wrapper[data-open]) .friend-dock-backdrop {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .friend-dock-popover {
+    width: min(22.5rem, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+  }
+}
