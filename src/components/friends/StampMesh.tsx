@@ -1,22 +1,13 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { IMPASTO_FRAGMENT, IMPASTO_VERTEX } from './impastoShader'
 
 export type StampMeshHandle = {
   requestRender: () => void
+  renderNow: () => void
 }
 
-type TextureSource = string | HTMLCanvasElement
-
-function loadTexture(source: TextureSource, loader: THREE.TextureLoader | null) {
-  if (typeof source !== 'string') {
-    return Promise.resolve(new THREE.CanvasTexture(source))
-  }
-  if (!loader) {
-    return Promise.reject(new Error('TextureLoader missing'))
-  }
-  return loader.loadAsync(source)
-}
+export type TextureSource = string | HTMLCanvasElement
 
 export type ShaderLive = {
   intensity: number
@@ -54,17 +45,204 @@ export type ShaderLive = {
 }
 
 type Props = {
-  albedoUrl: TextureSource
-  heightUrl: TextureSource
+  albedoUrl: TextureSource | null
+  heightUrl: TextureSource | null
   width: number
   height: number
   live: ShaderLive
   className?: string
   displayWidth: number
-  /** Inactive instances compile once, then remain fully demand-driven. */
   active?: boolean
-  /** CSS follows the animated parent width while render resolution stays stable. */
   fluidWidth?: boolean
+  /** 把 canvas 挂到票卡 shader 层；为空则留在组件自己的壳里。 */
+  slot?: HTMLElement | null
+  /** 换票时重置显影插值。 */
+  stampKey?: string
+  /** 贴图已绑、canvas 已挂上并画完第一帧。 */
+  onPresented?: () => void
+}
+
+type Engine = {
+  renderer: THREE.WebGLRenderer
+  scene: THREE.Scene
+  camera: THREE.Camera
+  uniforms: ReturnType<typeof createUniforms>
+  material: THREE.ShaderMaterial
+  mesh: THREE.Mesh
+  canvas: HTMLCanvasElement
+  albedoTex: THREE.Texture | null
+  heightTex: THREE.Texture | null
+  dummyAlbedo: THREE.Texture
+  dummyHeight: THREE.Texture
+  disposed: boolean
+  raf: number
+  lastFrame: number
+  start: number
+  revealCurrent: number
+  revealFrom: number
+  revealTarget: number
+  revealStartedAt: number
+}
+
+function createUniforms(width: number, height: number) {
+  return {
+    uAlbedo: { value: null as THREE.Texture | null },
+    uHeight: { value: null as THREE.Texture | null },
+    uResolution: { value: new THREE.Vector2(width, height) },
+    uLightUV: { value: new THREE.Vector2(0.5, 0.5) },
+    uIntensity: { value: 0 },
+    uBumpScale: { value: 1.85 },
+    uTime: { value: 0 },
+    uDapple: { value: 0.55 },
+    uFoil: { value: 1.0 },
+    uGlitter: { value: 0.52 },
+    uGlitterDensity: { value: 0.58 },
+    uGlitterSharpness: { value: 78 },
+    uFrost: { value: 0.24 },
+    uFrostSharpness: { value: 15 },
+    uMicroGrain: { value: 0.16 },
+    uMicroGrainScale: { value: 1.35 },
+    uFoilSharpness: { value: 56 },
+    uHoloBands: { value: 1 },
+    uLightHeight: { value: 0.68 },
+    uLightRadius: { value: 0.19 },
+    uAmbient: { value: 0.78 },
+    uKeyLight: { value: 0.45 },
+    uReveal: { value: 0 },
+    uBurnNoise: { value: 3.4 },
+    uBurnDetailScale: { value: 9 },
+    uBurnDetailMix: { value: 0.24 },
+    uBurnBite: { value: 0.26 },
+    uBurnBiteThreshold: { value: 0.62 },
+    uBurnWarp: { value: 0.055 },
+    uBurnDirection: { value: 0.08 },
+    uBurnEdge: { value: 0.052 },
+    uBurnGlow: { value: 0.42 },
+    uBurnShadow: { value: 0.14 },
+    uBurnGrain: { value: 0.48 },
+    uBurnDrift: { value: 0.12 },
+  }
+}
+
+function loadTexture(source: TextureSource, loader: THREE.TextureLoader | null) {
+  if (typeof source !== 'string') {
+    return Promise.resolve(new THREE.CanvasTexture(source))
+  }
+  if (!loader) return Promise.reject(new Error('TextureLoader missing'))
+  return loader.loadAsync(source)
+}
+
+function applyTextureFlags(albedo: THREE.Texture, heightMap: THREE.Texture) {
+  albedo.colorSpace = THREE.SRGBColorSpace
+  albedo.generateMipmaps = true
+  albedo.minFilter = THREE.LinearMipmapLinearFilter
+  albedo.magFilter = THREE.LinearFilter
+  heightMap.colorSpace = THREE.NoColorSpace
+  heightMap.generateMipmaps = false
+  heightMap.minFilter = THREE.LinearFilter
+  heightMap.magFilter = THREE.LinearFilter
+}
+
+function maxDprFor(displayWidth: number) {
+  return Math.min(window.devicePixelRatio, displayWidth >= 300 ? 1.5 : 1.2)
+}
+
+function resetReveal(engine: Engine, live: ShaderLive, now: number) {
+  const target = live.reveal
+  engine.revealCurrent = target >= 0.999 && live.revealDuration > 0 ? 0 : target
+  engine.revealFrom = engine.revealCurrent
+  engine.revealTarget = target
+  engine.revealStartedAt = now
+}
+
+function isCanvasTex(tex: THREE.Texture | null, source: HTMLCanvasElement) {
+  return tex instanceof THREE.CanvasTexture && tex.image === source
+}
+
+/** 现成 canvas 贴图同步绑上，避免第一帧还是 dummy / 上一张票。 */
+function bindCanvasTextures(
+  engine: Engine,
+  albedoSource: TextureSource | null,
+  heightSource: TextureSource | null,
+) {
+  if (!albedoSource || !heightSource) return false
+  if (typeof albedoSource === 'string' || typeof heightSource === 'string') return false
+
+  const albedo = isCanvasTex(engine.albedoTex, albedoSource)
+    ? engine.albedoTex!
+    : new THREE.CanvasTexture(albedoSource)
+  const heightMap = isCanvasTex(engine.heightTex, heightSource)
+    ? engine.heightTex!
+    : new THREE.CanvasTexture(heightSource)
+
+  if (engine.albedoTex !== albedo || engine.heightTex !== heightMap) {
+    applyTextureFlags(albedo, heightMap)
+  }
+  if (engine.albedoTex !== albedo) {
+    engine.albedoTex?.dispose()
+    engine.albedoTex = albedo
+    engine.uniforms.uAlbedo.value = albedo
+  }
+  if (engine.heightTex !== heightMap) {
+    engine.heightTex?.dispose()
+    engine.heightTex = heightMap
+    engine.uniforms.uHeight.value = heightMap
+  }
+  return true
+}
+
+function paint(engine: Engine, live: ShaderLive, now: number) {
+  if (engine.disposed) return false
+
+  if (Math.abs(live.reveal - engine.revealTarget) > 0.0001) {
+    engine.revealFrom = engine.revealCurrent
+    engine.revealTarget = live.reveal
+    engine.revealStartedAt = now
+  }
+  if (live.revealDuration <= 0) {
+    engine.revealCurrent = engine.revealTarget
+  } else {
+    const p = Math.min(1, (now - engine.revealStartedAt) / (live.revealDuration * 1000))
+    const eased = 1 - Math.pow(1 - p, 3)
+    engine.revealCurrent = engine.revealFrom + (engine.revealTarget - engine.revealFrom) * eased
+  }
+
+  const uniforms = engine.uniforms
+  uniforms.uTime.value = (now - engine.start) / 1000
+  uniforms.uIntensity.value = live.intensity
+  uniforms.uLightUV.value.set(live.lightUV.x, 1 - live.lightUV.y)
+  uniforms.uReveal.value = engine.revealCurrent
+  uniforms.uBumpScale.value = live.bumpScale
+  uniforms.uFoil.value = live.foil
+  uniforms.uGlitter.value = live.glitter
+  uniforms.uGlitterDensity.value = live.glitterDensity
+  uniforms.uGlitterSharpness.value = live.glitterSharpness
+  uniforms.uDapple.value = live.dapple
+  uniforms.uFrost.value = live.frost
+  uniforms.uFrostSharpness.value = live.frostSharpness
+  uniforms.uMicroGrain.value = live.microGrain
+  uniforms.uMicroGrainScale.value = live.microGrainScale
+  uniforms.uFoilSharpness.value = live.foilSharpness
+  uniforms.uHoloBands.value = live.holoBands
+  uniforms.uLightHeight.value = live.lightHeight
+  uniforms.uLightRadius.value = live.lightRadius
+  uniforms.uAmbient.value = live.ambient
+  uniforms.uKeyLight.value = live.keyLight
+  uniforms.uBurnNoise.value = live.burnNoise
+  uniforms.uBurnDetailScale.value = live.burnDetailScale
+  uniforms.uBurnDetailMix.value = live.burnDetailMix
+  uniforms.uBurnBite.value = live.burnBite
+  uniforms.uBurnBiteThreshold.value = live.burnBiteThreshold
+  uniforms.uBurnWarp.value = live.burnWarp
+  uniforms.uBurnDirection.value = live.burnDirection
+  uniforms.uBurnEdge.value = live.burnEdge
+  uniforms.uBurnGlow.value = live.burnGlow
+  uniforms.uBurnShadow.value = live.burnShadow
+  uniforms.uBurnGrain.value = live.burnGrain
+  uniforms.uBurnDrift.value = live.burnDrift
+  engine.renderer.render(engine.scene, engine.camera)
+  engine.lastFrame = now
+  return Math.abs(engine.revealCurrent - engine.revealTarget) > 0.001
 }
 
 /** Single-plane WebGL stamp: sand-grit + foil + organic reveal seam. */
@@ -79,249 +257,233 @@ export const StampMesh = forwardRef<StampMeshHandle, Props>(function StampMesh(
     displayWidth,
     active = true,
     fluidWidth = false,
+    slot = null,
+    stampKey = '',
+    onPresented,
   },
   ref,
 ) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const homeRef = useRef<HTMLDivElement>(null)
+  const engineRef = useRef<Engine | null>(null)
   const stateRef = useRef(live)
   const activeRef = useRef(active)
   const requestRenderRef = useRef<(() => void) | null>(null)
+  const renderNowRef = useRef<(() => void) | null>(null)
+  const classNameRef = useRef(className)
+  const fluidWidthRef = useRef(fluidWidth)
+  const stampKeyRef = useRef(stampKey)
+  const onPresentedRef = useRef(onPresented)
   stateRef.current = live
   activeRef.current = active
+  classNameRef.current = className
+  fluidWidthRef.current = fluidWidth
+  onPresentedRef.current = onPresented
 
   useImperativeHandle(
     ref,
     () => ({
       requestRender: () => requestRenderRef.current?.(),
+      renderNow: () => renderNowRef.current?.(),
     }),
     [],
   )
 
   const displayHeight = displayWidth * (height / width)
+  const sizeRef = useRef({ displayWidth, displayHeight, width, height })
+  sizeRef.current = { displayWidth, displayHeight, width, height }
 
-  useEffect(() => {
-    if (active) requestRenderRef.current?.()
-  }, [active, live])
+  useLayoutEffect(() => {
+    const home = homeRef.current
+    if (!home) return
 
-  const uniforms = useMemo(
-    () => ({
-      uAlbedo: { value: null as THREE.Texture | null },
-      uHeight: { value: null as THREE.Texture | null },
-      uResolution: { value: new THREE.Vector2(width, height) },
-      uLightUV: { value: new THREE.Vector2(0.5, 0.5) },
-      uIntensity: { value: 0 },
-      uBumpScale: { value: 1.85 },
-      uTime: { value: 0 },
-      uDapple: { value: 0.55 },
-      uFoil: { value: 1.0 },
-      uGlitter: { value: 0.52 },
-      uGlitterDensity: { value: 0.58 },
-      uGlitterSharpness: { value: 78 },
-      uFrost: { value: 0.24 },
-      uFrostSharpness: { value: 15 },
-      uMicroGrain: { value: 0.16 },
-      uMicroGrainScale: { value: 1.35 },
-      uFoilSharpness: { value: 56 },
-      uHoloBands: { value: 1 },
-      uLightHeight: { value: 0.68 },
-      uLightRadius: { value: 0.19 },
-      uAmbient: { value: 0.78 },
-      uKeyLight: { value: 0.45 },
-      uReveal: { value: 0 },
-      uBurnNoise: { value: 3.4 },
-      uBurnDetailScale: { value: 9 },
-      uBurnDetailMix: { value: 0.24 },
-      uBurnBite: { value: 0.26 },
-      uBurnBiteThreshold: { value: 0.62 },
-      uBurnWarp: { value: 0.055 },
-      uBurnDirection: { value: 0.08 },
-      uBurnEdge: { value: 0.052 },
-      uBurnGlow: { value: 0.42 },
-      uBurnShadow: { value: 0.14 },
-      uBurnGrain: { value: 0.48 },
-      uBurnDrift: { value: 0.12 },
-    }),
-    [width, height],
-  )
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const canvas = document.createElement('canvas')
+    canvas.className = classNameRef.current ?? 'stamp-canvas'
+    canvas.style.display = 'block'
+    canvas.style.width = '100%'
+    canvas.style.height = fluidWidthRef.current ? 'auto' : '100%'
+    home.appendChild(canvas)
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
       alpha: true,
-      // discard + MSAA 互相抵消，关抗锯齿不改票面，省一层多重采样。
       antialias: false,
       depth: false,
       stencil: false,
       premultipliedAlpha: false,
+      // 挪 DOM 时浏览器会清 drawing buffer；留住上一帧，避免空 canvas 闪一下
+      preserveDrawingBuffer: true,
       powerPreference: 'high-performance',
     })
     renderer.sortObjects = false
-    const maxDpr = displayWidth >= 300 ? 1.5 : 1.2
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDpr))
-    renderer.setSize(displayWidth, displayHeight, false)
     renderer.setClearColor(0x000000, 0)
+    renderer.setPixelRatio(maxDprFor(displayWidth))
+    renderer.setSize(displayWidth, displayHeight, false)
 
     const scene = new THREE.Scene()
     const camera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0.1, 10)
     camera.position.z = 1
 
-    const loader =
-      typeof albedoUrl === 'string' || typeof heightUrl === 'string'
-        ? new THREE.TextureLoader()
-        : null
-    let disposed = false
-    let albedoTex: THREE.Texture | null = null
-    let heightTex: THREE.Texture | null = null
-    let material: THREE.ShaderMaterial | null = null
-    let mesh: THREE.Mesh | null = null
-    let raf = 0
-    let lastFrame = 0
+    const uniforms = createUniforms(width, height)
+    const dummyAlbedo = new THREE.DataTexture(new Uint8Array([0, 0, 0, 0]), 1, 1)
+    dummyAlbedo.needsUpdate = true
+    const dummyHeight = new THREE.DataTexture(new Uint8Array([128, 128, 128, 255]), 1, 1)
+    dummyHeight.needsUpdate = true
+    uniforms.uAlbedo.value = dummyAlbedo
+    uniforms.uHeight.value = dummyHeight
+
+    const material = new THREE.ShaderMaterial({
+      vertexShader: IMPASTO_VERTEX,
+      fragmentShader: IMPASTO_FRAGMENT,
+      uniforms,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+    })
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material)
+    mesh.frustumCulled = false
+    scene.add(mesh)
+
     const start = performance.now()
-    const initialTarget = stateRef.current.reveal
-    let revealCurrent = initialTarget >= 0.999 && stateRef.current.revealDuration > 0 ? 0 : initialTarget
-    let revealFrom = revealCurrent
-    let revealTarget = initialTarget
-    let revealStartedAt = start
+    const engine: Engine = {
+      renderer,
+      scene,
+      camera,
+      uniforms,
+      material,
+      mesh,
+      canvas,
+      albedoTex: null,
+      heightTex: null,
+      dummyAlbedo,
+      dummyHeight,
+      disposed: false,
+      raf: 0,
+      lastFrame: 0,
+      start,
+      revealCurrent: 0,
+      revealFrom: 0,
+      revealTarget: 0,
+      revealStartedAt: start,
+    }
+    resetReveal(engine, stateRef.current, start)
+    engineRef.current = engine
+
+    const loop = (now: number) => {
+      if (engine.disposed) return
+      if (now - engine.lastFrame < 1000 / 60) {
+        engine.raf = requestAnimationFrame(loop)
+        return
+      }
+      engine.raf = 0
+      if (paint(engine, stateRef.current, now)) {
+        engine.raf = requestAnimationFrame(loop)
+      }
+    }
+
+    requestRenderRef.current = () => {
+      if (engine.disposed || engine.raf !== 0) return
+      engine.raf = requestAnimationFrame(loop)
+    }
+    renderNowRef.current = () => {
+      if (engine.disposed) return
+      const keep = paint(engine, stateRef.current, performance.now())
+      if (keep && engine.raf === 0) engine.raf = requestAnimationFrame(loop)
+    }
+
+    renderer.compile(scene, camera)
+    paint(engine, stateRef.current, start)
+
+    return () => {
+      engine.disposed = true
+      requestRenderRef.current = null
+      renderNowRef.current = null
+      cancelAnimationFrame(engine.raf)
+      material.dispose()
+      mesh.geometry.dispose()
+      engine.albedoTex?.dispose()
+      engine.heightTex?.dispose()
+      dummyAlbedo.dispose()
+      dummyHeight.dispose()
+      renderer.dispose()
+      canvas.remove()
+      engineRef.current = null
+    }
+    // Renderer is created once. Size, textures and slot are patched below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useLayoutEffect(() => {
+    const engine = engineRef.current
+    const home = homeRef.current
+    if (!engine || engine.disposed) return
+
+    bindCanvasTextures(engine, albedoUrl, heightUrl)
+
+    const size = sizeRef.current
+    engine.renderer.setPixelRatio(maxDprFor(size.displayWidth))
+    engine.renderer.setSize(size.displayWidth, size.displayHeight, false)
+    engine.uniforms.uResolution.value.set(size.width, size.height)
+
+    if (stampKey && stampKey !== stampKeyRef.current) {
+      resetReveal(engine, stateRef.current, performance.now())
+    }
+    stampKeyRef.current = stampKey
+
+    const dest = slot && document.contains(slot) ? slot : home
+    if (dest && engine.canvas.parentElement !== dest) dest.appendChild(engine.canvas)
+    if (classNameRef.current) engine.canvas.className = classNameRef.current
+
+    // 先换贴图、再挪节点、再同步画一帧。浏览器清 buffer 也赶在 paint 前补上。
+    if (activeRef.current || slot) renderNowRef.current?.()
+    if (slot) onPresentedRef.current?.()
+  }, [slot, albedoUrl, heightUrl, stampKey, displayWidth, displayHeight, width, height])
+
+  useEffect(() => {
+    const engine = engineRef.current
+    if (!engine || engine.disposed) return
+    if (!albedoUrl || !heightUrl) return
+    if (typeof albedoUrl !== 'string' && typeof heightUrl !== 'string') return
+
+    let cancelled = false
+    const loader = new THREE.TextureLoader()
 
     Promise.all([loadTexture(albedoUrl, loader), loadTexture(heightUrl, loader)]).then(
       ([albedo, heightMap]) => {
-        if (disposed) {
+        if (cancelled || engine.disposed) {
           albedo.dispose()
           heightMap.dispose()
           return
         }
-        albedo.colorSpace = THREE.SRGBColorSpace
-        albedo.generateMipmaps = true
-        albedo.minFilter = THREE.LinearMipmapLinearFilter
-        albedo.magFilter = THREE.LinearFilter
-        heightMap.colorSpace = THREE.NoColorSpace
-        heightMap.generateMipmaps = false
-        heightMap.minFilter = THREE.LinearFilter
-        heightMap.magFilter = THREE.LinearFilter
-
-        albedoTex = albedo
-        heightTex = heightMap
-        uniforms.uAlbedo.value = albedo
-        uniforms.uHeight.value = heightMap
-
-        material = new THREE.ShaderMaterial({
-          vertexShader: IMPASTO_VERTEX,
-          fragmentShader: IMPASTO_FRAGMENT,
-          uniforms,
-          transparent: true,
-          depthTest: false,
-          depthWrite: false,
-        })
-
-        const geo = new THREE.PlaneGeometry(1, 1)
-        mesh = new THREE.Mesh(geo, material)
-        mesh.frustumCulled = false
-        scene.add(mesh)
-
-        const loop = (now: number) => {
-          if (disposed) return
-
-          // Reveal/fire-edge motion needs 60 fps. Rendering still stops entirely
-          // after it settles, so this does not restore a permanent frame loop.
-          if (now - lastFrame < 1000 / 60) {
-            raf = requestAnimationFrame(loop)
-            return
-          }
-          lastFrame = now
-          raf = 0
-          const s = stateRef.current
-
-          if (Math.abs(s.reveal - revealTarget) > 0.0001) {
-            revealFrom = revealCurrent
-            revealTarget = s.reveal
-            revealStartedAt = now
-          }
-          if (s.revealDuration <= 0) {
-            revealCurrent = revealTarget
-          } else {
-            const p = Math.min(1, (now - revealStartedAt) / (s.revealDuration * 1000))
-            const eased = 1 - Math.pow(1 - p, 3)
-            revealCurrent = revealFrom + (revealTarget - revealFrom) * eased
-          }
-
-          uniforms.uTime.value = (now - start) / 1000
-          uniforms.uIntensity.value = s.intensity
-          uniforms.uLightUV.value.set(s.lightUV.x, 1 - s.lightUV.y)
-          uniforms.uReveal.value = revealCurrent
-          uniforms.uBumpScale.value = s.bumpScale
-          uniforms.uFoil.value = s.foil
-          uniforms.uGlitter.value = s.glitter
-          uniforms.uGlitterDensity.value = s.glitterDensity
-          uniforms.uGlitterSharpness.value = s.glitterSharpness
-          uniforms.uDapple.value = s.dapple
-          uniforms.uFrost.value = s.frost
-          uniforms.uFrostSharpness.value = s.frostSharpness
-          uniforms.uMicroGrain.value = s.microGrain
-          uniforms.uMicroGrainScale.value = s.microGrainScale
-          uniforms.uFoilSharpness.value = s.foilSharpness
-          uniforms.uHoloBands.value = s.holoBands
-          uniforms.uLightHeight.value = s.lightHeight
-          uniforms.uLightRadius.value = s.lightRadius
-          uniforms.uAmbient.value = s.ambient
-          uniforms.uKeyLight.value = s.keyLight
-          uniforms.uBurnNoise.value = s.burnNoise
-          uniforms.uBurnDetailScale.value = s.burnDetailScale
-          uniforms.uBurnDetailMix.value = s.burnDetailMix
-          uniforms.uBurnBite.value = s.burnBite
-          uniforms.uBurnBiteThreshold.value = s.burnBiteThreshold
-          uniforms.uBurnWarp.value = s.burnWarp
-          uniforms.uBurnDirection.value = s.burnDirection
-          uniforms.uBurnEdge.value = s.burnEdge
-          uniforms.uBurnGlow.value = s.burnGlow
-          uniforms.uBurnShadow.value = s.burnShadow
-          uniforms.uBurnGrain.value = s.burnGrain
-          uniforms.uBurnDrift.value = s.burnDrift
-          renderer.render(scene, camera)
-
-          // Keep drawing only while reveal is in flight. Pointer/parameter
-          // changes explicitly request one new frame through requestRenderRef.
-          if (Math.abs(revealCurrent - revealTarget) > 0.001) {
-            raf = requestAnimationFrame(loop)
-          }
-        }
-
-        requestRenderRef.current = () => {
-          if (disposed || raf !== 0) return
-          raf = requestAnimationFrame(loop)
-        }
-
-        // One idle frame compiles the program. Future frames are demand-only.
-        renderer.compile(scene, camera)
-        renderer.render(scene, camera)
-        if (activeRef.current) requestRenderRef.current()
+        applyTextureFlags(albedo, heightMap)
+        engine.albedoTex?.dispose()
+        engine.heightTex?.dispose()
+        engine.albedoTex = albedo
+        engine.heightTex = heightMap
+        engine.uniforms.uAlbedo.value = albedo
+        engine.uniforms.uHeight.value = heightMap
+        renderNowRef.current?.()
       },
     )
 
     return () => {
-      disposed = true
-      requestRenderRef.current = null
-      cancelAnimationFrame(raf)
-      material?.dispose()
-      mesh?.geometry.dispose()
-      albedoTex?.dispose()
-      heightTex?.dispose()
-      renderer.dispose()
+      cancelled = true
     }
-  }, [albedoUrl, heightUrl, displayWidth, displayHeight, uniforms])
+  }, [albedoUrl, heightUrl])
+
+  useEffect(() => {
+    if (active) requestRenderRef.current?.()
+  }, [active, live])
 
   return (
-    <canvas
-      ref={canvasRef}
-      className={className}
-      width={Math.round(displayWidth * Math.min(window.devicePixelRatio, displayWidth >= 300 ? 1.5 : 1.2))}
-      height={Math.round(displayHeight * Math.min(window.devicePixelRatio, displayWidth >= 300 ? 1.5 : 1.2))}
+    <div
+      ref={homeRef}
+      className={slot ? undefined : className}
       style={
-        fluidWidth
-          ? { width: '100%', height: 'auto', aspectRatio: `${width} / ${height}`, display: 'block' }
-          : { width: displayWidth, height: displayHeight, display: 'block' }
+        slot
+          ? undefined
+          : fluidWidth
+            ? { width: '100%', height: 'auto', aspectRatio: `${width} / ${height}`, display: 'block' }
+            : { width: displayWidth, height: displayHeight, display: 'block' }
       }
     />
   )

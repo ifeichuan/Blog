@@ -144,8 +144,7 @@ const all: FriendItem[] = [...friends, ...reading];
 
   /* 灯箱打开时，浮层文字和友链入口退到后面去 */
   .page-head,
-  .friend-dock,
-  .friend-dock-backdrop {
+  .friend-dock {
     transition: filter 0.28s ease, opacity 0.28s ease;
   }
   body.has-stamp-viewer {
@@ -155,8 +154,7 @@ const all: FriendItem[] = [...friends, ...reading];
     overflow: hidden;
   }
   body.has-stamp-viewer .page-head,
-  body.has-stamp-viewer .friend-dock,
-  body.has-stamp-viewer .friend-dock-backdrop {
+  body.has-stamp-viewer .friend-dock {
     filter: blur(14px);
     opacity: 0.58;
     pointer-events: none;

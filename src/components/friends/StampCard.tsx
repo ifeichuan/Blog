@@ -5,11 +5,11 @@ import {
   useReducedMotion,
   useSpring,
 } from 'motion/react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createStampTextures, type StampTextures } from './createStampTextures'
 import type { DebugParams } from './debugParams'
 import { liveFromDebug } from './shaderLive'
-import { StampMesh, type StampMeshHandle } from './StampMesh'
+import { useStampPresented, useStampShader } from './StampShaderHost'
 import type { StampDef } from './stamps'
 import { SWAP_DELAY_S, SWAP_FADE_S } from './viewerTiming'
 
@@ -52,8 +52,10 @@ export function StampCard({
   onOpen,
 }: Props) {
   const reduce = useReducedMotion()
+  const shader = useStampShader()
+  const presentedId = useStampPresented()
   const rootRef = useRef<HTMLButtonElement>(null)
-  const meshRef = useRef<StampMeshHandle>(null)
+  const slotRef = useRef<HTMLDivElement>(null)
   const [textures, setTextures] = useState<StampTextures | null>(null)
   const [ready, setReady] = useState(false)
   const [inView, setInView] = useState(true)
@@ -87,36 +89,34 @@ export function StampCard({
 
   const reveal = isPreviewTarget ? debug.previewProgress : isFocused ? 1 : 0
   const showShader = isPreviewTarget || isFocused
+  const [holding, setHolding] = useState(false)
+  const holdingRef = useRef(false)
 
-  // shader 层按需挂载：hover 时才创建 WebGL context，移开后延迟 600ms 卸载。
-  // （移开后 shader 层 opacity 已经为 0，600ms 只影响 GPU 资源释放时机，
-  // 不影响视觉。11 张卡只会有 1-3 个并发 context，GPU 内存与 shader 编译
-  // 只在真正需要时发生。首次 hover 多一次编译，之后立即出画。）
-  const [shaderAlive, setShaderAlive] = useState(false)
-  const shaderAliveRef = useRef(false)
-  const shaderTimerRef = useRef<number | null>(null)
+  // 松手后继续占着共享 canvas，把显影从 1 播回 0；换票或进灯箱则立刻让位。
+  useLayoutEffect(() => {
+    if (!showShader) return
+    holdingRef.current = true
+    setHolding(true)
+  }, [showShader])
 
   useEffect(() => {
-    if (showShader) {
-      if (shaderTimerRef.current !== null) {
-        clearTimeout(shaderTimerRef.current)
-        shaderTimerRef.current = null
-      }
-      if (!shaderAliveRef.current) {
-        shaderAliveRef.current = true
-        setShaderAlive(true)
-      }
-    } else if (shaderAliveRef.current) {
-      shaderTimerRef.current = window.setTimeout(() => {
-        shaderAliveRef.current = false
-        setShaderAlive(false)
-      }, 600)
+    if (showShader) return
+    if (isDimmed || isViewerActive) {
+      holdingRef.current = false
+      setHolding(false)
+      return
     }
-    return () => {
-      if (shaderTimerRef.current !== null) clearTimeout(shaderTimerRef.current)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showShader])
+    if (!holdingRef.current) return
+    const ms = (reduce ? 0 : debug.burnDuration) * 1000 + 48
+    const id = window.setTimeout(() => {
+      holdingRef.current = false
+      setHolding(false)
+    }, ms)
+    return () => window.clearTimeout(id)
+  }, [showShader, isDimmed, isViewerActive, reduce, debug.burnDuration])
+
+  const shaderOn = showShader || (holding && !isDimmed && !isViewerActive)
+  const layerReady = shaderOn && presentedId === stamp.id
 
 
   useEffect(() => {
@@ -196,7 +196,7 @@ export function StampCard({
       tiltYRaw.set(tx * debug.tiltMax)
       shadowXRaw.set(tx * 6)
     }
-    meshRef.current?.requestRender()
+    shader?.requestRender()
   }
 
   const onPointerMove = (e: React.PointerEvent) => {
@@ -246,13 +246,32 @@ export function StampCard({
     () =>
       liveFromDebug(
         debug,
-        showShader ? 1 : 0,
+        shaderOn ? 1 : 0,
         lightUVRef.current,
         reveal,
         reduce || isPreviewTarget ? 0 : debug.burnDuration,
       ),
-    [debug, showShader, reveal, reduce, isPreviewTarget],
+    [debug, shaderOn, reveal, reduce, isPreviewTarget],
   )
+
+  useLayoutEffect(() => {
+    if (!shader) return
+    if (shaderOn && textures && slotRef.current) {
+      shader.claim({
+        id: stamp.id,
+        slot: slotRef.current,
+        textures,
+        displayWidth,
+        live,
+      })
+      return
+    }
+    shader.release(stamp.id)
+  }, [shader, shaderOn, textures, displayWidth, live, stamp.id])
+
+  useEffect(() => {
+    return () => shader?.release(stamp.id)
+  }, [shader, stamp.id])
 
   return (
     <motion.button
@@ -328,44 +347,25 @@ export function StampCard({
               style={isFocused && !reduce ? { transform: shadowTransform } : undefined}
             />
             {ready && textures ? (
-              <>
-                {/* flat print always underneath; shader burns over it */}
-                <img
-                  src={textures.albedoUrl}
-                  alt=""
-                  draggable={false}
-                  className="stamp-img"
-                  width={displayWidth}
-                  height={displayHeight}
-                  style={{
-                    opacity: showShader ? 0.88 : 1,
-                  }}
-                />
-            {shaderAlive && (
-              <div
-                className="stamp-shader-layer"
-                style={{ opacity: showShader ? 1 : 0, visibility: showShader ? 'visible' : 'hidden' }}
-              >
-                <StampMesh
-                  ref={meshRef}
-                  albedoUrl={textures.albedoCanvas}
-                  heightUrl={textures.heightCanvas}
-                  width={textures.width}
-                  height={textures.height}
-                  live={live}
-                  displayWidth={displayWidth}
-                  className="stamp-canvas"
-                  active={showShader}
-                />
-              </div>
-            )}
-              </>
+              <img
+                src={textures.albedoUrl}
+                alt=""
+                draggable={false}
+                className="stamp-img"
+                width={displayWidth}
+                height={displayHeight}
+              />
             ) : (
               <div
                 className="stamp-placeholder"
                 style={{ width: displayWidth, height: displayHeight }}
               />
             )}
+            <div
+              ref={slotRef}
+              className="stamp-shader-layer"
+              style={{ opacity: layerReady ? 1 : 0, visibility: layerReady ? 'visible' : 'hidden' }}
+            />
 
             {isFocused && (
               <motion.span

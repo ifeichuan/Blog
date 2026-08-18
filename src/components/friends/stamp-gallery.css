@@ -29,6 +29,7 @@
 .stamp-field {
   position: absolute;
   inset: 0;
+  isolation: isolate;
 }
 
 .stamp-scroll-layer {
@@ -152,6 +153,14 @@
   -webkit-user-drag: none;
 }
 
+.stamp-shader-home {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .stamp-shader-layer {
   position: absolute;
   inset: 0;
@@ -164,6 +173,7 @@
   inset: 0;
   width: 100% !important;
   height: 100% !important;
+  transform: translateZ(0);
 }
 
 .stamp-placeholder {

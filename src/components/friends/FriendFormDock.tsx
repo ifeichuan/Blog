@@ -1,27 +1,75 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useEffect, useRef, useState, type FormEvent, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type RefObject } from 'react'
 import './friend-form-dock.css'
 
-const move = { type: 'spring' as const, bounce: 0, duration: 0.4 }
-const fade = { duration: 0.18, ease: [0.2, 0, 0, 1] as const }
+/** Critically damped — Apple response ~0.35s, no overshoot. */
+const spring = { type: 'spring' as const, bounce: 0, duration: 0.35 }
+const fade = { duration: 0.2, ease: [0.2, 0, 0, 1] as const }
+const press = { duration: 0.1, ease: 'easeOut' as const }
+const OPEN_MAX = 360
+const OPEN_PAD = 18
+const GUTTER = 40
+
+function openWidth() {
+  const gutter = window.innerWidth <= 480 ? 32 : GUTTER
+  return Math.min(OPEN_MAX, window.innerWidth - gutter)
+}
 
 /**
- * 右下角友链入口。同一张卡用 layout 从 pill 长到 popover，
- * 内容只做透明度交叉淡化 —— 不拆两块 layoutId，避免投影叠闪。
+ * 右下角友链入口。卡始终按打开后的尺寸排，从右下角按 X/Y 独立弹簧缩放。
+ * 中途再点会从当前值折返；不播 width/height，避免整页重排闪到 WebGL。
  */
 export function FriendFormDock() {
   const [open, setOpen] = useState(false)
   const reduce = useReducedMotion()
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const faceRef = useRef<HTMLDivElement>(null)
   const firstFieldRef = useRef<HTMLInputElement>(null)
-  const timing = reduce ? { duration: 0 } : move
+  const wasOpenRef = useRef(false)
+  const [closed, setClosed] = useState({ w: 128, h: 42 })
+  const [openW, setOpenW] = useState(OPEN_MAX)
+  const [faceH, setFaceH] = useState(320)
+  const timing = reduce ? { duration: 0 } : spring
   const fadeTiming = reduce ? { duration: 0 } : fade
+
+  useLayoutEffect(() => {
+    const trigger = triggerRef.current
+    if (!trigger) return
+    const sync = () => {
+      setClosed({ w: trigger.offsetWidth, h: trigger.offsetHeight })
+      setOpenW(openWidth())
+    }
+    sync()
+    const ro = new ResizeObserver(sync)
+    ro.observe(trigger)
+    window.addEventListener('resize', sync)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', sync)
+    }
+  }, [])
+
+  useLayoutEffect(() => {
+    const face = faceRef.current
+    if (!face) return
+    const sync = () => setFaceH(face.scrollHeight)
+    sync()
+    const ro = new ResizeObserver(sync)
+    ro.observe(face)
+    return () => ro.disconnect()
+  }, [openW])
 
   useEffect(() => {
     if (!open) return
-    const id = window.setTimeout(() => firstFieldRef.current?.focus(), reduce ? 0 : 280)
+    const id = window.setTimeout(() => firstFieldRef.current?.focus(), reduce ? 0 : 220)
     return () => window.clearTimeout(id)
   }, [open, reduce])
+
+  useEffect(() => {
+    if (wasOpenRef.current && !open) triggerRef.current?.focus()
+    wasOpenRef.current = open
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -29,80 +77,78 @@ export function FriendFormDock() {
       if (e.key !== 'Escape') return
       e.preventDefault()
       setOpen(false)
-      triggerRef.current?.focus()
+    }
+    const onPointerDown = (e: PointerEvent) => {
+      const node = e.target as Node
+      if (triggerRef.current?.contains(node)) return
+      if (cardRef.current && !cardRef.current.contains(node)) setOpen(false)
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.removeEventListener('pointerdown', onPointerDown)
+    }
   }, [open])
 
-  const close = () => {
-    setOpen(false)
-    triggerRef.current?.focus()
-  }
+  const maxCardH = typeof window === 'undefined' ? 720 : window.innerHeight - GUTTER
+  const openH = Math.min(faceH + OPEN_PAD * 2, maxCardH)
+  const scaleX = open || reduce ? 1 : closed.w / Math.max(openW, 1)
+  const scaleY = open || reduce ? 1 : closed.h / Math.max(openH, 1)
 
   return (
-    <>
-      <AnimatePresence>
-        {open && (
-          <motion.button
-            type="button"
-            className="friend-dock-backdrop"
-            aria-label="关闭友链表单"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={fadeTiming}
-            onClick={close}
-          />
-        )}
-      </AnimatePresence>
-
-      <div className="friend-dock">
+    <div className="friend-dock">
+      <motion.div
+        ref={cardRef}
+        className={`friend-dock-card${open ? ' is-open' : ''}`}
+        initial={false}
+        animate={{
+          scaleX,
+          scaleY,
+          borderRadius: open ? 20 : 999,
+          opacity: reduce && !open ? 0 : 1,
+        }}
+        transition={timing}
+        style={{
+          width: openW,
+          height: openH,
+          transformOrigin: 'bottom right',
+          pointerEvents: open ? 'auto' : 'none',
+        }}
+      >
         <motion.div
-          layout
-          className={`friend-dock-card${open ? ' is-open' : ''}`}
+          ref={faceRef}
+          className="friend-dock-face"
+          role="dialog"
+          aria-labelledby="friend-form-title"
+          aria-modal={open}
+          aria-hidden={!open}
           initial={false}
-          transition={timing}
-          style={{ transformOrigin: 'bottom right' }}
+          animate={{ opacity: open ? 1 : 0 }}
+          transition={fadeTiming}
+          style={{ pointerEvents: open ? 'auto' : 'none' }}
         >
-          <AnimatePresence initial={false} mode="wait">
-            {open ? (
-              <motion.div
-                key="form"
-                className="friend-dock-face"
-                role="dialog"
-                aria-labelledby="friend-form-title"
-                aria-modal="true"
-                initial={reduce ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={fadeTiming}
-              >
-                <FriendForm firstFieldRef={firstFieldRef} onClose={close} reduce={!!reduce} />
-              </motion.div>
-            ) : (
-              <motion.button
-                key="trigger"
-                ref={triggerRef}
-                type="button"
-                className="friend-dock-trigger"
-                aria-haspopup="dialog"
-                aria-expanded={false}
-                initial={reduce ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={fadeTiming}
-                whileHover={reduce ? undefined : { scale: 1.03 }}
-                whileTap={reduce ? undefined : { scale: 0.96 }}
-                onClick={() => setOpen(true)}
-              >
-                也想贴一张
-              </motion.button>
-            )}
-          </AnimatePresence>
+          <FriendForm firstFieldRef={firstFieldRef} onClose={() => setOpen(false)} reduce={!!reduce} />
         </motion.div>
-      </div>
-    </>
+      </motion.div>
+
+      <motion.button
+        ref={triggerRef}
+        type="button"
+        className="friend-dock-trigger"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        tabIndex={open ? -1 : 0}
+        initial={false}
+        animate={{ opacity: open ? 0 : 1 }}
+        transition={{ opacity: fadeTiming, scale: press }}
+        style={{ pointerEvents: open ? 'none' : 'auto' }}
+        whileTap={reduce || open ? undefined : { scale: 0.97 }}
+        onClick={() => setOpen(true)}
+      >
+        也想贴一张
+      </motion.button>
+    </div>
   )
 }
 

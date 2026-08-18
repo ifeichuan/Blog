@@ -1,25 +1,39 @@
-/* 右下角友链入口。尺寸/位置由 Motion layoutId 插值，这里只定两端外观。 */
-
-.friend-dock-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 39;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: color-mix(in oklab, var(--paper-bg, #f6f2ea) 42%, transparent);
-  cursor: zoom-out;
-}
+/* 右下角友链入口。卡按打开尺寸排，从右下角缩放；这里只定材料。 */
 
 .friend-dock {
   position: fixed;
-  z-index: 40;
+  z-index: 60;
   right: max(20px, env(safe-area-inset-right, 0px));
   bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  isolation: isolate;
+  pointer-events: none;
+  color: var(--fc-surface-page);
+}
+
+.friend-dock-card {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 18px;
+  border: 1px solid color-mix(in oklab, var(--paper-line) 70%, white);
+  background: var(--paper-surface);
+  color: var(--paper-strong);
+  box-shadow: 0 22px 56px color-mix(in oklab, var(--fc-ink) 20%, transparent);
+  will-change: transform;
+}
+
+.friend-dock-card.is-open {
+  background: color-mix(in oklab, var(--paper-surface) 78%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
 .friend-dock-trigger {
   appearance: none;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -35,20 +49,21 @@
   line-height: 18px;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 10px 28px color-mix(in oklab, var(--fc-ink) 22%, transparent);
+  pointer-events: auto;
 }
 
-.friend-dock-popover {
-  width: min(22.5rem, calc(100vw - 40px));
-  max-height: calc(100dvh - 40px);
+.friend-dock-face {
+  height: 100%;
   overflow: auto;
-  padding: 18px;
-  border: 1px solid var(--paper-line);
-  border-radius: 20px;
-  background: var(--paper-surface);
-  color: var(--paper-strong);
-  box-shadow: 0 22px 56px color-mix(in oklab, var(--fc-ink) 20%, transparent);
   scrollbar-width: thin;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .friend-dock-card.is-open {
+    background: var(--paper-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 .friend-form {
@@ -241,8 +256,7 @@
   background: var(--paper-wash);
 }
 
-body:has(.staggered-menu-wrapper[data-open]) .friend-dock,
-body:has(.staggered-menu-wrapper[data-open]) .friend-dock-backdrop {
+body:has(.staggered-menu-wrapper[data-open]) .friend-dock {
   opacity: 0;
   pointer-events: none;
 }
@@ -250,10 +264,5 @@ body:has(.staggered-menu-wrapper[data-open]) .friend-dock-backdrop {
 @media (max-width: 480px) {
   .form-grid {
     grid-template-columns: 1fr;
-  }
-
-  .friend-dock-popover {
-    width: min(22.5rem, calc(100vw - 32px));
-    max-height: calc(100dvh - 32px);
   }
 }

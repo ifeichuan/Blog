@@ -5,6 +5,7 @@ import { DEFAULT_DEBUG, type DebugParams } from './debugParams'
 import { Lightbox } from './Lightbox'
 import { startStampScrollBus } from './scrollBus'
 import { StampCard, type CardOrigin } from './StampCard'
+import { StampShaderHost } from './StampShaderHost'
 import { buildStamps, stampFieldBands, type FriendItem, type StampDef, type StampId } from './stamps'
 import './stamp-gallery.css'
 
@@ -81,6 +82,7 @@ export function StampGallery({ items, className }: Props) {
         ['--stamp-bands' as string]: bands,
       }}
     >
+      <StampShaderHost>
       <div className="stamp-field" aria-label="邮票作品集">
         {stamps.map((stamp) => (
           <StampCard
@@ -106,6 +108,7 @@ export function StampGallery({ items, className }: Props) {
           />
         ))}
       </div>
+      </StampShaderHost>
 
       {/* 调色台：原型实验工具，仅本地开发可见，线上构建不打包 */}
       {import.meta.env.DEV && <DebugPanel params={debug} onChange={setDebug} />}
