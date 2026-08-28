@@ -18,16 +18,16 @@ const experience = [
     description: "做 Aurora AI 开发平台。把 Agent 运行时从 OpenCode 搬到 Pi Agent，注册三类自定义 Tools，用 Hooks 加了 8 个文件编辑闸口，RPC 替掉 SSE 解决浏览器并发上限。做了多会话并行执行和实时同步，又基于 Git Diff + AST 搂了套代码门禁。",
   },
   {
-    date: "2025/09 - 2026/03",
-    company: "携程集团",
-    role: "前端开发",
-    description: "做国内携程多端和海外 Trip 详情页。首屏次屏分层加载，JS 体积砍了 32%，TTI 快了 25%，秒杀下单首帧等待缩短 160ms。给 Trip 阿拉伯站做了 RTL 全套适配，H5 和 App 双端都补齐了。顺手写了 3 套 RTL Agent Skill，适配效率提了约 60%。",
-  },
-  {
     date: "2025/06 - 2025/09",
     company: "上海德亿门生科技",
     role: "前端开发",
     description: "做求职小程序，独立交付了 PDF 题库标注系统。pdf.js + Canvas 双层渲染，IntersectionObserver + rAF 调度避免卡顿，接了豆包多模态做 AI 识别，正确率 90%+。另外用 LangGraph 串了 AI 对话、简历优化、岗位匹配三条链路，流式输出。",
+  },
+  {
+    date: "2025/03 - 2025/06",
+    company: "湖北萤图科技",
+    role: "前端开发",
+    description: "做 Electron 桌面 IM。用 SWC 换掉 Babel 重构编译链路，HMR 从 10s 压到 3s，生产构建 200s 砍到 50s。消息列表上了虚拟滚动加通用锚点定位，万级消息秒级跳转，配多源合并和 LRU 缓存，滚动 FPS 提了约 40%。另外基于 Electron IPC 补了多窗口协同和批量拖拽上传、预览这些系统级交互。",
   },
 ];
 const stack = [
@@ -67,9 +67,9 @@ const projects = [
         <div class="paper-flow">
           <section class="intro-section">
             <article>
-              <p>我是 feichuan，前端开发，2027 届计算机本科生。目前在 <strong>智精灵</strong> 做 AI 开发平台的前端。</p>
-              <p>我对交互、动效和 UI/UX 有执念。让界面有节奏感、让操作有反馈、让动效自然地引导注意力——这些东西对我来说比功能本身更重要。日常写 TypeScript + Vue 3 + React，偶尔碰 Rust 和 WebGL。</p>
-              <p>工作上从携程到智精灵，切过首屏性能、RTL 国际化、Agent 工具链这些方向。但下班后折腾的基本都是动效和界面细节。</p>
+              <p>我是 feichuan，前端开发，2027 届计算机本科生。日常写 TypeScript + Vue 3 + React，偶尔碰 Rust 和 WebGL。</p>
+              <p>我对交互和动效有执念。再往里一层，真正在意的是模型和人之间那一层怎么做好。往视觉走，是流式输出怎么显得自然、工具调用怎么让人一眼看懂在发生什么、等待怎么不像卡住；往控制走，是 <strong>Agent Harness</strong>——事件流怎么归一、哪些操作该拦一道、上下文怎么管。两边看着不搭，其实都在决定同一件事：人能不能看懂，能不能插手。</p>
+              <p>业余时间基本都花在这上面。<a href="/labs">/labs</a> 堆了十几个动效实验，同一个 blur 用 GSAP、Motion、WAAPI 各写一遍，看手感差在哪。GitHub 上攒了十几个 Claude Code Skill，从动画描述规范到多 Agent 编排链路。Obsidian 当第二大脑，每次和 Agent 聊完自动往里沉淀笔记——说到底也是在给 Agent 造环境，一个造记忆，一个造闸口。</p>
               <p>Blog 还在装修，奇怪的 UI 请见谅 :)</p>
             </article>
           </section>
