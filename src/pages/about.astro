@@ -156,7 +156,14 @@ const projects = [
   body { min-height:100%;margin:0;color:var(--paper-text);background:var(--paper-bg);font-family:"Maple Mono NF CN",system-ui,sans-serif;-webkit-font-smoothing:antialiased; }
   * { box-sizing:border-box; } a { color:inherit;text-decoration:underline;text-decoration-color:var(--paper-line);text-underline-offset:2px;transition:color .3s ease,text-decoration-color .3s ease; } a:hover { color:var(--paper-strong);text-decoration-color:currentColor; }
   main { min-height:100vh;padding:128px 0; }.paper-container { position:relative;z-index:1;width:100%;max-width:640px;margin-inline:auto;padding-inline:20px; }.about-heading { --avatar-size:128px;display:flex;min-height:128px;align-items:center;justify-content:space-between;gap:24px; }.about-heading>h1 { margin:0;color:var(--paper-strong);font-size:16px;font-weight:600;line-height:24px;letter-spacing:0; }.about-heading>h1 span { font-size:20px; }.paper-flow { display:flex;flex-direction:column;gap:64px;margin-top:20px; }
-  article { max-width:100%;font-size:16px;line-height:28px; } article p { margin:0; }.intro-section article { display:flex;flex-direction:column;gap:16px; }
+  article { max-width:100%;font-size:16px;line-height:28px; } article p { margin:0; }
+  /* orb 会飘到 intro 上来（resize 后 applyOffset 按 viewport 夹取，
+   * 舞台滚出视口时会把它往上拽）。飘着挺好，但文字得能读：
+   * 抬到 orb 的 z-index:20 之上，让球从文字底下过。 */
+  .intro-section { position:relative;z-index:30; }
+  /* 抬了层级字就在球上面了，但正文是中灰、球顶接近黑，压上去照样读不出。
+   * 描一圈纸色光晕：和背景同色，平时看不见，球飘过来时把笔画托出来。 */
+  .intro-section article { display:flex;flex-direction:column;gap:16px;text-shadow:0 0 3px var(--paper-bg),0 0 6px var(--paper-bg),0 0 12px var(--paper-bg),0 0 20px var(--paper-bg); }
   .paper-section { display:flex;flex-direction:column;gap:24px; }.section-heading { display:flex;min-height:24px;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px; }.section-heading h2,.connect-section h2 { margin:0;color:var(--paper-strong);font-size:16px;font-weight:600;line-height:24px; }.section-heading>a,.section-heading>span { font-size:16px;line-height:24px; }
   .sr-only { position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap; }
   .orb-stage { position:relative;width:100%;height:300px;overflow:visible;background:transparent; }
